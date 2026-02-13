@@ -28,55 +28,55 @@ const DOT_COLORS: Record<string, string> = {
 };
 
 const badgeVariants = cva(
-  'inline-flex items-center gap-1.5 rounded-full border text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+  'inline-flex items-center gap-1.5 rounded-full border text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
   {
     variants: {
       variant: {
         default: 'border-transparent bg-primary text-primary-foreground',
-        secondary: 'border-border bg-muted text-muted-foreground',
+        secondary: 'border-border/60 bg-muted/80 text-muted-foreground',
         destructive: 'border-transparent bg-destructive text-destructive-foreground',
-        outline: 'text-foreground border-border',
-        success: 'border-success/12 bg-success/5 text-success',
-        warning: 'border-warning/12 bg-warning/5 text-warning',
-        info: 'border-info/12 bg-info/5 text-info',
+        outline: 'text-foreground border-border/80',
+        success: 'border-success/10 bg-success/5 text-success',
+        warning: 'border-warning/10 bg-warning/5 text-warning',
+        info: 'border-info/10 bg-info/5 text-info',
 
         // Premium variant
         premium:
-          'border-purple-500/15 bg-gradient-to-r from-purple-500/5 to-blue-500/5 text-action-reroute',
+          'border-action-reroute/12 bg-gradient-to-r from-action-reroute/5 to-accent/5 text-action-reroute',
 
-        // Urgency variants — ultra-subtle: thin border + barely visible bg + muted text
+        // Urgency variants — PRIMARY prominence: these badges STAND OUT
         immediate:
-          'border-urgency-immediate/12 bg-urgency-immediate/5 text-urgency-immediate font-semibold',
-        urgent: 'border-urgency-urgent/12 bg-urgency-urgent/5 text-urgency-urgent font-semibold',
-        soon: 'border-urgency-soon/12 bg-urgency-soon/5 text-urgency-soon',
-        watch: 'border-urgency-watch/12 bg-urgency-watch/5 text-urgency-watch',
+          'border-urgency-immediate/20 bg-urgency-immediate/8 text-urgency-immediate font-semibold shadow-sm',
+        urgent: 'border-urgency-urgent/18 bg-urgency-urgent/6 text-urgency-urgent font-semibold',
+        soon: 'border-urgency-soon/10 bg-urgency-soon/4 text-urgency-soon',
+        watch: 'border-urgency-watch/8 bg-urgency-watch/3 text-urgency-watch',
 
-        // Severity variants — ultra-subtle
+        // Severity variants — scaled visual weight (critical prominent, low subtle)
         critical:
-          'border-severity-critical/12 bg-severity-critical/5 text-severity-critical font-semibold',
-        high: 'border-severity-high/12 bg-severity-high/5 text-severity-high',
-        medium: 'border-severity-medium/12 bg-severity-medium/5 text-severity-medium',
-        low: 'border-severity-low/12 bg-severity-low/5 text-severity-low',
+          'border-severity-critical/20 bg-severity-critical/8 text-severity-critical font-semibold shadow-sm',
+        high: 'border-severity-high/15 bg-severity-high/5 text-severity-high',
+        medium: 'border-severity-medium/8 bg-severity-medium/4 text-severity-medium',
+        low: 'border-severity-low/6 bg-severity-low/3 text-severity-low opacity-80',
 
-        // Confidence variants
-        'confidence-high': 'border-confidence-high/12 bg-confidence-high/5 text-confidence-high',
+        // Confidence variants — informational: LOW prominence
+        'confidence-high': 'border-confidence-high/8 bg-confidence-high/4 text-confidence-high',
         'confidence-medium':
-          'border-confidence-medium/12 bg-confidence-medium/5 text-confidence-medium',
-        'confidence-low': 'border-confidence-low/12 bg-confidence-low/5 text-confidence-low',
+          'border-confidence-medium/8 bg-confidence-medium/4 text-confidence-medium',
+        'confidence-low': 'border-confidence-low/8 bg-confidence-low/4 text-confidence-low',
 
-        // Action variants
-        reroute: 'border-action-reroute/12 bg-action-reroute/5 text-action-reroute',
-        delay: 'border-action-delay/12 bg-action-delay/5 text-action-delay',
-        insure: 'border-action-insure/12 bg-action-insure/5 text-action-insure',
-        monitor: 'border-action-monitor/12 bg-action-monitor/5 text-action-monitor',
-        nothing: 'border-action-nothing/12 bg-action-nothing/5 text-action-nothing',
+        // Action variants — informational: LOW prominence
+        reroute: 'border-action-reroute/8 bg-action-reroute/4 text-action-reroute',
+        delay: 'border-action-delay/8 bg-action-delay/4 text-action-delay',
+        insure: 'border-action-insure/8 bg-action-insure/4 text-action-insure',
+        monitor: 'border-action-monitor/8 bg-action-monitor/4 text-action-monitor',
+        nothing: 'border-action-nothing/8 bg-action-nothing/4 text-action-nothing',
 
-        // Status variants
-        pending: 'border-warning/12 bg-warning/5 text-warning',
-        acknowledged: 'border-success/12 bg-success/5 text-success',
-        overridden: 'border-purple-500/12 bg-purple-500/5 text-action-reroute',
-        expired: 'border-muted-foreground/12 bg-muted text-muted-foreground',
-        escalated: 'border-destructive/12 bg-destructive/5 text-destructive',
+        // Status variants — MEDIUM prominence: outlined style
+        pending: 'border-warning/15 bg-warning/4 text-warning',
+        acknowledged: 'border-success/12 bg-success/4 text-success',
+        overridden: 'border-action-reroute/12 bg-action-reroute/4 text-action-reroute',
+        expired: 'border-muted-foreground/8 bg-muted/50 text-muted-foreground opacity-75',
+        escalated: 'border-destructive/15 bg-destructive/5 text-destructive font-semibold',
       },
       size: {
         default: 'px-2 py-0.5 text-[10px]',

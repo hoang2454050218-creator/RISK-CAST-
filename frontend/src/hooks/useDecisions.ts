@@ -5,7 +5,7 @@
  * the frontend expects. Falls back to mock data when backend is unavailable.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import {
   getDecisions,
   getDecision,
@@ -14,6 +14,7 @@ import {
   escalateDecision,
   withMockFallback,
 } from '@/lib/api';
+import { toast } from '@/components/ui/toast';
 import { mockDecision, mockDecisions } from '@/lib/mock-data/legacy';
 import type {
   Decision,
@@ -227,7 +228,7 @@ export function useDecisionsList(params?: {
       );
       return { decisions: transformed, total: data.total ?? transformed.length };
     },
-    staleTime: 30_000,
+    staleTime: 60_000,
     refetchInterval: 60_000,
     select: (data) => data.decisions as Decision[],
     retry: 2,
@@ -265,6 +266,10 @@ export function useAcknowledgeDecision() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: decisionKeys.detail(variables.decision_id) });
       queryClient.invalidateQueries({ queryKey: decisionKeys.lists() });
+      toast.success('Decision acknowledged successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to acknowledge decision: ${error.message}`);
     },
   });
 }
@@ -280,6 +285,10 @@ export function useOverrideDecision() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: decisionKeys.detail(variables.decision_id) });
       queryClient.invalidateQueries({ queryKey: decisionKeys.lists() });
+      toast.success('Decision overridden successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to override decision: ${error.message}`);
     },
   });
 }
@@ -295,6 +304,10 @@ export function useEscalateDecision() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: decisionKeys.detail(variables.decision_id) });
       queryClient.invalidateQueries({ queryKey: decisionKeys.lists() });
+      toast.success('Decision escalated for human review');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to escalate decision: ${error.message}`);
     },
   });
 }

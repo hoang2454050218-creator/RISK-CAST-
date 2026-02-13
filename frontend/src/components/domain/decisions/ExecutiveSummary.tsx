@@ -54,7 +54,7 @@ export function ExecutiveSummary({
       transition={springs.smooth}
     >
       {/* Subtle top accent */}
-      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-accent via-purple-500 to-accent" />
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-accent via-action-reroute to-accent" />
 
       {/* Dark mode corner glow */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl pointer-events-none" />

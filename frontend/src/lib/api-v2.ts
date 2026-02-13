@@ -3,7 +3,14 @@
  *
  * Points to the V2 backend (port 8002).
  * Handles auth tokens, SSE streaming, and typed responses.
+ *
+ * Uses shared health-check gate from api.ts:
+ * - Skips network requests when backend is known offline
+ * - Marks backend offline on 5xx / network errors
+ * - Prevents ERR_CONNECTION_REFUSED console spam
  */
+
+import { isBackendOnline, markBackendOffline } from './api';
 
 const V2_BASE = import.meta.env.VITE_V2_API_URL || '/api/v1';
 const V2_TOKEN_KEY = 'riskcast:v2-token';
@@ -23,6 +30,14 @@ function authHeaders(): Record<string, string> {
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  // Health gate: fail fast when backend is known to be offline.
+  // This prevents ERR_CONNECTION_REFUSED / 500 errors flooding the console.
+  // Hooks using withMockFallback will catch this and return mock data.
+  const online = await isBackendOnline();
+  if (!online) {
+    throw new ApiV2Error(0, 'Backend offline');
+  }
+
   // Strip trailing slashes before query string to prevent 404s
   // e.g. "/signals/?foo=bar" → "/signals?foo=bar", "/customers/" → "/customers"
   const cleanPath = path.replace(/\/+(\?|$)/, '$1');
@@ -45,6 +60,10 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
         localStorage.removeItem('riskcast:auth-token');
         localStorage.removeItem('riskcast:auth-user');
       }
+      // Mark backend offline on server errors (5xx) to prevent subsequent requests
+      if (res.status >= 500) {
+        markBackendOffline();
+      }
       const body = await res.json().catch(() => ({ detail: res.statusText }));
       throw new ApiV2Error(res.status, body.detail || 'Request failed');
     }
@@ -52,14 +71,18 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   } catch (err) {
     clearTimeout(timeout);
     if (err instanceof ApiV2Error) throw err;
+    // Network errors (connection refused, timeout) = backend offline
+    markBackendOffline();
     throw new ApiV2Error(0, err instanceof Error ? err.message : 'Network error');
   }
 }
 
 export class ApiV2Error extends Error {
-  constructor(public status: number, message: string) {
+  status: number;
+  constructor(status: number, message: string) {
     super(message);
     this.name = 'ApiV2Error';
+    this.status = status;
   }
 }
 
@@ -502,7 +525,77 @@ export const v2Intelligence = {
 
 // ── SSE Helper ───────────────────────────────────────────────
 
-export function createEventSource(): EventSource {
-  const token = getToken();
-  return new EventSource(`/api/v1/events/stream?token=${token}`);
+/**
+ * Creates an SSE connection using fetch + ReadableStream.
+ * Uses Authorization header instead of URL query parameter (security).
+ * Returns an object with addEventListener-like interface for compatibility.
+ */
+export function createEventSource(): {
+  close: () => void;
+  onmessage: ((event: { data: string }) => void) | null;
+  onerror: ((event: unknown) => void) | null;
+} {
+  const controller = new AbortController();
+  const handlers: {
+    onmessage: ((event: { data: string }) => void) | null;
+    onerror: ((event: unknown) => void) | null;
+  } = { onmessage: null, onerror: null };
+
+  const source = {
+    get onmessage() { return handlers.onmessage; },
+    set onmessage(handler: ((event: { data: string }) => void) | null) {
+      handlers.onmessage = handler;
+    },
+    get onerror() { return handlers.onerror; },
+    set onerror(handler: ((event: unknown) => void) | null) {
+      handlers.onerror = handler;
+    },
+    close: () => controller.abort(),
+  };
+
+  // Start SSE stream using fetch with proper auth headers
+  (async () => {
+    try {
+      const token = getToken() || localStorage.getItem('riskcast:auth-token');
+      const apiKey = localStorage.getItem('riskcast:api-key') || import.meta.env.VITE_API_KEY || '';
+      const response = await fetch(`${V2_BASE}/events/stream`, {
+        headers: {
+          'Accept': 'text/event-stream',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          ...(apiKey ? { 'X-API-Key': apiKey } : {}),
+        },
+        signal: controller.signal,
+      });
+
+      if (!response.ok || !response.body) {
+        handlers.onerror?.(new Error(`SSE connection failed: ${response.status}`));
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            handlers.onmessage?.({ data: line.slice(6) });
+          }
+        }
+      }
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === 'AbortError')) {
+        handlers.onerror?.(err);
+      }
+    }
+  })();
+
+  return source;
 }

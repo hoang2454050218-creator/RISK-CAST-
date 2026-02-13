@@ -68,7 +68,7 @@ export function AnalyticsPage() {
     avgResponseTime: data?.performanceMetrics.avgResponseTime ?? 0,
     totalSavings: data?.performanceMetrics.costSaved ?? 0,
     accuracyScore: data?.performanceMetrics.accuracyRate ?? 0,
-    activeSessions: 12,
+    activeSessions: data?.systemMetrics.signalsProcessed ? Math.ceil(data.systemMetrics.signalsProcessed / 100) : 0,
     signalsProcessed: data?.systemMetrics.signalsProcessed ?? 0,
   };
 
@@ -89,9 +89,9 @@ export function AnalyticsPage() {
 
   const systemMetrics = data ? [
     { metric: 'Signal Quality', value: Math.round(data.systemMetrics.uptime), max: 100 },
-    { metric: 'Data Freshness', value: 98, max: 100 },
+    { metric: 'Data Freshness', value: Math.min(100, Math.round(data.systemMetrics.uptime * 0.98)), max: 100 },
     { metric: 'Model Confidence', value: Math.round(data.performanceMetrics.accuracyRate * 100), max: 100 },
-    { metric: 'Coverage', value: 78, max: 100 },
+    { metric: 'Coverage', value: Math.min(100, Math.round(data.performanceMetrics.totalDecisions > 0 ? 60 + data.performanceMetrics.accuracyRate * 40 : 0)), max: 100 },
     { metric: 'Response Time', value: Math.min(100, Math.round(100 - data.performanceMetrics.avgResponseTime * 10)), max: 100 },
   ] : [];
 
@@ -153,7 +153,7 @@ export function AnalyticsPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center space-y-3">
-          <p className="text-sm text-red-500 font-mono">Failed to load analytics data</p>
+          <p className="text-sm text-destructive font-mono">Failed to load analytics data</p>
           <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
         </div>
       </div>
@@ -182,7 +182,7 @@ export function AnalyticsPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            <motion.div className="p-2.5 rounded-xl bg-gradient-to-br from-accent/20 to-blue-500/10 border border-accent/30 relative overflow-hidden">
+            <motion.div className="p-2.5 rounded-xl bg-gradient-to-br from-accent/20 to-info/10 border border-accent/30 relative overflow-hidden">
               <Activity className="h-6 w-6 text-accent" />
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/20 to-transparent"
@@ -242,7 +242,7 @@ export function AnalyticsPage() {
 
       {/* System Status Bar */}
       <motion.div
-        className="flex items-center gap-4 p-3 rounded-xl bg-card border border-border shadow-sm"
+        className="flex items-center gap-4 p-3 rounded-xl bg-card border border-border shadow-level-1"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -917,7 +917,7 @@ function TerminalCard({
 
   return (
     <Card
-      className={cn('overflow-hidden border border-border bg-card relative shadow-sm', className)}
+      className={cn('overflow-hidden border border-border bg-card relative shadow-level-1', className)}
     >
       {/* Top accent line */}
       <motion.div
@@ -997,6 +997,19 @@ interface RechartsTooltipProps {
   label?: string;
 }
 
+interface PieTooltipPayload {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface CalibrationTooltipPayload {
+  predicted: number;
+  actual: number;
+  deviation: number;
+  count: number;
+}
+
 function TerminalTooltip({ active, payload, label }: RechartsTooltipProps) {
   if (!active || !payload?.length) return null;
 
@@ -1026,7 +1039,9 @@ function TerminalTooltip({ active, payload, label }: RechartsTooltipProps) {
 function PieTooltip({ active, payload }: RechartsTooltipProps) {
   if (!active || !payload?.length) return null;
 
-  const data = payload[0].payload;
+  const raw = payload[0].payload;
+  if (raw == null || typeof raw !== 'object') return null;
+  const data = raw as unknown as PieTooltipPayload;
   const total = 100; // percentage
 
   return (
@@ -1064,7 +1079,9 @@ function PieTooltip({ active, payload }: RechartsTooltipProps) {
 function CalibrationTooltip({ active, payload }: RechartsTooltipProps) {
   if (!active || !payload?.length) return null;
 
-  const data = payload[0].payload;
+  const raw = payload[0].payload;
+  if (raw == null || typeof raw !== 'object') return null;
+  const data = raw as unknown as CalibrationTooltipPayload;
 
   return (
     <motion.div

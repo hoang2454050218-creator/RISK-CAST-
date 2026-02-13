@@ -77,7 +77,7 @@ export { ConfirmationDialog } from './confirmation-dialog';
 export type { ConfirmationDialogProps } from './confirmation-dialog';
 
 // Error State
-export { ErrorState } from './error-state';
+export { ErrorState } from './states';
 
 // Not Found State
 export { NotFoundState } from './not-found-state';

@@ -1,11 +1,13 @@
 /**
- * Shared UI states: Loading, Empty, Error.
- * Used across all V2 components for consistent UX.
+ * Shared UI states: Loading, Empty, Error, Offline.
+ * Used across all components for consistent UX.
  *
- * All colors use semantic CSS-variable-backed tokens — no dark: prefixes needed.
+ * All text goes through i18n — no hardcoded language strings.
+ * All colors use semantic CSS-variable-backed tokens.
  */
 
 import { AlertCircle, Inbox, Loader2, RefreshCw, WifiOff } from 'lucide-react';
+import { useTranslations } from '@/lib/i18n';
 
 // ── Loading State ────────────────────────────────────────────────────────
 
@@ -14,11 +16,12 @@ interface LoadingStateProps {
   className?: string;
 }
 
-export function LoadingState({ message = 'Đang tải...', className = '' }: LoadingStateProps) {
+export function LoadingState({ message, className = '' }: LoadingStateProps) {
+  const t = useTranslations();
   return (
     <div className={`flex flex-col items-center justify-center py-12 ${className}`}>
       <Loader2 className="h-8 w-8 animate-spin text-accent mb-3" />
-      <p className="text-sm text-muted-foreground font-mono">{message}</p>
+      <p className="text-sm text-muted-foreground font-mono">{message || t.common.loading}</p>
     </div>
   );
 }
@@ -71,25 +74,38 @@ interface ErrorStateProps {
   onRetry?: () => void;
   variant?: 'inline' | 'full';
   className?: string;
+  title?: string;
+  error?: unknown;
+  description?: string;
 }
 
 export function ErrorState({
-  message = 'Đã xảy ra lỗi. Vui lòng thử lại.',
+  message,
   onRetry,
   variant = 'full',
   className = '',
+  title,
+  error,
+  description,
 }: ErrorStateProps) {
+  const t = useTranslations();
+  const displayMessage = message
+    || description
+    || (error instanceof Error ? error.message : null)
+    || t.common.errorDescription;
+  const displayTitle = title || t.common.errorTitle;
+
   if (variant === 'inline') {
     return (
-      <div className={`flex items-center gap-2 rounded-lg border border-error/20 bg-error-light px-4 py-3 ${className}`}>
+      <div role="alert" className={`flex items-center gap-2 rounded-lg border border-error/20 bg-error-light px-4 py-3 ${className}`}>
         <AlertCircle className="h-4 w-4 text-error shrink-0" />
-        <span className="text-sm text-error flex-1">{message}</span>
+        <span className="text-sm text-error flex-1">{displayMessage}</span>
         {onRetry && (
           <button
             onClick={onRetry}
             className="text-xs font-medium text-error hover:text-error/80 transition-colors"
           >
-            Thử lại
+            {t.common.retry}
           </button>
         )}
       </div>
@@ -97,18 +113,18 @@ export function ErrorState({
   }
 
   return (
-    <div className={`flex flex-col items-center justify-center py-16 px-4 ${className}`}>
+    <div role="alert" className={`flex flex-col items-center justify-center py-16 px-4 ${className}`}>
       <div className="rounded-full bg-error-light p-4 mb-4">
         <AlertCircle className="h-8 w-8 text-error" />
       </div>
-      <h3 className="text-sm font-semibold text-foreground mb-1">Đã xảy ra lỗi</h3>
-      <p className="text-xs text-muted-foreground text-center max-w-xs mb-4">{message}</p>
+      <h3 className="text-sm font-semibold text-foreground mb-1">{displayTitle}</h3>
+      <p className="text-xs text-muted-foreground text-center max-w-xs mb-4">{displayMessage}</p>
       {onRetry && (
         <button
           onClick={onRetry}
           className="flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
         >
-          <RefreshCw className="h-3.5 w-3.5" /> Thử lại
+          <RefreshCw className="h-3.5 w-3.5" /> {t.common.retry}
         </button>
       )}
     </div>
@@ -118,11 +134,12 @@ export function ErrorState({
 // ── Offline State ────────────────────────────────────────────────────────
 
 export function OfflineState({ className = '' }: { className?: string }) {
+  const t = useTranslations();
   return (
-    <div className={`flex items-center gap-2 rounded-lg border border-warning/20 bg-warning-light px-4 py-3 ${className}`}>
+    <div role="alert" className={`flex items-center gap-2 rounded-lg border border-warning/20 bg-warning-light px-4 py-3 ${className}`}>
       <WifiOff className="h-4 w-4 text-warning shrink-0" />
       <span className="text-sm text-warning">
-        Mất kết nối server. Đang thử kết nối lại...
+        {t.common.offline}
       </span>
     </div>
   );

@@ -11,7 +11,7 @@ import { SevenQuestionsView } from '@/components/domain/decisions/SevenQuestions
 import { VerdictBanner } from '@/components/domain/decisions/VerdictBanner';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { NotFoundState } from '@/components/ui/not-found-state';
-import { ErrorState } from '@/components/ui/error-state';
+import { ErrorState } from '@/components/ui/states';
 import { SkeletonDecisionView } from '@/components/ui/skeleton';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import {
@@ -33,7 +33,7 @@ export function DecisionDetailPage() {
   const [overrideAction, setOverrideAction] = useState<string>('DELAY');
   const [overrideReason, setOverrideReason] = useState('');
   const [escalateReason, setEscalateReason] = useState('');
-  const [escalatePriority, setEscalatePriority] = useState<string>('high');
+  const [escalatePriority, setEscalatePriority] = useState<'NORMAL' | 'HIGH' | 'CRITICAL'>('HIGH');
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [requestMoreText, setRequestMoreText] = useState('');
   const { user } = useUser();
@@ -77,7 +77,7 @@ export function DecisionDetailPage() {
         case 'override':
           await overrideMutation.mutateAsync({
             decision_id: decision.decision_id,
-            override_action: overrideAction,
+            new_action: overrideAction as import('@/types/decision').ActionType,
             reason: overrideReason,
             overridden_by: user.name,
           });
@@ -87,7 +87,7 @@ export function DecisionDetailPage() {
         case 'escalate':
           await escalateMutation.mutateAsync({
             decision_id: decision.decision_id,
-            reason: escalateReason,
+            escalation_reason: escalateReason,
             priority: escalatePriority,
             escalated_by: user.name,
           });
@@ -227,6 +227,7 @@ export function DecisionDetailPage() {
               onChange={(e) => setRequestMoreText(e.target.value)}
               placeholder="Describe the intelligence or data you need..."
               rows={4}
+              maxLength={2000}
               className="mt-4 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               autoFocus
             />
@@ -294,6 +295,7 @@ export function DecisionDetailPage() {
                   onChange={(e) => setOverrideReason(e.target.value)}
                   placeholder="Explain why you are overriding the AI recommendation..."
                   rows={3}
+                  maxLength={2000}
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
                 <p className="text-[11px] text-muted-foreground mt-1">
@@ -308,12 +310,12 @@ export function DecisionDetailPage() {
                 <label className="block text-sm font-medium text-foreground mb-1.5">Priority</label>
                 <select
                   value={escalatePriority}
-                  onChange={(e) => setEscalatePriority(e.target.value)}
+                  onChange={(e) => setEscalatePriority(e.target.value as 'NORMAL' | 'HIGH' | 'CRITICAL')}
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                  <option value="critical">Critical — Immediate attention</option>
-                  <option value="high">High — Within hours</option>
-                  <option value="medium">Medium — Within 24h</option>
+                  <option value="CRITICAL">Critical — Immediate attention</option>
+                  <option value="HIGH">High — Within hours</option>
+                  <option value="NORMAL">Normal — Within 24h</option>
                 </select>
               </div>
               <div>
@@ -325,6 +327,7 @@ export function DecisionDetailPage() {
                   onChange={(e) => setEscalateReason(e.target.value)}
                   placeholder="Why does this decision require human review..."
                   rows={3}
+                  maxLength={2000}
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
                 <p className="text-[11px] text-muted-foreground mt-1">

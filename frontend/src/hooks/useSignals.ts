@@ -5,8 +5,9 @@
  * Falls back to mock data when backend is unavailable.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { getSignals, withMockFallback, getSignal, dismissSignal, generateDecisionFromSignal } from '@/lib/api';
+import { toast } from '@/components/ui/toast';
 import { mockSignals } from '@/lib/mock-data/legacy';
 import type { Signal, EventType, SignalSource, SignalStatus } from '@/types/signal';
 
@@ -108,6 +109,7 @@ export function useSignalsList(params?: {
     },
     staleTime: 30_000,
     refetchInterval: 60_000,
+    placeholderData: keepPreviousData,
     retry: 2,
   });
 }
@@ -135,6 +137,10 @@ export function useDismissSignal() {
       dismissSignal(signalId, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: signalKeys.lists() });
+      toast.success('Signal dismissed');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to dismiss signal: ${error.message}`);
     },
   });
 }
@@ -146,6 +152,10 @@ export function useGenerateDecision() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: signalKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ['decisions'] });
+      toast.success('Decision generated from signal');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to generate decision: ${error.message}`);
     },
   });
 }

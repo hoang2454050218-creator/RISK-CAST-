@@ -8,20 +8,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Suggestion } from '@/lib/api-v2';
 
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-  cancel_order: { label: 'Hủy đơn hàng', color: 'text-error bg-error/10 border-error/20' },
-  require_prepayment: { label: 'Yêu cầu thanh toán trước', color: 'text-warning bg-warning/10 border-warning/20' },
-  split_shipment: { label: 'Chia lô hàng', color: 'text-info bg-info/10 border-info/20' },
-  delay_shipment: { label: 'Trì hoãn vận chuyển', color: 'text-warning bg-warning/10 border-warning/20' },
-  increase_monitoring: { label: 'Tăng giám sát', color: 'text-action-reroute bg-action-reroute/10 border-action-reroute/20' },
-  contact_customer: { label: 'Liên hệ khách hàng', color: 'text-accent bg-accent/10 border-accent/20' },
+  cancel_order: { label: 'Cancel Order', color: 'text-error bg-error/10 border-error/20' },
+  require_prepayment: { label: 'Require Prepayment', color: 'text-warning bg-warning/10 border-warning/20' },
+  split_shipment: { label: 'Split Shipment', color: 'text-info bg-info/10 border-info/20' },
+  delay_shipment: { label: 'Delay Shipment', color: 'text-warning bg-warning/10 border-warning/20' },
+  increase_monitoring: { label: 'Increase Monitoring', color: 'text-action-reroute bg-action-reroute/10 border-action-reroute/20' },
+  contact_customer: { label: 'Contact Customer', color: 'text-accent bg-accent/10 border-accent/20' },
 };
 
 const REASON_CODES = [
-  { code: 'vip_client', label: 'Khách VIP' },
-  { code: 'high_margin', label: 'Margin cao' },
-  { code: 'low_priority', label: 'Ưu tiên thấp' },
-  { code: 'incorrect', label: 'Không chính xác' },
-  { code: 'other', label: 'Lý do khác' },
+  { code: 'vip_client', label: 'VIP Client' },
+  { code: 'high_margin', label: 'High Margin' },
+  { code: 'low_priority', label: 'Low Priority' },
+  { code: 'incorrect', label: 'Incorrect' },
+  { code: 'other', label: 'Other' },
 ];
 
 interface SuggestionCardProps {
@@ -75,7 +75,7 @@ export function SuggestionCard({ suggestion, onFeedback }: SuggestionCardProps) 
       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-current/10">
         <button
           onClick={() => { setDecided('accepted'); onFeedback('accepted'); }}
-          className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 transition-all hover:shadow-lg hover:shadow-emerald-600/20 active:scale-95"
+          className="flex items-center gap-1.5 rounded-lg bg-success hover:bg-success/90 text-success-foreground text-xs font-semibold px-4 py-2 transition-all hover:shadow-lg hover:shadow-success/20 active:scale-95"
         >
           <Check className="h-3.5 w-3.5" /> Accept
         </button>

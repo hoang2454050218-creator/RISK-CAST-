@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import {
@@ -25,7 +25,6 @@ import {
   CornerDownLeft,
   Clock,
   XCircle,
-  MessageSquare,
   Globe,
   Sparkles,
   History,
@@ -159,9 +158,8 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const navigate = useNavigate();
-  const location = useLocation();
   const queryClient = useQueryClient();
 
   // Build data items from React Query cache
@@ -244,10 +242,6 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
       section: 'recent' as const,
     }));
   }, [query]);
-
-  // Contextual hint: if on decisions page, show decisions-specific actions first
-  const isOnDecisions = location.pathname.startsWith('/decisions');
-  const isOnSignals = location.pathname.startsWith('/signals');
 
   // Define command items
   const commandItems: CommandItem[] = useMemo(
@@ -505,7 +499,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm backdrop-blur-2xl"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -513,13 +507,13 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
       {/* Command Palette */}
       <div
         ref={dialogRef}
-        className="fixed left-1/2 top-[20%] z-50 w-full max-w-lg -translate-x-1/2 rounded-xl border bg-background shadow-2xl"
+        className="fixed left-1/2 top-[20%] z-50 w-full max-w-lg -translate-x-1/2 rounded-xl border bg-background shadow-2xl elevation-3 card-glass"
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"
       >
         {/* Search Input */}
-        <div className="flex items-center gap-3 border-b px-4 py-3">
+        <div className="flex items-center gap-3 border-b border-border/60 px-4 py-4">
           <Search className="h-5 w-5 text-muted-foreground" />
           <input
             ref={inputRef}
@@ -532,7 +526,8 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
               clearTimeout(debounceRef.current);
               debounceRef.current = setTimeout(() => setQuery(value), 150);
             }}
-            className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
+            maxLength={200}
+            className="flex-1 min-h-[2.5rem] bg-transparent text-base text-lg py-2.5 outline-none placeholder:text-muted-foreground"
             aria-label="Search commands"
           />
           <kbd className="hidden sm:inline-flex items-center gap-1 rounded border bg-muted px-2 py-0.5 text-xs text-muted-foreground">

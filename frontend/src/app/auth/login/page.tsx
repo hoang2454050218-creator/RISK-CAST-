@@ -90,12 +90,6 @@ export function LoginPage() {
     setError(null);
   };
 
-  const fillTestAccount = () => {
-    setEmail('hoangpro268@gmail.com');
-    setPassword('Hoang2672004');
-    setError(null);
-  };
-
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background p-4 overflow-hidden">
       {/* Background grid pattern */}
@@ -169,6 +163,7 @@ export function LoginPage() {
                   placeholder="you@company.com"
                   autoComplete="email"
                   autoFocus
+                  maxLength={254}
                   className={cn(
                     'h-11 w-full rounded-lg border bg-muted/40 pl-10 pr-4 text-sm text-foreground font-mono',
                     'placeholder:text-muted-foreground',
@@ -194,6 +189,7 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   autoComplete="current-password"
+                  maxLength={128}
                   className={cn(
                     'h-11 w-full rounded-lg border bg-muted/40 pl-10 pr-10 text-sm text-foreground font-mono',
                     'placeholder:text-muted-foreground',
@@ -218,7 +214,7 @@ export function LoginPage() {
             <AnimatePresence>
               {error && (
                 <motion.div
-                  className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2"
+                  className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2"
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -5 }}
@@ -258,56 +254,43 @@ export function LoginPage() {
             <div className="flex-1 border-t border-border" />
           </div>
 
-          {/* Test Account Quick Fill */}
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={fillTestAccount}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border border-accent/20 bg-accent/[0.05] hover:bg-accent/[0.1] hover:border-accent/30 transition-colors"
-            >
-              <div className="text-left">
-                <span className="block text-[10px] font-mono text-accent/70">hoangpro268@gmail.com</span>
-                <span className="block text-[9px] font-mono text-muted-foreground/50 mt-0.5">Password: Hoang2672004</span>
-              </div>
-              <span className="text-[9px] font-mono text-accent/50 uppercase">Test Account</span>
-            </button>
-          </div>
+          {/* Demo quick-access — DEV ONLY (no credentials shown) */}
+          {import.meta.env.DEV && (
+            <div className="mt-3 text-center">
+              <button
+                type="button"
+                onClick={() => setShowCredentials(!showCredentials)}
+                className="inline-flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-wider"
+              >
+                <Info className="h-3 w-3" />
+                Demo credentials
+              </button>
 
-          {/* Demo credentials */}
-          <div className="mt-3 text-center">
-            <button
-              type="button"
-              onClick={() => setShowCredentials(!showCredentials)}
-              className="inline-flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-wider"
-            >
-              <Info className="h-3 w-3" />
-              Demo credentials
-            </button>
-
-            <AnimatePresence>
-              {showCredentials && (
-                <motion.div
-                  className="mt-3 space-y-1.5"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                >
-                  {DEMO_ACCOUNTS.map((account) => (
-                    <button
-                      key={account.email}
-                      type="button"
-                      onClick={() => fillCredentials(account)}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border hover:border-accent/30 bg-muted/30 hover:bg-muted/50 transition-colors"
-                    >
-                      <span className="text-[10px] font-mono text-muted-foreground">{account.email}</span>
-                      <span className="text-[9px] font-mono text-accent/60 uppercase">{account.role}</span>
-                    </button>
-                  ))}
-                  <p className="text-[9px] font-mono text-muted-foreground/30">Password: demo</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+              <AnimatePresence>
+                {showCredentials && (
+                  <motion.div
+                    className="mt-3 space-y-1.5"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                  >
+                    {DEMO_ACCOUNTS.map((account) => (
+                      <button
+                        key={account.email}
+                        type="button"
+                        onClick={() => fillCredentials(account)}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border hover:border-accent/30 bg-muted/30 hover:bg-muted/50 transition-colors"
+                      >
+                        <span className="text-[10px] font-mono text-muted-foreground">{account.email}</span>
+                        <span className="text-[9px] font-mono text-accent/60 uppercase">{account.role}</span>
+                      </button>
+                    ))}
+                    <p className="text-[9px] font-mono text-muted-foreground/30">Click to fill credentials</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>

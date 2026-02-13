@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
+import { WifiOff } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { MobileNav } from './MobileNav';
 import { CommandPalette, useCommandPalette } from '@/components/ui/command-palette';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { DemoModeBanner } from '@/components/ui/demo-mode-banner';
 import { ChatWidget } from '@/components/domain/chat/ChatWidget';
 import { KeyboardShortcutsPanel } from '@/components/ui/keyboard-shortcuts-panel';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { toast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import { springs } from '@/lib/animations';
 
@@ -25,8 +28,27 @@ export function AppLayout() {
   const [isAboveMd, setIsAboveMd] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches,
   );
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const commandPalette = useCommandPalette();
   useKeyboardShortcuts({ enabled: true });
+
+  // Global offline detection
+  useEffect(() => {
+    const handleOffline = () => {
+      setIsOffline(true);
+      toast.error('Network connection lost. Some features may be unavailable.');
+    };
+    const handleOnline = () => {
+      setIsOffline(false);
+      toast.success('Connection restored');
+    };
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
+    return () => {
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', handleOnline);
+    };
+  }, []);
 
   // Responsive sidebar: auto-collapse on tablet (md), auto-expand on desktop (lg)
   useEffect(() => {
@@ -50,11 +72,11 @@ export function AppLayout() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background noise-texture">
       {/* Skip Link for Accessibility */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:bg-background focus:p-4 focus:text-foreground"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-accent focus:text-accent-foreground focus:px-4 focus:py-3 focus:rounded-lg focus:text-sm focus:font-semibold focus:shadow-level-3 focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 focus:ring-offset-background"
       >
         Skip to main content
       </a>
@@ -110,6 +132,27 @@ export function AppLayout() {
         }}
         transition={springs.smooth}
       >
+        {/* Offline Banner */}
+        <AnimatePresence>
+          {isOffline && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 text-center"
+              role="alert"
+            >
+              <span className="inline-flex items-center gap-2 text-xs font-mono text-destructive">
+                <WifiOff className="h-3.5 w-3.5" />
+                You are offline. Data may be stale. Actions will sync when reconnected.
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Demo Mode Banner — shown when backend offline / mock data active */}
+        <DemoModeBanner />
+
         {/* Top Bar */}
         <TopBar
           showMenuButton
@@ -117,8 +160,8 @@ export function AppLayout() {
           onSearchClick={commandPalette.open}
         />
 
-        {/* Page Content with Error Boundary */}
-        <main className="flex-1 p-4 pb-20 md:p-6 md:pb-6" id="main-content">
+        {/* Page Content with Error Boundary — atmospheric background */}
+        <main className="flex-1 p-4 pb-20 md:p-6 md:pb-6 bg-mesh-subtle content-atmosphere" id="main-content">
           <ErrorBoundary>
             <motion.div
               initial={{ opacity: 0, y: 10 }}

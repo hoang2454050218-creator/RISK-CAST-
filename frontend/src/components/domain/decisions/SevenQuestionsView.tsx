@@ -227,7 +227,7 @@ export function SevenQuestionsView({
               {/* Q1: What is happening? */}
               <div ref={setRef(1)} id="q1">
                 <QuestionWrapper index={1} label="What is happening?" tier="primary">
-                  {decision.q1_what && <Q1WhatIsHappening data={decision.q1_what} />}
+                  {decision.q1_what && <Q1WhatIsHappening data={decision.q1_what} signalIds={decision.signal_ids} />}
                 </QuestionWrapper>
               </div>
 
@@ -339,7 +339,7 @@ function QuestionWrapper({ index, label, children, tier }: QuestionWrapperProps)
       {/* Primary tier glow effect */}
       {tier === 'primary' && (
         <motion.div
-          className="absolute -inset-2 rounded-xl bg-gradient-to-r from-accent/5 via-purple-500/5 to-accent/5 blur-xl pointer-events-none"
+          className="absolute -inset-2 rounded-xl bg-gradient-to-r from-accent/5 via-action-reroute/5 to-accent/5 blur-xl pointer-events-none"
           animate={{ opacity: [0.5, 0.8, 0.5] }}
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
         />
@@ -403,7 +403,7 @@ export function SevenQuestionsAccordion({
     {
       num: 1,
       title: 'What is happening?',
-      component: decision.q1_what ? <Q1WhatIsHappening data={decision.q1_what} /> : null,
+      component: decision.q1_what ? <Q1WhatIsHappening data={decision.q1_what} signalIds={decision.signal_ids} /> : null,
     },
     { num: 2, title: 'When?', component: decision.q2_when ? <Q2When data={decision.q2_when} /> : null },
     { num: 3, title: 'How bad is it?', component: decision.q3_severity ? <Q3HowBad data={decision.q3_severity} /> : null },

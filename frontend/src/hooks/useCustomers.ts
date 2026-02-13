@@ -8,6 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/components/ui/toast';
 import {
   v2Customers,
   v2Shipments,
@@ -225,6 +226,10 @@ export function useCreateCustomer() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
+      toast.success('Customer created');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to create customer: ${error.message}`);
     },
   });
 }
@@ -238,6 +243,10 @@ export function useUpdateCustomer() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
       queryClient.invalidateQueries({ queryKey: customerKeys.detail(variables.id) });
+      toast.success('Customer updated');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update customer: ${error.message}`);
     },
   });
 }
@@ -249,6 +258,10 @@ export function useDeleteCustomer() {
     mutationFn: (id: string) => v2Customers.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
+      toast.success('Customer deleted');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete customer: ${error.message}`);
     },
   });
 }
@@ -263,6 +276,10 @@ export function useCreateShipment(customerId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: customerKeys.detail(customerId) });
       queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
+      toast.success('Shipment created');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to create shipment: ${error.message}`);
     },
   });
 }
@@ -293,6 +310,10 @@ export function useAnalyzeCompany() {
     mutationFn: (customerId: string) => v2Intelligence.analyzeCompany(customerId),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: customerKeys.analysis(data.company_id) });
+      toast.success('Company analysis complete');
+    },
+    onError: (error: Error) => {
+      toast.error(`Analysis failed: ${error.message}`);
     },
   });
 }

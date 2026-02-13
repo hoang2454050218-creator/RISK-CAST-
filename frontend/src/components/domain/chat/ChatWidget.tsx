@@ -5,21 +5,18 @@
  * Handles V2 auth automatically.
  */
 
-import { useState, useEffect } from 'react';
-import { MessageSquare, X, Loader2, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { X, Loader2, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useV2Auth } from '@/hooks/useV2Auth';
 import { ChatPanel } from './ChatPanel';
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated, isConnecting, connect } = useV2Auth();
+  const { isAuthenticated, isConnecting } = useV2Auth();
   const [unread, setUnread] = useState(0);
 
-  const handleToggle = async () => {
-    if (!isOpen && !isAuthenticated) {
-      await connect();
-    }
+  const handleToggle = () => {
     setIsOpen(!isOpen);
     if (!isOpen) setUnread(0);
   };
@@ -47,10 +44,16 @@ export function ChatWidget() {
 
             {isAuthenticated ? (
               <ChatPanel />
-            ) : (
+            ) : isConnecting ? (
               <div className="flex flex-col items-center justify-center h-full bg-background p-8">
                 <Loader2 className="h-8 w-8 animate-spin text-accent mb-4" />
                 <p className="text-sm text-muted-foreground">Connecting to RiskCast AI...</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full bg-background p-8 text-center">
+                <Sparkles className="h-8 w-8 text-accent/40 mb-4" />
+                <p className="text-sm font-medium text-foreground mb-1">RiskCast AI Assistant</p>
+                <p className="text-xs text-muted-foreground">Sign in to start chatting with the AI assistant.</p>
               </div>
             )}
           </motion.div>
@@ -71,22 +74,22 @@ export function ChatWidget() {
         <AnimatePresence mode="wait">
           {isOpen ? (
             <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
-              <X className="h-5 w-5 text-white" />
+              <X className="h-5 w-5 text-accent-foreground" />
             </motion.div>
           ) : isConnecting ? (
             <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Loader2 className="h-5 w-5 text-white animate-spin" />
+              <Loader2 className="h-5 w-5 text-accent-foreground animate-spin" />
             </motion.div>
           ) : (
             <motion.div key="chat" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}>
-              <Sparkles className="h-5 w-5 text-white" />
+              <Sparkles className="h-5 w-5 text-accent-foreground" />
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Unread badge */}
         {unread > 0 && !isOpen && (
-          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shadow-lg">
+          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center shadow-lg">
             {unread}
           </span>
         )}

@@ -12,6 +12,18 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split heavy dependencies into their own chunks
+          'maplibre': ['maplibre-gl'],
+          'recharts': ['recharts'],
+          'framer': ['framer-motion'],
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       // Proxy ALL /api requests to RiskCast V2 backend

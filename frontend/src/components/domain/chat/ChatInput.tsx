@@ -50,8 +50,9 @@ export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
           onChange={handleInput}
           onKeyDown={handleKeyDown}
           disabled={disabled}
-          placeholder={placeholder || 'Hỏi về đơn hàng, khách hàng, rủi ro...'}
+          placeholder={placeholder || 'Ask about orders, customers, risks...'}
           rows={1}
+          maxLength={5000}
           className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder-muted-foreground focus:outline-none disabled:opacity-50 min-h-[24px] max-h-[140px] py-0.5"
         />
         <button
@@ -59,7 +60,7 @@ export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
           disabled={!canSend}
           className={`shrink-0 h-8 w-8 rounded-xl flex items-center justify-center transition-all ${
             canSend
-              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-105 active:scale-95'
+              ? 'bg-accent text-accent-foreground shadow-lg shadow-accent/25 hover:shadow-accent/40 hover:scale-105 active:scale-95'
               : 'bg-muted text-muted-foreground cursor-not-allowed'
           }`}
           aria-label="Send"

@@ -22,10 +22,9 @@ import {
   Hash,
   Calendar,
   ScrollText,
-  Check,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatCurrency, formatDate, formatPercentage } from '@/lib/formatters';
 import { springs, staggerContainer, staggerItem } from '@/lib/animations';
 
 type AuditEventType =
@@ -72,9 +71,9 @@ const eventTypeConfig: Record<
   DECISION_OVERRIDDEN: {
     label: 'Overridden',
     icon: XCircle,
-    color: 'text-purple-500',
-    gradient: 'from-purple-500/20 to-pink-500/10',
-    badgeClass: 'border-purple-500/30 bg-purple-500/10 text-purple-500',
+    color: 'text-action-reroute',
+    gradient: 'from-action-reroute/20 to-accent/10',
+    badgeClass: 'border-action-reroute/30 bg-action-reroute/10 text-action-reroute',
   },
   DECISION_ESCALATED: {
     label: 'Escalated',
@@ -372,7 +371,7 @@ export function AuditPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, ...springs.smooth }}
       >
-        <Card className="overflow-hidden shadow-md bg-card shadow-sm">
+        <Card className="overflow-hidden shadow-md bg-card shadow-level-1">
           <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-success/50 to-transparent" />
           <CardContent className="p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -383,6 +382,7 @@ export function AuditPage() {
                   placeholder="Search audit events..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  maxLength={200}
                   className="h-10 w-full rounded-xl border border-border bg-muted/50 pl-10 pr-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all"
                 />
               </div>
@@ -453,7 +453,7 @@ export function AuditPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, ...springs.smooth }}
       >
-        <Card className="overflow-hidden shadow-md bg-card shadow-sm">
+        <Card className="overflow-hidden shadow-md bg-card shadow-level-1">
           <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
           <CardHeader>
             <CardTitle>Event Log</CardTitle>
@@ -527,7 +527,7 @@ export function AuditPage() {
                               {typeof value === 'number' && key.includes('usd')
                                 ? formatCurrency(value, { compact: true })
                                 : typeof value === 'number' && value < 1
-                                  ? `${(value * 100).toFixed(0)}%`
+                                  ? formatPercentage(value)
                                   : String(value)}
                             </span>
                           </span>

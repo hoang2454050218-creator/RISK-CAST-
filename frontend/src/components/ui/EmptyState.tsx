@@ -4,8 +4,6 @@
  * Replaces mock data. Shows helpful guidance on how to populate data.
  */
 
-import React from 'react';
-
 interface EmptyStateProps {
   icon?: string;
   title: string;

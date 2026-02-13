@@ -125,7 +125,7 @@ export function Q7IfNothing({ data, className }: Q7Props) {
               {/* Detailed Timeline Below Chart */}
               <div className="relative mt-4">
                 <motion.div
-                  className="absolute left-3 top-2 bottom-2 w-0.5 bg-gradient-to-b from-warning via-orange-500 to-error"
+                  className="absolute left-3 top-2 bottom-2 w-0.5 bg-gradient-to-b from-urgency-soon via-warning to-error"
                   initial={{ scaleY: 0 }}
                   animate={{ scaleY: 1 }}
                   transition={{ delay: 0.6, duration: 0.5 }}
@@ -219,7 +219,7 @@ function PONRCountdown({ pointOfNoReturn }: PONRCountdownProps) {
         'rounded-lg p-4 space-y-3 transition-all',
         isExpired && 'bg-error/20 border-2 border-error',
         isCritical && !isExpired && 'bg-error/10 border border-error',
-        isUrgent && !isCritical && 'bg-orange-500/10 border border-orange-500',
+        isUrgent && !isCritical && 'bg-warning/10 border border-warning',
         !isUrgent && !isCritical && !isExpired && 'bg-error/5 border border-error/20',
       )}
       animate={isCritical ? { scale: [1, 1.01, 1] } : {}}
@@ -291,7 +291,7 @@ function PONRCountdown({ pointOfNoReturn }: PONRCountdownProps) {
               <motion.div
                 className={cn(
                   'h-full rounded-full',
-                  isCritical ? 'bg-error' : isUrgent ? 'bg-orange-500' : 'bg-warning',
+                  isCritical ? 'bg-error' : isUrgent ? 'bg-warning' : 'bg-urgency-soon',
                 )}
                 initial={{ width: 0 }}
                 animate={{ width: `${percentRemaining}%` }}
@@ -323,7 +323,7 @@ function PONRCountdown({ pointOfNoReturn }: PONRCountdownProps) {
           )}
           {isUrgent && !isCritical && (
             <motion.div
-              className="flex items-center gap-2 text-sm text-warning bg-orange-500/10 rounded p-2"
+              className="flex items-center gap-2 text-sm text-warning bg-warning/10 rounded p-2"
               initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={springs.smooth}
@@ -403,10 +403,10 @@ function CostEscalationItem({ point, isLast: _isLast, progress, index }: CostEsc
   const timestamp = new Date(point.timestamp);
 
   // Color based on progress through escalation
-  const dotColor = progress < 0.33 ? 'bg-warning' : progress < 0.66 ? 'bg-orange-500' : 'bg-error';
+  const dotColor = progress < 0.33 ? 'bg-urgency-soon' : progress < 0.66 ? 'bg-warning' : 'bg-error';
 
   const textColor =
-    progress < 0.33 ? 'text-warning' : progress < 0.66 ? 'text-orange-500' : 'text-error';
+    progress < 0.33 ? 'text-urgency-soon' : progress < 0.66 ? 'text-warning' : 'text-error';
 
   return (
     <motion.div

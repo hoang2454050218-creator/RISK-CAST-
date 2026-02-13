@@ -32,23 +32,23 @@ export const priorityConfig: Record<
 > = {
   CRITICAL: {
     label: 'Critical',
-    badge: 'bg-red-500/15 text-red-500 dark:text-red-400 border-red-500/40',
-    gradient: 'from-red-500 via-red-500 to-rose-600',
+    badge: 'bg-severity-critical/15 text-severity-critical border-severity-critical/40',
+    gradient: 'from-severity-critical via-severity-critical to-severity-critical/80',
     glow: '',
-    border: 'border-red-500/30 dark:border-red-500/40',
+    border: 'border-severity-critical/30',
     icon: Flame,
-    accentColor: 'text-red-500 dark:text-red-400',
-    bgTint: 'bg-red-500/5 dark:bg-red-500/5',
+    accentColor: 'text-severity-critical',
+    bgTint: 'bg-severity-critical/5',
   },
   HIGH: {
     label: 'High',
-    badge: 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/40',
-    gradient: 'from-orange-500 via-orange-500 to-amber-500',
+    badge: 'bg-severity-high/15 text-severity-high border-severity-high/40',
+    gradient: 'from-severity-high via-severity-high to-severity-high/80',
     glow: '',
-    border: 'border-orange-500/30 dark:border-orange-500/30',
+    border: 'border-severity-high/30',
     icon: AlertTriangle,
-    accentColor: 'text-orange-500 dark:text-orange-400',
-    bgTint: 'bg-orange-500/5 dark:bg-orange-500/5',
+    accentColor: 'text-severity-high',
+    bgTint: 'bg-severity-high/5',
   },
   NORMAL: {
     label: 'Normal',
@@ -68,17 +68,17 @@ export const statusConfig: Record<
 > = {
   PENDING: {
     label: 'Pending',
-    badge: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/40',
-    dotColor: 'bg-amber-500',
+    badge: 'bg-warning/15 text-warning border-warning/40',
+    dotColor: 'bg-warning',
   },
   IN_REVIEW: {
     label: 'In Review',
-    badge: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/40',
-    dotColor: 'bg-blue-500',
+    badge: 'bg-info/15 text-info border-info/40',
+    dotColor: 'bg-info',
   },
   RESOLVED: {
     label: 'Resolved',
-    badge: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/40',
-    dotColor: 'bg-emerald-500',
+    badge: 'bg-success/15 text-success border-success/40',
+    dotColor: 'bg-success',
   },
 };

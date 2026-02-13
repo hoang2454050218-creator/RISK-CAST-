@@ -18,7 +18,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatPercentage } from '@/lib/formatters';
 import { springs, staggerContainer, staggerItem } from '@/lib/animations';
 import { useChartColors } from '@/lib/chart-theme';
 import { DollarSign, Package, AlertTriangle, TrendingUp, Zap } from 'lucide-react';
@@ -110,7 +110,7 @@ export function ExposureChart({ data, className, animate = true }: ExposureChart
       >
         {/* Top accent line with animation */}
         <motion.div
-          className="h-px bg-gradient-to-r from-red-500 via-orange-500 to-amber-500"
+          className="h-px bg-gradient-to-r from-severity-critical via-severity-high to-warning"
           animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
           transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
           style={{ backgroundSize: '200% 200%' }}
@@ -126,13 +126,13 @@ export function ExposureChart({ data, className, animate = true }: ExposureChart
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <motion.div
-                className="p-2.5 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/10 border border-red-500/30 relative overflow-hidden"
+                className="p-2.5 rounded-xl bg-gradient-to-br from-severity-critical/20 to-severity-high/10 border border-severity-critical/30 relative overflow-hidden"
                 whileHover={{ scale: 1.05 }}
                 transition={springs.bouncy}
               >
                 <DollarSign className="h-5 w-5 text-severity-critical" />
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400/20 to-transparent"
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-severity-critical/20 to-transparent"
                   animate={{ x: ['-100%', '100%'] }}
                   transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
                 />
@@ -215,7 +215,7 @@ export function ExposureChart({ data, className, animate = true }: ExposureChart
 
             <motion.div
               variants={staggerItem}
-              className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-center"
+              className="p-2.5 rounded-lg bg-severity-critical/10 border border-severity-critical/30 text-center"
             >
               <div className="flex items-center justify-center gap-1 mb-1">
                 <AlertTriangle className="h-3 w-3 text-severity-critical" />
@@ -357,7 +357,7 @@ export function ExposureChart({ data, className, animate = true }: ExposureChart
                               Exposure Ratio:
                             </span>
                             <span className="font-mono text-sm text-info">
-                              {(d.exposureRatio * 100).toFixed(1)}%
+                              {formatPercentage(d.exposureRatio, { decimals: 1 })}
                             </span>
                           </div>
                         </div>

@@ -93,7 +93,7 @@ export function HumanReviewPage() {
   // ─── Error state ──────────────────────────────────────
   if (error) {
     return (
-      <div className="rounded-xl bg-card border border-border p-12 shadow-sm">
+      <div className="rounded-xl bg-card border border-border p-12 shadow-level-1">
         <div className="flex flex-col items-center justify-center text-center">
           <div className="p-3 rounded-lg bg-error/10 border border-error/20 mb-4">
             <AlertTriangle className="h-8 w-8 text-error" />
@@ -122,7 +122,7 @@ export function HumanReviewPage() {
       <motion.div
         className={cn(
           'flex items-center justify-between px-4 py-2 rounded-lg border text-[10px] font-mono uppercase tracking-wider',
-          'bg-card border-border shadow-sm',
+          'bg-card border-border shadow-level-1',
         )}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -289,7 +289,7 @@ export function HumanReviewPage() {
       <motion.div
         className={cn(
           'flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border',
-          'bg-card border-border shadow-sm',
+          'bg-card border-border shadow-level-1',
         )}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -360,7 +360,7 @@ export function HumanReviewPage() {
               transition={springs.smooth}
               className={cn(
                 'relative overflow-hidden rounded-xl border p-16 text-center',
-                'bg-card border-border shadow-sm',
+                'bg-card border-border shadow-level-1',
               )}
             >
               {isDark && (

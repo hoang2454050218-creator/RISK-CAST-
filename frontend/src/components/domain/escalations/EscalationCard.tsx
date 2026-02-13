@@ -38,11 +38,12 @@ export function EscalationCard({
   return (
     <motion.div
       className={cn(
-        'group relative overflow-hidden rounded-xl border transition-all duration-300',
+        'group relative overflow-hidden rounded-xl border shadow-level-1 transition-all duration-200',
         'bg-card',
         priority.border,
         isActive && priority.glow,
-        'hover:border-opacity-60',
+        isCritical && 'breathe-glow',
+        'hover:shadow-level-2',
         priority.bgTint,
       )}
       whileHover={{ y: -1, transition: { duration: 0.2 } }}

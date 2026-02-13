@@ -10,9 +10,6 @@ import {
   Mail,
   Phone,
   Ship,
-  DollarSign,
-  MapPin,
-  FileText,
   AlertTriangle,
   Edit,
   ChevronRight,
@@ -26,7 +23,7 @@ import {
   Shield,
   Anchor,
 } from 'lucide-react';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatDate } from '@/lib/formatters';
 import { StatCard } from '@/components/domain/common/StatCard';
 import {
   useCustomer,
@@ -36,19 +33,19 @@ import {
   useCompanyAnalysis,
   useAnalyzeCompany,
 } from '@/hooks/useCustomers';
-import { ErrorState } from '@/components/ui/error-state';
+import { ErrorState } from '@/components/ui/states';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import type { CustomerFullResponse } from '@/lib/api-v2';
 
 const riskToleranceConfig: Record<string, { label: string; className: string }> = {
-  LOW: { label: 'Conservative', className: 'bg-emerald-500/10 text-emerald-600' },
-  BALANCED: { label: 'Balanced', className: 'bg-amber-500/10 text-amber-600' },
-  HIGH: { label: 'Aggressive', className: 'bg-red-500/10 text-red-600' },
+  LOW: { label: 'Conservative', className: 'bg-success/10 text-success' },
+  BALANCED: { label: 'Balanced', className: 'bg-warning/10 text-warning' },
+  HIGH: { label: 'Aggressive', className: 'bg-destructive/10 text-destructive' },
 };
 
 const tierConfig: Record<string, { label: string; className: string }> = {
-  enterprise: { label: 'Enterprise', className: 'bg-purple-500 text-white' },
-  'mid-market': { label: 'Mid-Market', className: 'bg-blue-500 text-white' },
+  enterprise: { label: 'Enterprise', className: 'bg-action-reroute text-accent-foreground' },
+  'mid-market': { label: 'Mid-Market', className: 'bg-info text-accent-foreground' },
   startup: { label: 'Startup', className: 'bg-muted text-muted-foreground' },
   standard: { label: 'Standard', className: 'bg-muted text-muted-foreground' },
 };
@@ -247,7 +244,7 @@ export function CustomerDetailPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex items-start gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500 shrink-0">
+          <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-action-reroute/10 text-action-reroute shrink-0">
             <Building className="h-8 w-8" />
           </div>
           <div>
@@ -259,7 +256,7 @@ export function CustomerDetailPage() {
                     type="text"
                     value={editData.company_name}
                     onChange={(e) => setEditData((d) => ({ ...d, company_name: e.target.value }))}
-                    className="h-9 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    className="h-9 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                   />
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -269,7 +266,7 @@ export function CustomerDetailPage() {
                       type="email"
                       value={editData.email}
                       onChange={(e) => setEditData((d) => ({ ...d, email: e.target.value }))}
-                      className="h-9 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                      className="h-9 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                     />
                   </div>
                   <div className="space-y-1">
@@ -278,7 +275,7 @@ export function CustomerDetailPage() {
                       type="tel"
                       value={editData.primary_phone}
                       onChange={(e) => setEditData((d) => ({ ...d, primary_phone: e.target.value }))}
-                      className="h-9 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                      className="h-9 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                     />
                   </div>
                 </div>
@@ -287,7 +284,7 @@ export function CustomerDetailPage() {
                   <select
                     value={editData.risk_tolerance}
                     onChange={(e) => setEditData((d) => ({ ...d, risk_tolerance: e.target.value as 'LOW' | 'BALANCED' | 'HIGH' }))}
-                    className="h-9 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    className="h-9 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                   >
                     <option value="LOW">Conservative (Low)</option>
                     <option value="BALANCED">Balanced</option>
@@ -301,7 +298,7 @@ export function CustomerDetailPage() {
                   <h1 className="text-2xl font-semibold">{c.company_name}</h1>
                   <Badge className={tier.className}>{tier.label}</Badge>
                   {c.is_active ? (
-                    <Badge className="bg-emerald-500/10 text-emerald-600">Active</Badge>
+                    <Badge className="bg-success/10 text-success">Active</Badge>
                   ) : (
                     <Badge className="bg-muted text-muted-foreground">Inactive</Badge>
                   )}
@@ -328,7 +325,7 @@ export function CustomerDetailPage() {
           {isEditing ? (
             <>
               <Button
-                className="gap-2 bg-emerald-600 hover:bg-emerald-500 text-white"
+                className="gap-2 bg-success hover:bg-success/90 text-success-foreground"
                 onClick={handleSaveEdit}
                 disabled={updateCustomer.isPending}
               >
@@ -348,7 +345,7 @@ export function CustomerDetailPage() {
               </Button>
               <Button
                 variant="outline"
-                className="gap-2 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                className="gap-2 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
                 onClick={handleDelete}
               >
                 <Trash2 className="h-4 w-4" />
@@ -424,8 +421,8 @@ export function CustomerDetailPage() {
                       className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-blue-500/10">
-                          <Ship className="h-4 w-4 text-blue-500" />
+                        <div className="p-2 rounded-lg bg-info/10">
+                          <Ship className="h-4 w-4 text-info" />
                         </div>
                         <div>
                           <p className="font-mono text-sm font-semibold">{origin} → {dest}</p>
@@ -442,7 +439,7 @@ export function CustomerDetailPage() {
                     <p className="text-sm font-medium mb-2 text-muted-foreground">Auto-detected Chokepoints:</p>
                     <div className="flex flex-wrap gap-2">
                       {c.relevant_chokepoints.map((cp) => (
-                        <Badge key={cp} variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/30">
+                        <Badge key={cp} variant="outline" className="bg-warning/10 text-warning border-warning/30">
                           {cp.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
                         </Badge>
                       ))}
@@ -506,7 +503,7 @@ export function CustomerDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-purple-500" />
+                <Brain className="h-5 w-5 text-action-reroute" />
                 AI Analysis
               </CardTitle>
             </CardHeader>
@@ -520,7 +517,7 @@ export function CustomerDetailPage() {
                       <ul className="text-sm space-y-1">
                         {analysis.key_exposures.map((exp, i) => (
                           <li key={i} className="flex items-start gap-1.5">
-                            <AlertTriangle className="h-3.5 w-3.5 text-amber-500 mt-0.5 shrink-0" />
+                            <AlertTriangle className="h-3.5 w-3.5 text-warning mt-0.5 shrink-0" />
                             <span className="text-muted-foreground">{exp}</span>
                           </li>
                         ))}
@@ -533,7 +530,7 @@ export function CustomerDetailPage() {
                       <ul className="text-sm space-y-1">
                         {analysis.recommendations.map((rec, i) => (
                           <li key={i} className="flex items-start gap-1.5">
-                            <ChevronRight className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                            <ChevronRight className="h-3.5 w-3.5 text-success mt-0.5 shrink-0" />
                             <span className="text-muted-foreground">{rec}</span>
                           </li>
                         ))}
@@ -598,7 +595,7 @@ export function CustomerDetailPage() {
                     value={shipmentData.origin}
                     onChange={(e) => setShipmentData((s) => ({ ...s, origin: e.target.value }))}
                     placeholder="CNSHA"
-                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                   />
                 </div>
                 <div className="space-y-1">
@@ -608,7 +605,7 @@ export function CustomerDetailPage() {
                     value={shipmentData.destination}
                     onChange={(e) => setShipmentData((s) => ({ ...s, destination: e.target.value }))}
                     placeholder="NLRTM"
-                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                   />
                 </div>
               </div>
@@ -621,7 +618,7 @@ export function CustomerDetailPage() {
                     value={shipmentData.cargoValue}
                     onChange={(e) => setShipmentData((s) => ({ ...s, cargoValue: e.target.value }))}
                     placeholder="500000"
-                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                   />
                 </div>
                 <div className="space-y-1">
@@ -631,7 +628,7 @@ export function CustomerDetailPage() {
                     value={shipmentData.containerCount}
                     onChange={(e) => setShipmentData((s) => ({ ...s, containerCount: e.target.value }))}
                     placeholder="1"
-                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                   />
                 </div>
               </div>
@@ -644,7 +641,7 @@ export function CustomerDetailPage() {
                     value={shipmentData.carrier}
                     onChange={(e) => setShipmentData((s) => ({ ...s, carrier: e.target.value }))}
                     placeholder="MAEU"
-                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                   />
                 </div>
                 <div className="space-y-1">
@@ -654,7 +651,7 @@ export function CustomerDetailPage() {
                     value={shipmentData.vessel}
                     onChange={(e) => setShipmentData((s) => ({ ...s, vessel: e.target.value }))}
                     placeholder="Ever Given"
-                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                   />
                 </div>
               </div>
@@ -666,7 +663,7 @@ export function CustomerDetailPage() {
                   value={shipmentData.cargoDesc}
                   onChange={(e) => setShipmentData((s) => ({ ...s, cargoDesc: e.target.value }))}
                   placeholder="Electronic components"
-                  className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                 />
               </div>
 
@@ -677,7 +674,7 @@ export function CustomerDetailPage() {
                     type="date"
                     value={shipmentData.etd}
                     onChange={(e) => setShipmentData((s) => ({ ...s, etd: e.target.value }))}
-                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                   />
                 </div>
                 <div className="space-y-1">
@@ -686,7 +683,7 @@ export function CustomerDetailPage() {
                     type="date"
                     value={shipmentData.eta}
                     onChange={(e) => setShipmentData((s) => ({ ...s, eta: e.target.value }))}
-                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                   />
                 </div>
               </div>
@@ -696,7 +693,7 @@ export function CustomerDetailPage() {
               <Button
                 onClick={handleAddShipment}
                 disabled={!shipmentData.origin || !shipmentData.destination || createShipment.isPending}
-                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500"
+                className="flex-1 bg-gradient-to-r from-action-reroute to-accent"
               >
                 {createShipment.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />

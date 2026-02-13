@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
@@ -18,13 +18,11 @@ import { DecisionCard } from '@/components/domain/decisions/DecisionCard';
 import { useDecisionsList, useAcknowledgeDecision, usePagination } from '@/hooks';
 import {
   Search,
-  Filter,
   LayoutGrid,
   List,
   RefreshCw,
   Bookmark,
   BookmarkCheck,
-  FileText,
   Check,
   ChevronDown,
   AlertTriangle,
@@ -56,7 +54,7 @@ interface SavedView {
   };
 }
 
-const defaultSavedViews: SavedView[] = [
+const DEFAULT_VIEWS: SavedView[] = [
   {
     id: 'urgent-pending',
     name: 'Urgent Pending',
@@ -74,8 +72,31 @@ const defaultSavedViews: SavedView[] = [
   },
 ];
 
+const VIEWS_STORAGE_KEY = 'riskcast:saved-views:decisions';
+const MAX_VIEWS = 5;
+
+function loadPersistedViews(): SavedView[] {
+  try {
+    const raw = localStorage.getItem(VIEWS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as SavedView[];
+      const defaultIds = new Set(DEFAULT_VIEWS.map((d) => d.id));
+      const userViews = parsed.filter((v) => !defaultIds.has(v.id));
+      return [...DEFAULT_VIEWS, ...userViews.slice(0, MAX_VIEWS)];
+    }
+  } catch { /* ignore */ }
+  return DEFAULT_VIEWS;
+}
+
+function persistViews(views: SavedView[]) {
+  try {
+    localStorage.setItem(VIEWS_STORAGE_KEY, JSON.stringify(views));
+  } catch { /* ignore */ }
+}
+
 export function DecisionsPage() {
   const { success, info, error: showError } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // ─── React Query + Pagination ──────────────────────────
   const {
@@ -95,17 +116,33 @@ export function DecisionsPage() {
   const [filterUrgency, setFilterUrgency] = useState<Urgency | 'ALL'>('ALL');
   const [filterSeverity, setFilterSeverity] = useState<Severity | 'ALL'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [savedViews, setSavedViews] = useState<SavedView[]>(defaultSavedViews);
+  const [filterCustomer, setFilterCustomer] = useState<string | null>(null);
+  const [savedViews, setSavedViews] = useState<SavedView[]>(loadPersistedViews);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [showSavedViewsPanel, setShowSavedViewsPanel] = useState(false);
   const [confirmDecisionId, setConfirmDecisionId] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const navigate = useNavigate();
 
+  // Sync URL params to filter state on mount
+  useEffect(() => {
+    const urgency = searchParams.get('urgency');
+    if (urgency) setFilterUrgency(urgency as Urgency);
+    const status = searchParams.get('status');
+    if (status) setFilterStatus(status as DecisionStatus);
+    const severity = searchParams.get('severity');
+    if (severity) setFilterSeverity(severity as Severity);
+    const customer = searchParams.get('customer');
+    if (customer) setFilterCustomer(customer);
+    const q = searchParams.get('q');
+    if (q) setSearchQuery(q);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const hasActiveFilters =
     filterStatus !== 'ALL' ||
     filterUrgency !== 'ALL' ||
     filterSeverity !== 'ALL' ||
+    filterCustomer !== null ||
     searchQuery !== '';
 
   // Expand mock decisions with additional synthetic entries for rich list
@@ -138,6 +175,12 @@ export function DecisionsPage() {
         if (filterStatus !== 'ALL' && d.status !== filterStatus) return false;
         if (filterUrgency !== 'ALL' && d.q2_when?.urgency !== filterUrgency) return false;
         if (filterSeverity !== 'ALL' && d.q3_severity?.severity !== filterSeverity) return false;
+        if (filterCustomer) {
+          const customerMatch =
+            d.customer_id.toLowerCase().includes(filterCustomer.toLowerCase()) ||
+            (d.q1_what?.event_summary ?? '').toLowerCase().includes(filterCustomer.toLowerCase());
+          if (!customerMatch) return false;
+        }
         if (searchQuery) {
           const q = searchQuery.toLowerCase();
           return (
@@ -164,12 +207,11 @@ export function DecisionsPage() {
             return 0;
         }
       });
-  }, [allDecisions, filterStatus, filterUrgency, filterSeverity, searchQuery, sortBy]);
+  }, [allDecisions, filterStatus, filterUrgency, filterSeverity, filterCustomer, searchQuery, sortBy]);
 
   const pendingCount = allDecisions.filter((d) => d.status === 'PENDING').length;
   const immediateCount = allDecisions.filter((d) => d.q2_when?.urgency === 'IMMEDIATE').length;
   const urgentCount = allDecisions.filter((d) => d.q2_when?.urgency === 'URGENT').length;
-  const acknowledgedCount = allDecisions.filter((d) => d.status === 'ACKNOWLEDGED').length;
   const totalExposure = allDecisions.reduce((sum, d) => sum + (d.q3_severity?.total_exposure_usd ?? 0), 0);
   const totalInactionCost = allDecisions
     .filter((d) => d.status === 'PENDING')
@@ -229,10 +271,31 @@ export function DecisionsPage() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [paginatedDecisions, selectedIndex, navigate]);
 
+  // Sync filters to URL params
+  useEffect(() => {
+    setSearchParams(
+      (prev) => {
+        const syncParam = (key: string, val: string | null, defaultVal?: string) => {
+          if (val && val !== defaultVal && val !== 'ALL') prev.set(key, val);
+          else prev.delete(key);
+        };
+        syncParam('status', filterStatus, 'ALL');
+        syncParam('urgency', filterUrgency, 'ALL');
+        syncParam('severity', filterSeverity, 'ALL');
+        syncParam('sort', sortBy, 'urgency');
+        syncParam('customer', filterCustomer);
+        if (searchQuery) prev.set('q', searchQuery);
+        else prev.delete('q');
+        return prev;
+      },
+      { replace: true },
+    );
+  }, [filterStatus, filterUrgency, filterSeverity, sortBy, filterCustomer, searchQuery, setSearchParams]);
+
   // Reset selection when page/filters change
   useEffect(() => {
     setSelectedIndex(-1);
-  }, [filterStatus, filterUrgency, filterSeverity, searchQuery, pagination.currentPage]);
+  }, [filterStatus, filterUrgency, filterSeverity, searchQuery, pagination.page]);
 
   // ─── Callbacks ────────────────────────────────────────
   const clearAllFilters = useCallback(() => {
@@ -265,7 +328,11 @@ export function DecisionsPage() {
       name: viewName,
       filters: { status: filterStatus, urgency: filterUrgency, severity: filterSeverity, sortBy },
     };
-    setSavedViews((prev) => [...prev, newView]);
+    setSavedViews((prev) => {
+      const updated = [...prev, newView].slice(0, DEFAULT_VIEWS.length + MAX_VIEWS);
+      persistViews(updated);
+      return updated;
+    });
     setActiveViewId(newView.id);
     success(`View "${viewName}" saved`);
   }, [filterStatus, filterUrgency, filterSeverity, sortBy, success]);
@@ -308,8 +375,8 @@ export function DecisionsPage() {
     return (
       <div className="rounded-xl bg-card border border-border p-12 shadow-sm">
         <div className="flex flex-col items-center justify-center text-center">
-          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 mb-4">
-            <AlertTriangle className="h-8 w-8 text-red-500" />
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 mb-4">
+            <AlertTriangle className="h-8 w-8 text-destructive" />
           </div>
           <p className="text-base font-semibold text-foreground mb-1">Failed to load decisions</p>
           <p className="text-xs text-muted-foreground font-mono mb-4">
@@ -426,19 +493,19 @@ export function DecisionsPage() {
 
       {/* ── Urgency Summary Strip ────────────────────────────── */}
       <motion.div
-        className="rounded-2xl border border-border/40 bg-card/60 backdrop-blur-sm p-1.5"
+        className="rounded-2xl border border-border/40 bg-card/60 backdrop-blur-sm shadow-level-1 p-1.5"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, ...springs.smooth }}
       >
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
           {[
-            { label: 'IMMEDIATE', value: immediateCount, color: 'text-red-400', bg: immediateCount > 0 ? 'bg-red-500/[0.06]' : 'bg-muted/20', icon: Zap, glow: immediateCount > 0 ? 'rc-text-glow-red' : '', pulse: immediateCount > 0 },
-            { label: 'URGENT', value: urgentCount, color: 'text-amber-400', bg: urgentCount > 0 ? 'bg-amber-500/[0.06]' : 'bg-muted/20', icon: AlertTriangle, glow: urgentCount > 0 ? 'rc-text-glow-amber' : '', pulse: false },
-            { label: 'PENDING', value: pendingCount, color: 'text-blue-400', bg: pendingCount > 0 ? 'bg-blue-500/[0.06]' : 'bg-muted/20', icon: Clock, glow: '', pulse: false },
+            { label: 'IMMEDIATE', value: immediateCount, color: 'text-urgency-immediate', bg: immediateCount > 0 ? 'bg-urgency-immediate/[0.06]' : 'bg-muted/20', icon: Zap, glow: immediateCount > 0 ? 'rc-text-glow-red' : '', pulse: immediateCount > 0 },
+            { label: 'URGENT', value: urgentCount, color: 'text-urgency-urgent', bg: urgentCount > 0 ? 'bg-urgency-urgent/[0.06]' : 'bg-muted/20', icon: AlertTriangle, glow: urgentCount > 0 ? 'rc-text-glow-amber' : '', pulse: false },
+            { label: 'PENDING', value: pendingCount, color: 'text-info', bg: pendingCount > 0 ? 'bg-info/[0.06]' : 'bg-muted/20', icon: Clock, glow: '', pulse: false },
             { label: 'EXPOSURE', value: formatCurrency(totalExposure, { compact: true }), color: 'text-foreground', bg: 'bg-muted/20', icon: Eye, glow: '', pulse: false, isText: true },
-            { label: 'CAN SAVE', value: formatCurrency(totalPotentialSavings, { compact: true }), color: 'text-emerald-400', bg: totalPotentialSavings > 0 ? 'bg-emerald-500/[0.04]' : 'bg-muted/20', icon: TrendingDown, glow: '', pulse: false, isText: true },
-            { label: 'IF NOTHING', value: formatCurrency(totalInactionCost, { compact: true }), color: 'text-red-400/70', bg: totalInactionCost > 0 ? 'bg-red-500/[0.03]' : 'bg-muted/20', icon: ShieldAlert, glow: '', pulse: false, isText: true },
+            { label: 'CAN SAVE', value: formatCurrency(totalPotentialSavings, { compact: true }), color: 'text-success', bg: totalPotentialSavings > 0 ? 'bg-success/[0.04]' : 'bg-muted/20', icon: TrendingDown, glow: '', pulse: false, isText: true },
+            { label: 'IF NOTHING', value: formatCurrency(totalInactionCost, { compact: true }), color: 'text-destructive/70', bg: totalInactionCost > 0 ? 'bg-destructive/[0.03]' : 'bg-muted/20', icon: ShieldAlert, glow: '', pulse: false, isText: true },
           ].map((stat) => (
             <div key={stat.label} className={cn('flex items-center gap-2.5 rounded-xl px-3.5 py-3 transition-colors', stat.bg)}>
               <stat.icon className={cn('h-5 w-5 shrink-0', stat.color)} />
@@ -450,8 +517,8 @@ export function DecisionsPage() {
               </div>
               {stat.pulse && (
                 <span className="relative flex h-2.5 w-2.5 ml-auto shrink-0">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500/50" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive/50" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive" />
                 </span>
               )}
             </div>
@@ -460,7 +527,7 @@ export function DecisionsPage() {
       </motion.div>
 
       {/* ── Filters Bar ──────────────────────────────────────── */}
-      <div className="p-3 rounded-2xl bg-card border border-border/60 shadow-sm">
+      <div className="p-3 rounded-2xl bg-card border border-border/60 shadow-level-1">
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative flex-1 max-w-sm">
@@ -470,6 +537,7 @@ export function DecisionsPage() {
                 placeholder="Search decisions..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                maxLength={200}
                 className="h-9 w-full rounded-xl border border-border bg-muted/50 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent/50 focus:border-accent/50 font-mono"
               />
             </div>
@@ -536,18 +604,20 @@ export function DecisionsPage() {
                 <button
                   onClick={() => setViewMode('grid')}
                   className={cn(
-                    'p-1.5 rounded-md transition-all',
+                    'p-2.5 sm:p-1.5 rounded-md transition-all min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 inline-flex items-center justify-center',
                     viewMode === 'grid' ? 'bg-card text-accent shadow-sm' : 'text-muted-foreground hover:text-foreground',
                   )}
+                  aria-label="Grid view"
                 >
                   <LayoutGrid className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
                   className={cn(
-                    'p-1.5 rounded-md transition-all',
+                    'p-2.5 sm:p-1.5 rounded-md transition-all min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 inline-flex items-center justify-center',
                     viewMode === 'list' ? 'bg-card text-accent shadow-sm' : 'text-muted-foreground hover:text-foreground',
                   )}
+                  aria-label="List view"
                 >
                   <List className="h-4 w-4" />
                 </button>
@@ -577,6 +647,15 @@ export function DecisionsPage() {
                   <ActiveFilterChip
                     label={filterSeverity}
                     onRemove={() => setFilterSeverity('ALL')}
+                  />
+                )}
+                {filterCustomer && (
+                  <ActiveFilterChip
+                    label={`Customer: ${filterCustomer}`}
+                    onRemove={() => {
+                      setFilterCustomer(null);
+                      setSearchParams((prev) => { prev.delete('customer'); return prev; });
+                    }}
                   />
                 )}
                 {searchQuery && (

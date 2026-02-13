@@ -100,7 +100,7 @@ const sectionLabelVariants = {
 
 // ── Sidebar Component ───────────────────────────────────
 export function Sidebar({ isCollapsed, onToggle, className }: SidebarProps) {
-  const { user } = useUser();
+  useUser();
   const { visibleNavItems, role } = usePermissions();
   const roleConfig = ROLE_CONFIG[role] ?? ROLE_CONFIG.analyst;
 
@@ -145,9 +145,10 @@ export function Sidebar({ isCollapsed, onToggle, className }: SidebarProps) {
       animate={isCollapsed ? 'collapsed' : 'expanded'}
       variants={sidebarVariants}
       className={cn(
-        'fixed left-0 top-0 z-40 flex h-screen flex-col sidebar',
+        'fixed left-0 top-0 z-40 flex h-screen flex-col sidebar sidebar-atmosphere',
         className,
       )}
+      style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
     >
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-sidebar-border px-3">
@@ -183,9 +184,10 @@ export function Sidebar({ isCollapsed, onToggle, className }: SidebarProps) {
             >
               <Button
                 variant="ghost"
-                size="icon-sm"
+                size="icon"
                 onClick={onToggle}
                 className="hover:bg-accent/10"
+                aria-label="Collapse sidebar"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -360,19 +362,19 @@ function NavItemComponent({ item, isCollapsed, index }: NavItemProps) {
         to={item.href}
         aria-current={isActive ? 'page' : undefined}
         className={cn(
-          'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium',
+          'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-sm font-medium',
           'transition-all duration-200',
           isActive ? 'text-accent font-semibold' : 'text-sidebar-foreground hover:text-foreground',
           isCollapsed && 'justify-center px-2',
         )}
         title={isCollapsed ? item.label : undefined}
       >
-        {/* Active indicator */}
+        {/* Active indicator — gradient background */}
         <AnimatePresence>
           {isActive && (
             <motion.div
               layoutId="activeIndicator"
-              className="absolute inset-0 rounded-lg bg-accent/20 border border-accent/40"
+              className="absolute inset-0 rounded-lg nav-item-active-bg border border-accent/15"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -381,11 +383,12 @@ function NavItemComponent({ item, isCollapsed, index }: NavItemProps) {
           )}
         </AnimatePresence>
 
-        {/* Active left bar */}
+        {/* Active left bar — accent with glow in dark mode */}
         <AnimatePresence>
           {isActive && !isCollapsed && (
             <motion.div
-              className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-accent"
+              className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-full bg-accent nav-item-active-bar"
+              style={{ boxShadow: 'var(--atm-nav-active-glow)' }}
               initial={{ scaleY: 0 }}
               animate={{ scaleY: 1 }}
               exit={{ scaleY: 0 }}

@@ -218,12 +218,12 @@ interface ReasoningStepItemProps {
 
 function ReasoningStepItem({ step, index, isActive, onClick }: ReasoningStepItemProps) {
   const stepConfig = {
-    input: { icon: Database, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    retrieval: { icon: Search, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-    analysis: { icon: Brain, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-    calculation: { icon: Calculator, color: 'text-green-500', bg: 'bg-green-500/10' },
+    input: { icon: Database, color: 'text-info', bg: 'bg-info/10' },
+    retrieval: { icon: Search, color: 'text-action-reroute', bg: 'bg-action-reroute/10' },
+    analysis: { icon: Brain, color: 'text-urgency-soon', bg: 'bg-urgency-soon/10' },
+    calculation: { icon: Calculator, color: 'text-success', bg: 'bg-success/10' },
     decision: { icon: CheckCircle2, color: 'text-accent', bg: 'bg-accent/10' },
-    output: { icon: Sparkles, color: 'text-pink-500', bg: 'bg-pink-500/10' },
+    output: { icon: Sparkles, color: 'text-category-social', bg: 'bg-category-social/10' },
   };
 
   const config = stepConfig[step.type];

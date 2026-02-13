@@ -36,10 +36,29 @@ interface ToastState {
 // Toast Store
 // ============================================
 
+/** Maximum number of toasts visible at once. Oldest are evicted first. */
+const MAX_TOASTS = 5;
+
+/** De-duplicate window: ignore identical toast titles within this period (ms). */
+const DEDUP_WINDOW_MS = 500;
+
+/** Tracks recent toast titles to prevent spam. */
+let _recentTitles: { title: string; time: number }[] = [];
+
 export const useToastStore = create<ToastState>((set, get) => ({
   toasts: [],
 
   addToast: (toast) => {
+    // ── Spam protection: de-duplicate identical toasts within window ──
+    const now = Date.now();
+    _recentTitles = _recentTitles.filter((r) => now - r.time < DEDUP_WINDOW_MS);
+    if (_recentTitles.some((r) => r.title === toast.title)) {
+      // Return existing toast id or empty — silently ignore duplicate
+      const existing = get().toasts.find((t) => t.title === toast.title);
+      return existing?.id ?? '';
+    }
+    _recentTitles.push({ title: toast.title, time: now });
+
     const id = typeof crypto !== 'undefined' && crypto.randomUUID
       ? `toast-${crypto.randomUUID()}`
       : `toast-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
@@ -49,9 +68,14 @@ export const useToastStore = create<ToastState>((set, get) => ({
       duration: toast.duration ?? (toast.type === 'loading' ? Infinity : 5000),
     };
 
-    set((state) => ({
-      toasts: [...state.toasts, newToast],
-    }));
+    set((state) => {
+      const updated = [...state.toasts, newToast];
+      // ── Evict oldest toasts when exceeding max limit ──
+      if (updated.length > MAX_TOASTS) {
+        return { toasts: updated.slice(updated.length - MAX_TOASTS) };
+      }
+      return { toasts: updated };
+    });
 
     // Auto dismiss
     if (newToast.duration !== Infinity) {
@@ -201,9 +225,11 @@ function ToastItem({ toast: toastData, onClose }: ToastItemProps) {
       animate="visible"
       exit="exit"
       className={cn(
-        'relative flex items-start gap-3 rounded-lg border p-4 shadow-lg backdrop-blur-sm',
+        'relative flex items-start gap-3 rounded-lg border p-4 shadow-lg backdrop-blur-sm backdrop-blur-xl elevation-3',
         'bg-card border-border',
         'min-w-[320px] max-w-[420px]',
+        toastData.type === 'success' && 'border-l-2 border-l-success',
+        toastData.type === 'error' && 'border-l-2 border-l-error',
       )}
     >
       {/* Icon */}

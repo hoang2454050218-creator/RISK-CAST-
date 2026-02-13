@@ -45,9 +45,10 @@ export function formatCurrency(
     compact?: boolean;
     signed?: boolean;
     locale?: string;
+    fallback?: string;
   },
 ): string {
-  if (amount == null || isNaN(amount)) return '—';
+  if (amount == null || isNaN(amount)) return options?.fallback ?? '—';
   const { showCents = false, compact = false, signed = false, locale } = options ?? {};
 
   const formatter = new Intl.NumberFormat(getIntlLocale(locale), {
@@ -79,9 +80,9 @@ export function formatCurrencyRange(
  */
 export function formatPercentage(
   value: number | null | undefined,
-  options?: { decimals?: number; locale?: string },
+  options?: { decimals?: number; locale?: string; fallback?: string },
 ): string {
-  if (value == null || isNaN(value)) return '—';
+  if (value == null || isNaN(value)) return options?.fallback ?? '—';
   const { decimals = 0, locale } = options ?? {};
 
   const formatter = new Intl.NumberFormat(getIntlLocale(locale), {
@@ -98,9 +99,9 @@ export function formatPercentage(
  */
 export function formatNumber(
   value: number | null | undefined,
-  options?: { decimals?: number; compact?: boolean; locale?: string },
+  options?: { decimals?: number; compact?: boolean; locale?: string; fallback?: string },
 ): string {
-  if (value == null || isNaN(value)) return '—';
+  if (value == null || isNaN(value)) return options?.fallback ?? '—';
   const { decimals = 0, compact = false, locale } = options ?? {};
 
   const formatter = new Intl.NumberFormat(getIntlLocale(locale), {

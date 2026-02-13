@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { NotFoundState } from '@/components/ui/not-found-state';
-import { ErrorState } from '@/components/ui/error-state';
+import { ErrorState } from '@/components/ui/states';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
@@ -65,7 +65,7 @@ const eventTypeConfig: Record<EventType, { label: string; color: string }> = {
 export function SignalDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { success, warning, info, error: showError } = useToast();
+  const { success, warning, error: showError } = useToast();
 
   // ─── React Query ──────────────────────────────────────
   const { data: signal, isLoading, error, refetch, isRefetching } = useSignal(id);

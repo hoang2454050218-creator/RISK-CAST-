@@ -43,14 +43,14 @@ export function MorningBriefCard() {
         {isLoading && (
           <div className="flex items-center justify-center py-6 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin mr-2" />
-            <span className="text-xs">Đang tạo brief...</span>
+            <span className="text-xs">Generating brief...</span>
           </div>
         )}
 
         {error && (
           <div className="flex items-center gap-2 py-4 text-muted-foreground text-xs">
             <AlertCircle className="h-4 w-4" />
-            Brief chưa sẵn sàng
+            Brief not ready yet
           </div>
         )}
 
@@ -65,7 +65,7 @@ export function MorningBriefCard() {
             {brief.priority_items.length > 0 && (
               <div className="mt-3 space-y-1.5">
                 <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                  Cần chú ý
+                  Needs Attention
                 </p>
                 {brief.priority_items.slice(0, 3).map((item, i) => (
                   <div
@@ -91,7 +91,7 @@ export function MorningBriefCard() {
               to="/chat"
               className="flex items-center gap-1 mt-3 pt-3 border-t border-border text-xs text-accent hover:text-accent-hover transition-colors"
             >
-              Hỏi thêm về brief
+              Ask about this brief
               <ChevronRight className="h-3 w-3" />
             </Link>
           </>

@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge, AnimatedBadge } from '@/components/ui/badge';
-import { MapPin, Route, Quote, Ship, AlertTriangle, ChevronRight, Zap } from 'lucide-react';
+import { MapPin, Route, Quote, Ship, AlertTriangle, ChevronRight, Zap, Radio } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/formatters';
 import { springs, staggerContainer, staggerItem } from '@/lib/animations';
@@ -12,6 +13,8 @@ interface Q1Props {
   data: Q1Data;
   /** Optional: affected shipments for at-a-glance preview */
   affectedShipments?: ShipmentExposure[];
+  /** Optional: linked signal IDs for cross-referencing */
+  signalIds?: string[];
   className?: string;
 }
 
@@ -23,7 +26,7 @@ const chokepointLabels: Record<Chokepoint, string> = {
   STRAIT_OF_HORMUZ: 'Strait of Hormuz',
 };
 
-export function Q1WhatIsHappening({ data, affectedShipments, className }: Q1Props) {
+export function Q1WhatIsHappening({ data, affectedShipments, signalIds, className }: Q1Props) {
   const [showAllShipments, setShowAllShipments] = useState(false);
   const displayedShipments = affectedShipments
     ? showAllShipments
@@ -68,7 +71,7 @@ export function Q1WhatIsHappening({ data, affectedShipments, className }: Q1Prop
 
           {/* Personalized Impact - Why this matters to YOU */}
           <motion.div
-            className="rounded-xl bg-gradient-to-r from-accent/5 to-purple-500/5 border border-accent/20 p-4"
+            className="rounded-xl bg-gradient-to-r from-accent/5 to-action-reroute/5 border border-accent/20 p-4"
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.15, ...springs.smooth }}
@@ -194,9 +197,12 @@ export function Q1WhatIsHappening({ data, affectedShipments, className }: Q1Prop
               >
                 {data.affected_chokepoints.map((chokepoint) => (
                   <motion.div key={chokepoint} variants={staggerItem}>
-                    <Badge variant="secondary" className="text-xs">
-                      {chokepointLabels[chokepoint] || chokepoint}
-                    </Badge>
+                    <Link to={`/signals?chokepoint=${chokepoint}`}>
+                      <Badge variant="secondary" className="text-xs hover:bg-accent/10 cursor-pointer transition-colors">
+                        {chokepointLabels[chokepoint] || chokepoint}
+                        <ChevronRight className="h-3 w-3 ml-0.5" />
+                      </Badge>
+                    </Link>
                   </motion.div>
                 ))}
               </motion.div>
@@ -224,6 +230,33 @@ export function Q1WhatIsHappening({ data, affectedShipments, className }: Q1Prop
               </motion.div>
             </div>
           </motion.div>
+
+          {/* Linked Signals — Cross-reference trail */}
+          {signalIds && signalIds.length > 0 && (
+            <motion.div
+              className="space-y-2 pt-2 border-t border-border/50"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, ...springs.smooth }}
+            >
+              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <Radio className="h-3.5 w-3.5 text-info" />
+                <span>Based on {signalIds.length} signal{signalIds.length !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {signalIds.map((id) => (
+                  <Link
+                    key={id}
+                    to={`/signals`}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-info/5 border border-info/20 text-[11px] font-mono text-info hover:bg-info/10 transition-colors"
+                  >
+                    {id}
+                    <ChevronRight className="h-3 w-3" />
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
           {/* Source Attribution */}
           <motion.div

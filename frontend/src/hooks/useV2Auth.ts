@@ -1,8 +1,9 @@
 /**
- * useV2Auth — Auto-manages V2 backend authentication.
+ * useV2Auth — Manages V2 backend authentication.
  *
- * When V2 token is missing, auto-registers a V2 account
- * using the current V1 user info. Stores V2 token separately.
+ * Checks for existing valid token → uses it.
+ * If expired/missing → user must authenticate via login page.
+ * NO auto-registration. NO hardcoded credentials.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -18,95 +19,81 @@ interface V2User {
   role: string;
 }
 
+/** Check if a JWT token is expired */
+function isTokenExpired(token: string): boolean {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return true;
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.exp) return false; // No expiry = treat as valid
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+}
+
 export function useV2Auth() {
-  const [token, setToken] = useState<string | null>(localStorage.getItem(V2_TOKEN_KEY));
-  const [user, setUser] = useState<V2User | null>(() => {
-    const stored = localStorage.getItem(V2_USER_KEY);
-    return stored ? JSON.parse(stored) : null;
+  const [token, setToken] = useState<string | null>(() => {
+    const stored = localStorage.getItem(V2_TOKEN_KEY);
+    // Validate stored token on init — clear if expired
+    if (stored && isTokenExpired(stored)) {
+      localStorage.removeItem(V2_TOKEN_KEY);
+      localStorage.removeItem(V2_USER_KEY);
+      return null;
+    }
+    return stored;
   });
-  const [isConnecting, setIsConnecting] = useState(false);
 
-  const connect = useCallback(async () => {
-    if (token) return true;
-    setIsConnecting(true);
-
+  const [user, setUser] = useState<V2User | null>(() => {
     try {
-      // Try login first
-      let res = await fetch('/api/v1/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'demo@riskcast.vn', password: 'riskcast2026' }),
-      });
-
-      if (res.status === 401) {
-        // Register new account
-        res = await fetch('/api/v1/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            company_name: 'RiskCast Demo',
-            company_slug: `demo-${Date.now()}`,
-            email: 'demo@riskcast.vn',
-            password: 'riskcast2026',
-            name: 'Demo User',
-            industry: 'logistics',
-          }),
-        });
-      }
-
-      if (!res.ok) {
-        // Slug might exist, try with unique slug
-        res = await fetch('/api/v1/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            company_name: 'RiskCast Demo',
-            company_slug: `demo-${Date.now()}`,
-            email: `demo-${Date.now()}@riskcast.vn`,
-            password: 'riskcast2026',
-            name: 'Demo User',
-            industry: 'logistics',
-          }),
-        });
-      }
-
-      if (res.ok) {
-        const data = await res.json();
-        const v2Token = data.access_token;
-        const v2User: V2User = {
-          user_id: data.user_id,
-          company_id: data.company_id,
-          email: data.email,
-          name: data.name,
-          role: data.role,
-        };
-
-        localStorage.setItem(V2_TOKEN_KEY, v2Token);
-        localStorage.setItem(V2_USER_KEY, JSON.stringify(v2User));
-        setToken(v2Token);
-        setUser(v2User);
-        return true;
-      }
-
-      return false;
+      const stored = localStorage.getItem(V2_USER_KEY);
+      return stored ? JSON.parse(stored) : null;
     } catch {
-      return false;
-    } finally {
-      setIsConnecting(false);
+      return null;
     }
-  }, [token]);
+  });
 
-  // Auto-connect on mount if no token
+  const [isConnecting] = useState(false);
+
+  /** Store tokens after successful auth from login page */
+  const setAuth = useCallback((newToken: string, newUser: V2User) => {
+    localStorage.setItem(V2_TOKEN_KEY, newToken);
+    localStorage.setItem(V2_USER_KEY, JSON.stringify(newUser));
+    setToken(newToken);
+    setUser(newUser);
+  }, []);
+
+  /** Clear auth state */
+  const clearAuth = useCallback(() => {
+    localStorage.removeItem(V2_TOKEN_KEY);
+    localStorage.removeItem(V2_USER_KEY);
+    setToken(null);
+    setUser(null);
+  }, []);
+
+  // Validate token on mount — if expired, clear
   useEffect(() => {
-    if (!token) {
-      connect();
+    if (token && isTokenExpired(token)) {
+      clearAuth();
     }
-  }, [token, connect]);
+  }, [token, clearAuth]);
 
-  return { token, user, isConnecting, connect, isAuthenticated: !!token };
+  return {
+    token,
+    user,
+    isConnecting,
+    setAuth,
+    clearAuth,
+    isAuthenticated: !!token && !isTokenExpired(token),
+  };
 }
 
 /** Get stored V2 token (for use in api-v2.ts) */
 export function getV2Token(): string | null {
-  return localStorage.getItem(V2_TOKEN_KEY);
+  const token = localStorage.getItem(V2_TOKEN_KEY);
+  if (token && isTokenExpired(token)) {
+    localStorage.removeItem(V2_TOKEN_KEY);
+    return null;
+  }
+  return token;
 }

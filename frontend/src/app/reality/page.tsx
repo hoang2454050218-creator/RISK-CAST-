@@ -1,99 +1,45 @@
-import { useState } from 'react';
+/**
+ * Reality Page — Oracle Reality Engine
+ *
+ * "Military-grade intelligence overview."
+ * Full-screen map + live signal feed + summary cards.
+ * Every number is LIVE from React Query cache.
+ */
+
+import { useState, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
-import { useRealityEngine } from '@/hooks/useRealityEngine';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { useRealityEngine, type RealityRate, type RealityVesselAlert } from '@/hooks/useRealityEngine';
+import { useSignalsList } from '@/hooks/useSignals';
+import { useDecisionsList } from '@/hooks/useDecisions';
+import { useEscalationsList } from '@/hooks/useEscalations';
+import { LazyGlobalMap as GlobalMap } from '@/components/domain/map';
+import { CHOKEPOINTS, normalizeChokepointId } from '@/components/domain/map/chokepoints';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/domain/common/StatCard';
 import {
   Globe,
-  Ship,
   Anchor,
   TrendingUp,
   TrendingDown,
   RefreshCw,
-  MapPin,
-  Clock,
   AlertTriangle,
-  CheckCircle,
   Activity,
-  Waves,
-  Wind,
   DollarSign,
-  Sparkles,
+  Radio,
+  ChevronRight,
+  Zap,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatCurrency, formatDate } from '@/lib/formatters';
-import { springs, staggerContainer, staggerItem } from '@/lib/animations';
-import { AnimatedNumber, AnimatedCurrency } from '@/components/ui/animated-number';
+import { formatDate } from '@/lib/formatters';
+import { springs, staggerContainer, staggerItem, pageTransition } from '@/lib/animations';
+import { AnimatedCurrency } from '@/components/ui/animated-number';
+import type { Signal } from '@/types/signal';
 
-type ChokepointStatus = 'NORMAL' | 'CONGESTED' | 'DISRUPTED' | 'CRITICAL';
-
-interface ChokepointHealth {
-  id: string;
-  name: string;
-  region: string;
-  status: ChokepointStatus;
-  vessels_waiting: number;
-  avg_delay_days: number;
-  transit_time_change: number;
-  last_updated: string;
-  incidents: string[];
-  weather: { condition: string; wind_speed_knots: number; wave_height_m: number };
-}
-interface FreightRate {
-  route: string;
-  current_usd: number;
-  week_ago_usd: number;
-  change_pct: number;
-  trend: 'UP' | 'DOWN' | 'STABLE';
-  last_updated: string;
-}
-interface VesselAlert {
-  id: string;
-  vessel_name: string;
-  imo: string;
-  alert_type: 'DIVERSION' | 'DELAY' | 'PORT_CHANGE' | 'SPEED_CHANGE';
-  message: string;
-  timestamp: string;
-  route: string;
-}
-
-const statusConfig: Record<
-  ChokepointStatus,
-  { label: string; className: string; icon: typeof CheckCircle; gradient: string }
-> = {
-  NORMAL: {
-    label: 'Normal',
-    className:
-      'bg-gradient-to-r from-success to-success text-white shadow-lg shadow-success/25',
-    icon: CheckCircle,
-    gradient: 'from-success/20 to-success/10',
-  },
-  CONGESTED: {
-    label: 'Congested',
-    className:
-      'bg-gradient-to-r from-warning to-warning text-white shadow-lg shadow-warning/25',
-    icon: Clock,
-    gradient: 'from-warning/20 to-warning/10',
-  },
-  DISRUPTED: {
-    label: 'Disrupted',
-    className:
-      'bg-gradient-to-r from-error to-error text-white shadow-lg shadow-error/25',
-    icon: AlertTriangle,
-    gradient: 'from-error/20 to-error/10',
-  },
-  CRITICAL: {
-    label: 'Critical',
-    className:
-      'bg-gradient-to-r from-error to-error text-white shadow-lg shadow-error/30 animate-pulse',
-    icon: AlertTriangle,
-    gradient: 'from-error/20 to-error/10',
-  },
-};
-
-const alertTypeConfig = {
+// ─── Alert type config ──────────────────────────────────────────
+const alertTypeConfig: Record<string, { label: string; className: string }> = {
   DIVERSION: {
     label: 'Diversion',
     className: 'bg-action-reroute/10 text-action-reroute border border-action-reroute/30',
@@ -112,41 +58,183 @@ const alertTypeConfig = {
   },
 };
 
+// ═══════════════════════════════════════════════════════════════════
+// SIGNAL FEED — Live auto-scrolling
+// ═══════════════════════════════════════════════════════════════════
+function SignalFeed({ signals }: { signals: Signal[] }) {
+  const recentSignals = useMemo(
+    () =>
+      [...signals]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 20),
+    [signals],
+  );
+
+  if (recentSignals.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
+        <Radio className="h-4 w-4 mr-2 animate-pulse" />
+        Awaiting signal data...
+      </div>
+    );
+  }
+
+  return (
+    <div className="divide-y divide-border/30 max-h-[300px] overflow-y-auto scrollbar-thin">
+      {recentSignals.map((signal) => (
+        <Link
+          key={signal.signal_id}
+          to={`/signals`}
+          className="flex items-start gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors group"
+        >
+          <span className="text-[10px] font-mono text-muted-foreground/60 pt-0.5 shrink-0 w-12 text-right tabular-nums">
+            {formatDate(signal.created_at, { includeTime: true }).split(',').pop()?.trim() ?? ''}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-foreground/80 line-clamp-1 group-hover:text-foreground transition-colors">
+              {signal.event_title}
+            </p>
+            <div className="flex items-center gap-2 mt-0.5">
+              {signal.affected_chokepoints.length > 0 && (
+                <span className="text-[10px] font-mono text-action-reroute/70">
+                  {signal.affected_chokepoints.map(normalizeChokepointId).join(', ')}
+                </span>
+              )}
+              <span className="text-[10px] font-mono text-muted-foreground/50">
+                {Math.round(signal.probability * 100)}%
+              </span>
+            </div>
+          </div>
+          <ChevronRight className="h-3 w-3 text-muted-foreground/30 shrink-0 mt-1 group-hover:text-muted-foreground/60 transition-colors" />
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CHOKEPOINT HEALTH LIST
+// ═══════════════════════════════════════════════════════════════════
+function ChokepointHealthList({ signals }: { signals: Signal[] }) {
+  const navigate = useNavigate();
+
+  const chokepointData = useMemo(() => {
+    const signalsByCP = new Map<string, number>();
+    for (const s of signals) {
+      if (s.status !== 'ACTIVE' && s.status !== 'CONFIRMED') continue;
+      for (const cp of s.affected_chokepoints) {
+        const id = normalizeChokepointId(cp);
+        signalsByCP.set(id, (signalsByCP.get(id) ?? 0) + 1);
+      }
+    }
+
+    return CHOKEPOINTS.map((cp) => {
+      const count = signalsByCP.get(cp.id) ?? 0;
+      const status = count >= 3 ? 'disrupted' : count >= 1 ? 'degraded' : 'operational';
+      return { ...cp, signalCount: count, status };
+    });
+  }, [signals]);
+
+  return (
+    <div className="space-y-1.5">
+      {chokepointData.map((cp) => {
+        const colorMap: Record<string, { dot: string; text: string }> = {
+          operational: { dot: 'bg-success', text: 'text-success' },
+          degraded: { dot: 'bg-warning', text: 'text-warning' },
+          disrupted: { dot: 'bg-error', text: 'text-error' },
+        };
+        const colors = colorMap[cp.status] ?? colorMap.operational;
+
+        return (
+          <button
+            key={cp.id}
+            onClick={() => navigate(`/signals?chokepoint=${cp.id}`)}
+            className="w-full flex items-center justify-between rounded-lg px-3 py-2.5 bg-muted/20 border border-border/30 hover:bg-muted/40 transition-colors text-left"
+          >
+            <div className="flex items-center gap-2.5">
+              <motion.span
+                className={cn('inline-block h-2.5 w-2.5 rounded-full', colors.dot)}
+                animate={
+                  cp.status === 'disrupted'
+                    ? { scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }
+                    : {}
+                }
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+              <span className="text-xs font-medium text-foreground">{cp.name}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono text-muted-foreground/60">{cp.region}</span>
+              {cp.signalCount > 0 ? (
+                <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
+                  {cp.signalCount} signal{cp.signalCount !== 1 ? 's' : ''}
+                </Badge>
+              ) : (
+                <span className="text-[9px] font-mono text-success/70 font-semibold">OK</span>
+              )}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MAIN REALITY PAGE
+// ═══════════════════════════════════════════════════════════════════
 export function RealityPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { data, isLoading, error, refetch } = useRealityEngine();
+  const navigate = useNavigate();
+  const { data: realityData, isLoading, error, refetch } = useRealityEngine();
+  const { data: signals = [] } = useSignalsList();
+  const { data: decisions = [] } = useDecisionsList();
+  const { data: escalations = [] } = useEscalationsList();
 
-  // Map hook data to local types
-  const chokepoints: ChokepointHealth[] = (data?.chokepoints ?? []).map(cp => ({
-    id: cp.id,
-    name: cp.name,
-    region: cp.region,
-    status: (cp.status === 'critical' ? 'CRITICAL' : cp.status === 'degraded' ? 'CONGESTED' : 'NORMAL') as ChokepointStatus,
-    vessels_waiting: cp.vesselCount,
-    avg_delay_days: cp.transitDelayDays,
-    transit_time_change: cp.transitDelayDays > 0 ? cp.transitDelayDays * 8 : 0,
-    last_updated: cp.lastIncident,
-    incidents: [],
-    weather: { condition: 'N/A', wind_speed_knots: 0, wave_height_m: 0 },
-  }));
+  // ── Derived metrics ──────────────────────────────────────────
+  const activeSignals = signals.filter(
+    (s) => s.status === 'ACTIVE' || s.status === 'CONFIRMED',
+  );
+  const pendingDecisions = decisions.filter((d) => d.status === 'PENDING');
+  const immediateDecisions = pendingDecisions.filter((d) => d.q2_when?.urgency === 'IMMEDIATE');
+  const pendingEscalations = escalations.filter(
+    (e) => e.status === 'PENDING' || e.status === 'IN_REVIEW',
+  );
 
-  const rates: FreightRate[] = (data?.rates ?? []).map(r => ({
+  // Reality engine data
+  type RateRow = {
+    route: string;
+    currentRate: number;
+    previousRate: number;
+    change: number;
+    trend: 'UP' | 'DOWN' | 'STABLE';
+    lastUpdated: string;
+  };
+  type VesselAlertRow = {
+    id: string;
+    vesselName: string;
+    alertType: string;
+    description: string;
+    timestamp: string;
+    location: string;
+  };
+
+  const rates: RateRow[] = (realityData?.rates ?? []).map((r: RealityRate) => ({
     route: r.route,
-    current_usd: r.currentRate,
-    week_ago_usd: r.previousRate,
-    change_pct: Math.round(r.change * 10) / 10,
-    trend: (r.change > 2 ? 'UP' : r.change < -2 ? 'DOWN' : 'STABLE') as FreightRate['trend'],
-    last_updated: r.lastUpdated,
+    currentRate: r.currentRate,
+    previousRate: r.previousRate,
+    change: Math.round(r.change * 10) / 10,
+    trend: r.change > 2 ? 'UP' : r.change < -2 ? 'DOWN' : ('STABLE' as const),
+    lastUpdated: r.lastUpdated,
   }));
 
-  const vesselAlerts: VesselAlert[] = (data?.vesselAlerts ?? []).map(a => ({
+  const vesselAlerts: VesselAlertRow[] = (realityData?.vesselAlerts ?? []).map((a: RealityVesselAlert) => ({
     id: a.id,
-    vessel_name: a.vesselName,
-    imo: '',
-    alert_type: (a.alertType === 'port_congestion' ? 'PORT_CHANGE' : a.alertType.toUpperCase()) as VesselAlert['alert_type'],
-    message: a.description,
+    vesselName: a.vesselName,
+    alertType: a.alertType === 'port_congestion' ? 'PORT_CHANGE' : a.alertType.toUpperCase(),
+    description: a.description,
     timestamp: a.timestamp,
-    route: a.location,
+    location: a.location,
   }));
 
   const handleRefresh = async () => {
@@ -154,12 +242,6 @@ export function RealityPage() {
     await refetch();
     setIsRefreshing(false);
   };
-
-  const criticalCount = chokepoints.filter(
-    (c) => c.status === 'CRITICAL' || c.status === 'DISRUPTED',
-  ).length;
-  const congestedCount = chokepoints.filter((c) => c.status === 'CONGESTED').length;
-  const totalVessels = chokepoints.reduce((sum, c) => sum + c.vessels_waiting, 0);
 
   if (isLoading) {
     return (
@@ -177,7 +259,9 @@ export function RealityPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center space-y-3">
           <p className="text-sm text-error">Failed to load reality data</p>
-          <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            Retry
+          </Button>
         </div>
       </div>
     );
@@ -185,344 +269,270 @@ export function RealityPage() {
 
   return (
     <motion.div
-      className="space-y-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
+      className="space-y-5 pb-8"
+      variants={pageTransition}
+      initial="hidden"
+      animate="visible"
     >
-      {/* Page Header */}
-      <motion.div
-        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={springs.smooth}
-      >
-        <div>
-          <motion.h1
-            className="text-3xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent flex items-center gap-3"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+      {/* ── Page Header ─────────────────────────────────────────── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <motion.div
+            className="p-2.5 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20"
+            animate={{ rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 8, repeat: Infinity }}
           >
-            <motion.div
-              className="p-2 rounded-xl bg-gradient-to-br from-accent/20 to-accent/20"
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 6, repeat: Infinity }}
-            >
-              <Globe className="h-6 w-6 text-accent" />
-            </motion.div>
-            Reality (Oracle)
-          </motion.h1>
-          <motion.p
-            className="text-sm text-muted-foreground mt-1"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            Real-time global shipping intelligence • Last updated{' '}
-            {formatDate(new Date().toISOString(), { relative: true })}
-          </motion.p>
+            <Globe className="h-5 w-5 text-accent" />
+          </motion.div>
+          <div>
+            <h1 className="text-xl font-bold text-foreground tracking-tight">
+              Reality Engine
+            </h1>
+            <p className="text-xs text-muted-foreground font-mono">
+              LIVE{' '}
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-success animate-pulse mx-1 align-middle" />
+              {activeSignals.length} active signals · {pendingDecisions.length} pending decisions
+            </p>
+          </div>
         </div>
 
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button
-            variant="outline"
-            className="gap-2 bg-gradient-to-r from-accent/10 to-accent/10 border-accent/30 hover:border-accent/50 shadow-lg"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-          >
-            <RefreshCw className={cn('h-4 w-4 text-accent', isRefreshing && 'animate-spin')} />
-            <span className="font-medium">{isRefreshing ? 'Refreshing...' : 'Refresh Data'}</span>
-          </Button>
-        </motion.div>
-      </motion.div>
-
-      {/* Global Status Summary */}
-      <motion.div
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div variants={staggerItem}>
-          <StatCard
-            icon={AlertTriangle}
-            accentColor="red"
-            value={criticalCount}
-            label="Critical/Disrupted"
-            urgent={criticalCount > 0}
-            variant="overlay"
-          />
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <StatCard
-            icon={Clock}
-            accentColor="orange"
-            value={congestedCount}
-            label="Congested Routes"
-            variant="overlay"
-          />
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <StatCard
-            icon={Ship}
-            accentColor="blue"
-            value={totalVessels}
-            label="Vessels Waiting"
-            variant="overlay"
-          />
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <StatCard
-            icon={TrendingUp}
-            accentColor="red"
-            value="+31%"
-            label="Avg Rate Change"
-            variant="overlay"
-          />
-        </motion.div>
-      </motion.div>
-
-      {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Chokepoint Health - 2 columns */}
-        <motion.div
-          className="lg:col-span-2"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, ...springs.smooth }}
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 border-accent/30 hover:border-accent/50"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
         >
-          <Card className="overflow-hidden shadow-md bg-card shadow-sm">
-            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-accent" />
-                Chokepoint Health
-              </CardTitle>
-              <CardDescription>Real-time status of major shipping chokepoints</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <motion.div
-                className="space-y-4"
-                variants={staggerContainer}
-                initial="hidden"
-                animate="visible"
-              >
-                {chokepoints.map((chokepoint) => {
-                  const config = statusConfig[chokepoint.status];
-                  const StatusIcon = config.icon;
-                  return (
-                    <motion.div
-                      key={chokepoint.id}
-                      variants={staggerItem}
-                      whileHover={{ x: 4, scale: 1.005 }}
-                      transition={springs.snappy}
-                      className={cn(
-                        'p-4 rounded-xl transition-all bg-gradient-to-r',
-                        config.gradient,
-                        chokepoint.status === 'CRITICAL' && 'ring-1 ring-error/40',
-                        chokepoint.status === 'DISRUPTED' && 'ring-1 ring-error/30',
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-bold">{chokepoint.name}</h3>
-                            <Badge className={config.className}>
-                              <StatusIcon className="h-3 w-3 mr-1" />
-                              {config.label}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {chokepoint.region}
-                            </span>
-                          </div>
+          <RefreshCw className={cn('h-3.5 w-3.5', isRefreshing && 'animate-spin')} />
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </Button>
+      </div>
 
-                          {chokepoint.incidents.length > 0 && (
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              {chokepoint.incidents.map((incident, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <AlertTriangle className="h-3 w-3 mt-1 shrink-0 text-warning" />
-                                  {incident}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
-                            <span>{chokepoint.weather.condition}</span>
-                            <span className="flex items-center gap-1">
-                              <Wind className="h-3 w-3" />
-                              {chokepoint.weather.wind_speed_knots} kts
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Waves className="h-3 w-3" />
-                              {chokepoint.weather.wave_height_m}m
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="text-right space-y-2 shrink-0">
-                          <div className="p-2 rounded-lg bg-background/50">
-                            <p className="font-mono text-xl font-bold">
-                              <AnimatedNumber value={chokepoint.vessels_waiting} />
-                            </p>
-                            <p className="text-xs text-muted-foreground">Vessels</p>
-                          </div>
-                          <div className="p-2 rounded-lg bg-background/50">
-                            <p
-                              className={cn(
-                                'font-mono text-sm font-bold',
-                                chokepoint.avg_delay_days > 5 && 'text-error',
-                              )}
-                            >
-                              +{chokepoint.avg_delay_days}d
-                            </p>
-                            <p className="text-xs text-muted-foreground">Avg Delay</p>
-                          </div>
-                          {chokepoint.transit_time_change > 0 && (
-                            <div className="p-2 rounded-lg bg-background/50">
-                              <p className="font-mono text-sm font-bold text-error">
-                                +{chokepoint.transit_time_change}%
-                              </p>
-                              <p className="text-xs text-muted-foreground">Transit Time</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            </CardContent>
-          </Card>
+      {/* ── Map + Disruptions Grid ──────────────────────────────── */}
+      <div className="grid gap-5 lg:grid-cols-5">
+        {/* Full interactive map — 3 columns */}
+        <motion.div
+          className="lg:col-span-3"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, ...springs.smooth }}
+        >
+          <div className="rounded-2xl border border-border/60 bg-card shadow-level-1 overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-border/40 bg-muted/10 flex items-center justify-between">
+              <span className="text-xs font-semibold text-foreground flex items-center gap-2">
+                <Globe className="h-3.5 w-3.5 text-accent" />
+                Global Overview
+              </span>
+              <span className="text-[10px] font-mono text-muted-foreground/60">
+                Click chokepoint to filter signals
+              </span>
+            </div>
+            <GlobalMap
+              signals={signals}
+              onChokepointClick={(cpId) => navigate(`/signals?chokepoint=${cpId}`)}
+              className="h-[360px] lg:h-[420px] border-0 rounded-none"
+            />
+          </div>
         </motion.div>
 
-        {/* Freight Rates */}
+        {/* Active Disruptions sidebar — 2 columns */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          className="lg:col-span-2 space-y-4"
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, ...springs.smooth }}
+          transition={{ delay: 0.2, ...springs.smooth }}
         >
-          <Card className="overflow-hidden shadow-md bg-card shadow-sm h-full">
-            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-success/50 to-transparent" />
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-success" />
-                Spot Rates (FEU)
-              </CardTitle>
-              <CardDescription>Current container shipping rates</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <motion.div
-                className="space-y-3"
-                variants={staggerContainer}
-                initial="hidden"
-                animate="visible"
-              >
-                {rates.map((rate) => (
-                  <motion.div
-                    key={rate.route}
-                    variants={staggerItem}
-                    whileHover={{ x: 4 }}
-                    className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted transition-colors"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{rate.route}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(rate.last_updated, { relative: true })}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-mono font-bold">
-                        <AnimatedCurrency value={rate.current_usd} />
-                      </p>
-                      <p
-                        className={cn(
-                          'text-xs font-mono font-bold flex items-center gap-1 justify-end',
-                          rate.change_pct > 0
-                            ? 'text-error'
-                            : rate.change_pct < 0
-                              ? 'text-success'
-                              : 'text-muted-foreground',
-                        )}
-                      >
-                        {rate.change_pct > 0 ? (
-                          <TrendingUp className="h-3 w-3" />
-                        ) : rate.change_pct < 0 ? (
-                          <TrendingDown className="h-3 w-3" />
-                        ) : null}
-                        {rate.change_pct > 0 ? '+' : ''}
-                        {rate.change_pct}%
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </CardContent>
-          </Card>
+          {/* Chokepoint Health */}
+          <div className="rounded-2xl border border-border/60 bg-card shadow-level-1 overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-border/40 bg-muted/10">
+              <span className="text-xs font-semibold text-foreground flex items-center gap-2">
+                <Shield className="h-3.5 w-3.5 text-action-reroute" />
+                Chokepoint Status
+              </span>
+            </div>
+            <div className="p-3">
+              <ChokepointHealthList signals={signals} />
+            </div>
+          </div>
+
+          {/* Quick stats */}
+          <div className="grid grid-cols-2 gap-3">
+            <StatCard
+              icon={Zap}
+              accentColor="red"
+              value={immediateDecisions.length}
+              label="Immediate"
+              variant="overlay"
+              tier="secondary"
+              href="/decisions?urgency=IMMEDIATE"
+            />
+            <StatCard
+              icon={AlertTriangle}
+              accentColor="orange"
+              value={pendingEscalations.length}
+              label="Escalations"
+              variant="overlay"
+              tier="secondary"
+              href="/human-review"
+            />
+          </div>
         </motion.div>
       </div>
 
-      {/* Vessel Alerts */}
+      {/* ── Signal Feed ─────────────────────────────────────────── */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, ...springs.smooth }}
+        transition={{ delay: 0.25, ...springs.smooth }}
       >
-        <Card className="overflow-hidden shadow-md bg-card shadow-sm">
-          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-purple-500" />
-              Recent Vessel Alerts
-            </CardTitle>
-            <CardDescription>
-              Real-time updates from AIS tracking and carrier notifications
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <motion.div
-              className="space-y-3"
-              variants={staggerContainer}
-              initial="hidden"
-              animate="visible"
-            >
-              {vesselAlerts.map((alert) => {
-                const config = alertTypeConfig[alert.alert_type];
-                return (
-                  <motion.div
-                    key={alert.id}
-                    variants={staggerItem}
-                    whileHover={{ x: 4, scale: 1.005 }}
-                    transition={springs.snappy}
-                    className="flex items-start gap-4 p-4 rounded-xl bg-muted/40 hover:bg-muted transition-colors"
-                  >
-                    <motion.div
-                      className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted shrink-0"
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                    >
-                      <Anchor className="h-5 w-5 text-purple-500" />
-                    </motion.div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="font-bold text-sm">{alert.vessel_name}</span>
-                        <Badge className={config.className}>{config.label}</Badge>
-                        <span className="text-xs text-muted-foreground font-mono">{alert.imo}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{alert.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Route: {alert.route}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-xs text-muted-foreground font-mono">
-                        {formatDate(alert.timestamp, { relative: true })}
-                      </p>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-border/60 bg-card shadow-level-1 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/40 bg-muted/10">
+            <span className="text-xs font-semibold text-foreground flex items-center gap-2">
+              <Radio className="h-3.5 w-3.5 text-info" />
+              Signal Feed
+              {activeSignals.length > 0 && (
+                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 ml-1">
+                  {activeSignals.length} active
+                </Badge>
+              )}
+            </span>
+            <Link to="/signals">
+              <Button variant="ghost" size="sm" className="h-6 text-xs gap-1 text-muted-foreground">
+                View all <ChevronRight className="h-3 w-3" />
+              </Button>
+            </Link>
+          </div>
+          <SignalFeed signals={signals} />
+        </div>
       </motion.div>
+
+      {/* ── Bottom Grid: Rates + Vessel Alerts ──────────────────── */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        {/* Freight Rates */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, ...springs.smooth }}
+        >
+          <div className="rounded-2xl border border-border/60 bg-card shadow-level-1 overflow-hidden h-full">
+            <div className="px-4 py-2.5 border-b border-border/40 bg-muted/10">
+              <span className="text-xs font-semibold text-foreground flex items-center gap-2">
+                <DollarSign className="h-3.5 w-3.5 text-success" />
+                Spot Rates (FEU)
+              </span>
+            </div>
+            <div className="p-3">
+              {rates.length > 0 ? (
+                <motion.div
+                  className="space-y-2"
+                  variants={staggerContainer}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {rates.map((rate) => (
+                    <motion.div
+                      key={rate.route}
+                      variants={staggerItem}
+                      className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                    >
+                      <div>
+                        <p className="text-xs font-medium">{rate.route}</p>
+                        <p className="text-[10px] text-muted-foreground/60 font-mono">
+                          {formatDate(rate.lastUpdated, { relative: true })}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-mono text-sm font-bold tabular-nums">
+                          <AnimatedCurrency value={rate.currentRate} />
+                        </p>
+                        <p
+                          className={cn(
+                            'text-[10px] font-mono font-bold flex items-center gap-0.5 justify-end',
+                            rate.change > 0
+                              ? 'text-error'
+                              : rate.change < 0
+                                ? 'text-success'
+                                : 'text-muted-foreground',
+                          )}
+                        >
+                          {rate.change > 0 ? (
+                            <TrendingUp className="h-3 w-3" />
+                          ) : rate.change < 0 ? (
+                            <TrendingDown className="h-3 w-3" />
+                          ) : null}
+                          {rate.change > 0 ? '+' : ''}
+                          {rate.change}%
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              ) : (
+                <div className="flex items-center justify-center py-8 text-muted-foreground text-xs">
+                  No rate data available
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Vessel Alerts */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35, ...springs.smooth }}
+        >
+          <div className="rounded-2xl border border-border/60 bg-card shadow-level-1 overflow-hidden h-full">
+            <div className="px-4 py-2.5 border-b border-border/40 bg-muted/10">
+              <span className="text-xs font-semibold text-foreground flex items-center gap-2">
+                <Activity className="h-3.5 w-3.5 text-action-reroute" />
+                Vessel Alerts
+              </span>
+            </div>
+            <div className="p-3">
+              {vesselAlerts.length > 0 ? (
+                <motion.div
+                  className="space-y-2"
+                  variants={staggerContainer}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {vesselAlerts.map((alert) => {
+                    const config = alertTypeConfig[alert.alertType] ?? alertTypeConfig.DELAY;
+                    return (
+                      <motion.div
+                        key={alert.id}
+                        variants={staggerItem}
+                        className="flex items-start gap-3 px-3 py-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                      >
+                        <Anchor className="h-4 w-4 text-action-reroute/60 mt-0.5 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                            <span className="font-medium text-xs">{alert.vesselName}</span>
+                            <Badge className={cn('text-[9px] px-1.5 py-0', config.className)}>
+                              {config.label}
+                            </Badge>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground line-clamp-1">
+                            {alert.description}
+                          </p>
+                        </div>
+                        <span className="text-[10px] font-mono text-muted-foreground/50 shrink-0">
+                          {formatDate(alert.timestamp, { relative: true })}
+                        </span>
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              ) : (
+                <div className="flex items-center justify-center py-8 text-muted-foreground text-xs">
+                  No vessel alerts
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </div>
     </motion.div>
   );
 }

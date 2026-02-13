@@ -40,15 +40,15 @@ export interface ConfirmationDialogProps {
 const VARIANT_STYLES = {
   default: {
     icon: 'text-accent bg-accent/10 border-accent/20',
-    confirm: 'bg-accent hover:bg-accent/90 text-white',
+    confirm: 'bg-accent hover:bg-accent/90 text-accent-foreground',
   },
   warning: {
-    icon: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
-    confirm: 'bg-amber-600 hover:bg-amber-500 text-white',
+    icon: 'text-warning bg-warning/10 border-warning/20',
+    confirm: 'bg-warning hover:bg-warning/90 text-destructive-foreground',
   },
   danger: {
-    icon: 'text-red-500 bg-red-500/10 border-red-500/20',
-    confirm: 'bg-red-600 hover:bg-red-500 text-white',
+    icon: 'text-destructive bg-destructive/10 border-destructive/20',
+    confirm: 'bg-destructive hover:bg-destructive/90 text-destructive-foreground',
   },
 } as const;
 
@@ -133,7 +133,7 @@ export function ConfirmationDialog({
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           {/* Backdrop */}
           <motion.div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm backdrop-blur-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -149,7 +149,7 @@ export function ConfirmationDialog({
             aria-describedby="confirm-dialog-desc"
             className={cn(
               'relative z-10 w-full max-w-md',
-              'bg-card border border-border rounded-xl shadow-2xl',
+              'bg-card border border-border rounded-xl shadow-2xl elevation-3',
               'overflow-hidden',
             )}
             initial={{ opacity: 0, scale: 0.95, y: 10 }}

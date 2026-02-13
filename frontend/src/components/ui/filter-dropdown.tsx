@@ -130,7 +130,7 @@ export function FilterDropdown({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         className={cn(
-          'flex items-center gap-2 px-2.5 py-1.5 text-xs font-mono rounded-md border transition-all',
+          'flex items-center gap-2 px-3 py-2.5 sm:px-2.5 sm:py-1.5 min-h-[44px] sm:min-h-0 text-xs font-mono rounded-md border transition-all',
           isActive
             ? colors.trigger
             : 'bg-muted/50 text-muted-foreground border-border hover:border-border',
@@ -168,7 +168,7 @@ export function FilterDropdown({
                     }}
                     onMouseEnter={() => setHighlightedIndex(index)}
                     className={cn(
-                      'flex w-full items-center gap-2 px-2.5 py-2 text-xs font-mono rounded transition-colors',
+                      'flex w-full items-center gap-2 px-2.5 py-3 sm:py-2 min-h-[44px] sm:min-h-0 text-xs font-mono rounded transition-colors',
                       highlightedIndex === index && 'bg-muted',
                       option.value === value
                         ? colors.selected

@@ -121,7 +121,7 @@ export function Pagination({
           <select
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="h-7 rounded border border-border bg-muted/50 px-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-accent/50"
+            className="h-9 sm:h-7 rounded border border-border bg-muted/50 px-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-accent/50"
           >
             {pageSizeOptions.map((size) => (
               <option key={size} value={size}>
@@ -207,9 +207,9 @@ function PageButton({
       {...props}
       disabled={disabled}
       className={cn(
-        'inline-flex items-center justify-center h-7 min-w-7 rounded text-xs font-mono transition-colors',
+        'inline-flex items-center justify-center h-9 min-w-9 sm:h-7 sm:min-w-7 rounded text-xs font-mono transition-colors',
         active
-          ? 'bg-accent text-white font-semibold'
+          ? 'bg-accent text-accent-foreground font-semibold'
           : 'text-muted-foreground hover:text-foreground hover:bg-muted',
         disabled && 'opacity-30 pointer-events-none',
       )}

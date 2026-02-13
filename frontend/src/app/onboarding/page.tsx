@@ -11,13 +11,12 @@
  * Saves data to backend via API at each step.
  */
 
-import { useState, useRef, useEffect, type FormEvent } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import {
   Check,
   Upload,
-  Play,
   Building2,
   Route,
   Shield,
@@ -130,12 +129,12 @@ function OnboardingPhoneInput({
   return (
     <div className="space-y-1" ref={ref}>
       <label className="text-sm font-medium flex items-center gap-1.5">
-        <Phone className="h-3.5 w-3.5 text-purple-500" />
+        <Phone className="h-3.5 w-3.5 text-action-reroute" />
         Phone (WhatsApp) *
       </label>
       <div className="relative flex items-stretch">
         <button type="button" onClick={() => { setOpen(!open); setSearch(''); }}
-          className={`flex items-center gap-1.5 px-3 rounded-l-lg border border-r-0 bg-muted/70 hover:bg-muted min-w-[96px] transition-all ${open ? 'border-purple-500 ring-2 ring-purple-500/30 z-10' : 'border-border'}`}>
+          className={`flex items-center gap-1.5 px-3 rounded-l-lg border border-r-0 bg-muted/70 hover:bg-muted min-w-[96px] transition-all ${open ? 'border-action-reroute ring-2 ring-action-reroute/30 z-10' : 'border-border'}`}>
           <span className="text-lg leading-none">{sel.flag}</span>
           <span className="text-sm font-mono font-medium">{sel.code}</span>
           <ChevronDown className={`h-3 w-3 text-muted-foreground ml-auto transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -144,12 +143,13 @@ function OnboardingPhoneInput({
           <input ref={inputRef} type="tel" value={value}
             onChange={(e) => onChange(formatPhone(e.target.value.replace(/[^\d\s\-()]/g, '')))}
             placeholder={sel.format.replace(/#/g, '0')}
-            className={`h-10 w-full rounded-r-lg border bg-muted/50 pl-3 pr-9 text-sm font-mono tracking-wide focus:outline-none focus:ring-2 focus:ring-purple-500/50 ${digits > 0 && digits < 8 ? 'border-amber-400' : 'border-border'}`}
+            maxLength={20}
+            className={`h-10 w-full rounded-r-lg border bg-muted/50 pl-3 pr-9 text-sm font-mono tracking-wide focus:outline-none focus:ring-2 focus:ring-action-reroute/50 ${digits > 0 && digits < 8 ? 'border-warning' : 'border-border'}`}
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
             {digits === 0 ? <MessageSquare className="h-3.5 w-3.5 text-muted-foreground/40" />
-              : digits >= 8 ? <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><Check className="h-3.5 w-3.5 text-emerald-500" /></motion.div>
-              : <span className="text-[9px] font-mono text-amber-500">{digits}/8+</span>}
+              : digits >= 8 ? <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><Check className="h-3.5 w-3.5 text-success" /></motion.div>
+              : <span className="text-[9px] font-mono text-warning">{digits}/8+</span>}
           </div>
         </div>
         <AnimatePresence>
@@ -157,15 +157,15 @@ function OnboardingPhoneInput({
             <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
               className="absolute top-full left-0 mt-1 w-72 max-h-60 bg-card border rounded-xl shadow-xl overflow-hidden z-50">
               <div className="p-2 border-b"><input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search..." autoFocus className="h-8 w-full rounded-lg border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50" /></div>
+                placeholder="Search..." autoFocus maxLength={200} className="h-8 w-full rounded-lg border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50" /></div>
               <div className="overflow-y-auto max-h-44">
                 {filtered.map((c) => (
                   <button key={c.code + c.country} onClick={() => { onCountryCodeChange(c.code); setOpen(false); setSearch(''); onChange(''); inputRef.current?.focus(); }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-muted/80 transition-colors ${countryCode === c.code ? 'bg-purple-500/10' : ''}`}>
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-muted/80 transition-colors ${countryCode === c.code ? 'bg-action-reroute/10' : ''}`}>
                     <span className="text-lg">{c.flag}</span>
                     <span className="text-sm flex-1 truncate">{c.label}</span>
                     <span className="text-xs font-mono text-muted-foreground">{c.code}</span>
-                    {countryCode === c.code && <Check className="h-3 w-3 text-purple-500" />}
+                    {countryCode === c.code && <Check className="h-3 w-3 text-action-reroute" />}
                   </button>
                 ))}
               </div>
@@ -176,7 +176,7 @@ function OnboardingPhoneInput({
       {digits > 0 && (
         <p className="text-[10px] text-muted-foreground font-mono pl-1">
           Full: <span className="text-foreground">{countryCode} {value}</span>
-          {digits >= 8 && <span className="text-emerald-500 ml-1">Valid</span>}
+          {digits >= 8 && <span className="text-success ml-1">Valid</span>}
         </p>
       )}
     </div>
@@ -224,7 +224,6 @@ const STEP_ORDER: Step[] = ['welcome', 'company', 'routes', 'preferences', 'impo
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
-  const qc = useQueryClient();
   const [step, setStep] = useState<Step>('welcome');
   const [error, setError] = useState<string | null>(null);
 
@@ -338,18 +337,18 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-950/10 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-action-reroute/10 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         {/* Progress */}
         {step !== 'welcome' && step !== 'complete' && (
           <div className="mb-6">
             <div className="flex items-center gap-1 mb-2">
-              {STEP_ORDER.slice(1, -1).map((s, i) => (
+              {STEP_ORDER.slice(1, -1).map((s) => (
                 <div key={s} className="flex-1">
                   <div
                     className={`h-1.5 rounded-full transition-all duration-300 ${
                       STEP_ORDER.indexOf(s) <= stepIndex
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+                        ? 'bg-gradient-to-r from-action-reroute to-accent'
                         : 'bg-muted'
                     }`}
                   />
@@ -374,11 +373,11 @@ export default function OnboardingPage() {
               className="text-center space-y-6"
             >
               <motion.div
-                className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center"
+                className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-action-reroute/20 to-accent/20 flex items-center justify-center"
                 animate={{ scale: [1, 1.05, 1], rotate: [0, 2, -2, 0] }}
                 transition={{ duration: 4, repeat: Infinity }}
               >
-                <Shield className="h-10 w-10 text-purple-500" />
+                <Shield className="h-10 w-10 text-action-reroute" />
               </motion.div>
 
               <div>
@@ -398,7 +397,7 @@ export default function OnboardingPage() {
                   { icon: Brain, label: 'AI Analysis', desc: 'Risk intelligence' },
                 ].map((item) => (
                   <div key={item.label} className="p-3 rounded-lg bg-card border text-center">
-                    <item.icon className="h-5 w-5 mx-auto mb-1.5 text-purple-500" />
+                    <item.icon className="h-5 w-5 mx-auto mb-1.5 text-action-reroute" />
                     <p className="text-xs font-medium">{item.label}</p>
                     <p className="text-[10px] text-muted-foreground">{item.desc}</p>
                   </div>
@@ -406,7 +405,7 @@ export default function OnboardingPage() {
               </div>
 
               <Button
-                className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg shadow-purple-500/25 px-8"
+                className="gap-2 bg-gradient-to-r from-action-reroute to-accent hover:from-action-reroute/90 hover:to-accent/90 shadow-lg shadow-action-reroute/25 px-8"
                 onClick={goNext}
                 size="lg"
               >
@@ -425,11 +424,11 @@ export default function OnboardingPage() {
               exit={{ opacity: 0, x: -40 }}
               transition={{ duration: 0.25 }}
             >
-              <Card className="border-purple-500/20">
+              <Card className="border-action-reroute/20">
                 <CardContent className="p-6 space-y-4">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-lg bg-purple-500/10">
-                      <Building2 className="h-5 w-5 text-purple-500" />
+                    <div className="p-2 rounded-lg bg-action-reroute/10">
+                      <Building2 className="h-5 w-5 text-action-reroute" />
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold">Company Profile</h2>
@@ -445,7 +444,8 @@ export default function OnboardingPage() {
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
                         placeholder="Acme Logistics Co."
-                        className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                        maxLength={200}
+                        className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                       />
                     </div>
 
@@ -463,7 +463,8 @@ export default function OnboardingPage() {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="ops@company.com"
-                          className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                          maxLength={254}
+                          className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                         />
                       </div>
                     </div>
@@ -473,7 +474,7 @@ export default function OnboardingPage() {
                       <select
                         value={industry}
                         onChange={(e) => setIndustry(e.target.value)}
-                        className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                        className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                       >
                         <option value="">Select industry...</option>
                         {INDUSTRIES.map((ind) => (
@@ -489,7 +490,7 @@ export default function OnboardingPage() {
                       Back
                     </Button>
                     <Button
-                      className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500"
+                      className="flex-1 bg-gradient-to-r from-action-reroute to-accent"
                       onClick={goNext}
                       disabled={!companyName || phone.replace(/\D/g, '').length < 8}
                     >
@@ -511,11 +512,11 @@ export default function OnboardingPage() {
               exit={{ opacity: 0, x: -40 }}
               transition={{ duration: 0.25 }}
             >
-              <Card className="border-blue-500/20">
+              <Card className="border-info/20">
                 <CardContent className="p-6 space-y-4">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-lg bg-blue-500/10">
-                      <Route className="h-5 w-5 text-blue-500" />
+                    <div className="p-2 rounded-lg bg-info/10">
+                      <Route className="h-5 w-5 text-info" />
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold">Trade Routes</h2>
@@ -525,7 +526,7 @@ export default function OnboardingPage() {
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20 text-sm text-blue-600 dark:text-blue-400">
+                  <div className="p-3 rounded-lg bg-info/5 border border-info/20 text-sm text-info">
                     <Anchor className="h-4 w-4 inline mr-1.5" />
                     RiskCast monitors maritime chokepoints (Suez Canal, Red Sea, Malacca Strait, etc.) along your routes
                     and sends real-time alerts when disruptions affect your shipments.
@@ -537,7 +538,7 @@ export default function OnboardingPage() {
                       <select
                         value={routeOrigin}
                         onChange={(e) => setRouteOrigin(e.target.value)}
-                        className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                        className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-info/50"
                       >
                         <option value="">Select origin...</option>
                         {PORTS.map((p) => (
@@ -550,7 +551,7 @@ export default function OnboardingPage() {
                       <select
                         value={routeDestination}
                         onChange={(e) => setRouteDestination(e.target.value)}
-                        className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                        className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-info/50"
                       >
                         <option value="">Select destination...</option>
                         {PORTS.filter((p) => p.code !== routeOrigin).map((p) => (
@@ -581,14 +582,14 @@ export default function OnboardingPage() {
                             className="flex items-center justify-between p-2.5 rounded-lg border bg-card"
                           >
                             <div className="flex items-center gap-2 text-sm">
-                              <Ship className="h-3.5 w-3.5 text-blue-500" />
+                              <Ship className="h-3.5 w-3.5 text-info" />
                               <span className="font-mono font-medium">{route.origin}</span>
                               <span className="text-xs text-muted-foreground">{orig?.label}</span>
                               <span className="text-muted-foreground">→</span>
                               <span className="font-mono font-medium">{route.destination}</span>
                               <span className="text-xs text-muted-foreground">{dest?.label}</span>
                             </div>
-                            <button onClick={() => removeRoute(i)} className="p-1 text-muted-foreground hover:text-red-500">
+                            <button onClick={() => removeRoute(i)} className="p-1 text-muted-foreground hover:text-destructive">
                               <X className="h-3.5 w-3.5" />
                             </button>
                           </div>
@@ -599,14 +600,14 @@ export default function OnboardingPage() {
 
                   {/* Auto-detected chokepoints */}
                   {chokepoints.length > 0 && (
-                    <div className="p-3 rounded-lg bg-orange-500/5 border border-orange-500/20">
-                      <p className="text-xs font-medium text-orange-600 dark:text-orange-400 mb-2">
+                    <div className="p-3 rounded-lg bg-warning/5 border border-warning/20">
+                      <p className="text-xs font-medium text-warning mb-2">
                         <AlertTriangle className="h-3.5 w-3.5 inline mr-1" />
                         Auto-detected Chokepoints ({chokepoints.length}):
                       </p>
                       <div className="flex flex-wrap gap-1.5">
                         {chokepoints.map((cp) => (
-                          <Badge key={cp} variant="outline" className="text-xs bg-orange-500/10 text-orange-600 border-orange-500/30">
+                          <Badge key={cp} variant="outline" className="text-xs bg-warning/10 text-warning border-warning/30">
                             {cp.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
                           </Badge>
                         ))}
@@ -620,7 +621,7 @@ export default function OnboardingPage() {
                       Back
                     </Button>
                     <Button
-                      className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500"
+                      className="flex-1 bg-gradient-to-r from-action-reroute to-accent"
                       onClick={goNext}
                     >
                       Next: Risk Preferences
@@ -641,11 +642,11 @@ export default function OnboardingPage() {
               exit={{ opacity: 0, x: -40 }}
               transition={{ duration: 0.25 }}
             >
-              <Card className="border-amber-500/20">
+              <Card className="border-warning/20">
                 <CardContent className="p-6 space-y-4">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-lg bg-amber-500/10">
-                      <Shield className="h-5 w-5 text-amber-500" />
+                    <div className="p-2 rounded-lg bg-warning/10">
+                      <Shield className="h-5 w-5 text-warning" />
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold">Risk Preferences</h2>
@@ -663,27 +664,27 @@ export default function OnboardingPage() {
                           value: 'LOW' as const, label: 'Conservative',
                           desc: 'Alert early, maximum safety for high-value cargo.',
                           Icon: ShieldCheck, color: 'blue',
-                          gradient: 'from-blue-500/20 to-cyan-500/20',
-                          border: 'border-blue-500', ring: 'ring-blue-500/30',
-                          bg: 'bg-blue-500/10', iconColor: 'text-blue-500',
+                          gradient: 'from-info/20 to-action-insure/20',
+                          border: 'border-info', ring: 'ring-info/30',
+                          bg: 'bg-info/10', iconColor: 'text-info',
                           features: ['Early warnings', 'Lower thresholds'],
                         },
                         {
                           value: 'BALANCED' as const, label: 'Balanced',
                           desc: 'Smart filtering to reduce noise. Recommended.',
                           Icon: Shield, color: 'purple',
-                          gradient: 'from-purple-500/20 to-violet-500/20',
-                          border: 'border-purple-500', ring: 'ring-purple-500/30',
-                          bg: 'bg-purple-500/10', iconColor: 'text-purple-500',
+                          gradient: 'from-action-reroute/20 to-action-reroute/20',
+                          border: 'border-action-reroute', ring: 'ring-action-reroute/30',
+                          bg: 'bg-action-reroute/10', iconColor: 'text-action-reroute',
                           features: ['Smart filtering', 'Prioritized alerts'],
                         },
                         {
                           value: 'HIGH' as const, label: 'Aggressive',
                           desc: 'Only critical disruptions. For experienced teams.',
                           Icon: ShieldAlert, color: 'orange',
-                          gradient: 'from-orange-500/20 to-red-500/20',
-                          border: 'border-orange-500', ring: 'ring-orange-500/30',
-                          bg: 'bg-orange-500/10', iconColor: 'text-orange-500',
+                          gradient: 'from-urgency-urgent/20 to-destructive/20',
+                          border: 'border-urgency-urgent', ring: 'ring-urgency-urgent/30',
+                          bg: 'bg-urgency-urgent/10', iconColor: 'text-urgency-urgent',
                           features: ['Critical only', 'Minimal noise'],
                         },
                       ]).map((opt) => {
@@ -711,8 +712,7 @@ export default function OnboardingPage() {
                                 <p className="text-sm font-bold">{opt.label}</p>
                                 <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center ${isSelected ? opt.border : 'border-border'}`}>
                                   {isSelected && (
-                                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-1.5 h-1.5 rounded-full"
-                                      style={{ backgroundColor: opt.color === 'blue' ? '#3b82f6' : opt.color === 'purple' ? '#a855f7' : '#f97316' }} />
+                                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className={`w-1.5 h-1.5 rounded-full ${opt.iconColor.replace('text-', 'bg-')}`} />
                                   )}
                                 </div>
                               </div>
@@ -738,25 +738,25 @@ export default function OnboardingPage() {
                         {
                           value: 'enterprise', label: 'Enterprise',
                           desc: 'Full platform with SLA & priority support',
-                          Icon: Crown, gradient: 'from-amber-500/15 to-orange-500/15',
-                          border: 'border-amber-500', ring: 'ring-amber-500/30',
-                          iconColor: 'text-amber-500', badge: 'Best',
+                          Icon: Crown, gradient: 'from-warning/15 to-urgency-urgent/15',
+                          border: 'border-warning', ring: 'ring-warning/30',
+                          iconColor: 'text-warning', badge: 'Best',
                           features: ['Unlimited routes', 'AI analysis', 'SLA guarantee'],
                         },
                         {
                           value: 'mid-market', label: 'Mid-Market',
                           desc: 'Core monitoring for growing teams',
-                          Icon: Gem, gradient: 'from-violet-500/15 to-purple-500/15',
-                          border: 'border-violet-500', ring: 'ring-violet-500/30',
-                          iconColor: 'text-violet-500', badge: null,
+                          Icon: Gem, gradient: 'from-action-reroute/15 to-action-reroute/15',
+                          border: 'border-action-reroute', ring: 'ring-action-reroute/30',
+                          iconColor: 'text-action-reroute', badge: null,
                           features: ['Up to 20 routes', 'Basic AI', 'Email support'],
                         },
                         {
                           value: 'startup', label: 'Startup',
                           desc: 'Essential monitoring to get started',
-                          Icon: Zap, gradient: 'from-emerald-500/15 to-teal-500/15',
-                          border: 'border-emerald-500', ring: 'ring-emerald-500/30',
-                          iconColor: 'text-emerald-500', badge: null,
+                          Icon: Zap, gradient: 'from-success/15 to-action-insure/15',
+                          border: 'border-success', ring: 'ring-success/30',
+                          iconColor: 'text-success', badge: null,
                           features: ['Up to 5 routes', 'Basic alerts'],
                         },
                       ]).map((opt) => {
@@ -782,7 +782,7 @@ export default function OnboardingPage() {
                                   <opt.Icon className={`h-4.5 w-4.5 ${isSelected ? opt.iconColor : 'text-muted-foreground'}`} />
                                 </div>
                                 {opt.badge && (
-                                  <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' : 'bg-amber-500/10 text-amber-600'}`}>
+                                  <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-gradient-to-r from-warning to-urgency-urgent text-accent-foreground' : 'bg-warning/10 text-warning'}`}>
                                     {opt.badge}
                                   </span>
                                 )}
@@ -804,8 +804,8 @@ export default function OnboardingPage() {
                     </div>
                   </div>
 
-                  {error && (
-                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-500">
+                    {error && (
+                    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
                       {error}
                     </div>
                   )}
@@ -816,7 +816,7 @@ export default function OnboardingPage() {
                       Back
                     </Button>
                     <Button
-                      className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500"
+                      className="flex-1 bg-gradient-to-r from-action-reroute to-accent"
                       onClick={handleCreateCompany}
                       disabled={createCustomerMutation.isPending}
                     >
@@ -844,8 +844,8 @@ export default function OnboardingPage() {
               <Card>
                 <CardContent className="p-6 space-y-4">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-lg bg-emerald-500/10">
-                      <Upload className="h-5 w-5 text-emerald-500" />
+                    <div className="p-2 rounded-lg bg-success/10">
+                      <Upload className="h-5 w-5 text-success" />
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold">Import Data (Optional)</h2>
@@ -855,9 +855,9 @@ export default function OnboardingPage() {
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-center">
-                    <Check className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                  <div className="p-4 rounded-lg bg-success/5 border border-success/20 text-center">
+                    <Check className="h-8 w-8 text-success mx-auto mb-2" />
+                    <p className="text-sm font-medium text-success">
                       Company profile created successfully!
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -872,7 +872,7 @@ export default function OnboardingPage() {
 
                   <div className="flex gap-3 pt-2">
                     <Button
-                      className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500"
+                      className="flex-1 bg-gradient-to-r from-action-reroute to-accent"
                       onClick={handleSkipImport}
                     >
                       Continue to Signal Scan
@@ -893,14 +893,14 @@ export default function OnboardingPage() {
               exit={{ opacity: 0, x: -40 }}
               transition={{ duration: 0.25 }}
             >
-              <Card className="border-purple-500/20">
+              <Card className="border-action-reroute/20">
                 <CardContent className="p-6 space-y-4 text-center">
                   <motion.div
-                    className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center"
+                    className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-action-reroute/20 to-accent/20 flex items-center justify-center"
                     animate={{ scale: [1, 1.1, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
-                    <Brain className="h-8 w-8 text-purple-500" />
+                    <Brain className="h-8 w-8 text-action-reroute" />
                   </motion.div>
 
                   <div>
@@ -922,7 +922,7 @@ export default function OnboardingPage() {
                   )}
 
                   <Button
-                    className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 px-8"
+                    className="gap-2 bg-gradient-to-r from-action-reroute to-accent px-8"
                     onClick={handleScan}
                     disabled={scanMutation.isPending || analyzeMutation.isPending}
                     size="lg"
@@ -956,12 +956,12 @@ export default function OnboardingPage() {
               className="text-center space-y-6"
             >
               <motion.div
-                className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center"
+                className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-success/20 to-success/20 flex items-center justify-center"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', damping: 10 }}
               >
-                <Check className="h-10 w-10 text-emerald-500" />
+                <Check className="h-10 w-10 text-success" />
               </motion.div>
 
               <div>
@@ -974,7 +974,7 @@ export default function OnboardingPage() {
               {scanResult && (
                 <div className="p-4 rounded-lg bg-card border mx-auto max-w-sm">
                   <p className="text-sm font-medium">
-                    <Sparkles className="h-4 w-4 inline mr-1 text-purple-500" />
+                    <Sparkles className="h-4 w-4 inline mr-1 text-action-reroute" />
                     Found {scanResult.signals} active signals
                   </p>
                   {aiAnalysis && (
@@ -985,7 +985,7 @@ export default function OnboardingPage() {
 
               <div className="flex gap-3 justify-center">
                 <Button
-                  className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 px-6"
+                  className="gap-2 bg-gradient-to-r from-action-reroute to-accent px-6"
                   onClick={() => navigate('/dashboard')}
                 >
                   Go to Dashboard

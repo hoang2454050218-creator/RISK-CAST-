@@ -123,6 +123,18 @@ export function Q6Confidence({ data, decisionId, className }: Q6Props) {
                 <p className="text-sm text-muted-foreground">
                   Based on {data.confidence_factors.length} factors
                 </p>
+                {/* Confidence explanation summary */}
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-mono text-muted-foreground/70 mt-1">
+                  {data.confidence_factors.length > 0 && (
+                    <span>{data.confidence_factors.length} factor{data.confidence_factors.length !== 1 ? 's' : ''} analyzed</span>
+                  )}
+                  {data.calibration?.historical_accuracy != null && (
+                    <span>Hist. accuracy: {Math.round(data.calibration.historical_accuracy * 100)}%</span>
+                  )}
+                  {data.calibration?.sample_size != null && data.calibration.sample_size > 0 && (
+                    <span>n={data.calibration.sample_size}</span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 text-xs">
                   <Eye className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-muted-foreground">

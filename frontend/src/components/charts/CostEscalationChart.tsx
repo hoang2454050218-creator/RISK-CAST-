@@ -23,14 +23,11 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { springs, staggerContainer, staggerItem } from '@/lib/animations';
 import { useChartColors } from '@/lib/chart-theme';
 import {
-  TrendingUp,
   AlertTriangle,
   Clock,
   Flame,
   DollarSign,
   Skull,
-  Activity,
-  Zap,
   Radio,
   Target,
 } from 'lucide-react';
@@ -136,13 +133,13 @@ export function CostEscalationChart({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <motion.div
-                className="p-2.5 rounded-xl bg-gradient-to-br from-red-500/20 to-rose-500/10 border border-red-500/30 relative overflow-hidden"
+                className="p-2.5 rounded-xl bg-gradient-to-br from-severity-critical/20 to-severity-critical/10 border border-severity-critical/30 relative overflow-hidden"
                 whileHover={{ scale: 1.05 }}
                 transition={springs.bouncy}
               >
                 <Flame className="h-5 w-5 text-severity-critical" />
                 <motion.div
-                  className="absolute inset-0 bg-red-500/20"
+                  className="absolute inset-0 bg-severity-critical/20"
                   animate={{ opacity: [0.3, 0, 0.3] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 />
@@ -151,7 +148,7 @@ export function CostEscalationChart({
                 <CardTitle className="text-sm font-mono font-bold uppercase tracking-wider text-severity-critical flex items-center gap-2">
                   Cost Escalation
                   <motion.span
-                    className="text-[9px] font-normal px-1.5 py-0.5 rounded bg-red-500/10 text-severity-critical border border-red-500/30"
+                    className="text-[9px] font-normal px-1.5 py-0.5 rounded bg-severity-critical/10 text-severity-critical border border-severity-critical/30"
                     animate={{ opacity: [0.5, 1, 0.5] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
@@ -193,7 +190,7 @@ export function CostEscalationChart({
 
               <motion.div
                 variants={staggerItem}
-                className="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/30"
+                className="px-3 py-2 rounded-xl bg-severity-critical/10 border border-severity-critical/30"
               >
                 <div className="flex items-center gap-1 text-[9px] mb-0.5 text-severity-critical font-mono uppercase">
                   <AlertTriangle className="h-3 w-3" />
@@ -212,7 +209,7 @@ export function CostEscalationChart({
           {/* Time Warning Bar */}
           {timeUntilPONR !== null && (
             <motion.div
-              className="mt-4 p-3 rounded-xl bg-red-500/5 border border-red-500/20 flex items-center justify-between"
+              className="mt-4 p-3 rounded-xl bg-severity-critical/5 border border-severity-critical/20 flex items-center justify-between"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
@@ -446,7 +443,7 @@ export function CostEscalationChart({
                 <>
                   {/* NOW label */}
                   <motion.div
-                    className="absolute bg-accent backdrop-blur-sm text-white px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold shadow-lg border border-accent/50"
+                    className="absolute bg-accent backdrop-blur-sm text-accent-foreground px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold shadow-lg border border-accent/50"
                     style={{
                       left: `calc(${((currentTimestamp - chartData[0]?.timestamp) / (chartData[chartData.length - 1]?.timestamp - chartData[0]?.timestamp)) * 85 + 7}% - 20px)`,
                       top: '10px',
@@ -464,7 +461,7 @@ export function CostEscalationChart({
                   {/* PONR label */}
                   {pointOfNoReturnTimestamp && (
                     <motion.div
-                      className="absolute bg-severity-critical backdrop-blur-sm text-white px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold shadow-lg flex items-center gap-1 border border-red-400/50"
+                      className="absolute bg-severity-critical backdrop-blur-sm text-destructive-foreground px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold shadow-lg flex items-center gap-1 border border-severity-critical/50"
                       style={{
                         left: `calc(${((pointOfNoReturnTimestamp - chartData[0]?.timestamp) / (chartData[chartData.length - 1]?.timestamp - chartData[0]?.timestamp)) * 85 + 7}% - 45px)`,
                         top: '10px',

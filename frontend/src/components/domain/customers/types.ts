@@ -14,15 +14,15 @@ export interface Customer {
 export const riskToleranceConfig = {
   LOW: {
     label: 'Conservative',
-    className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+    className: 'bg-success/10 text-success border-success/30',
   },
   MEDIUM: {
     label: 'Balanced',
-    className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30',
+    className: 'bg-warning/10 text-warning border-warning/30',
   },
   HIGH: {
     label: 'Aggressive',
-    className: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30',
+    className: 'bg-destructive/10 text-destructive border-destructive/30',
   },
 };
 
@@ -30,12 +30,12 @@ export const statusConfig = {
   ACTIVE: {
     label: 'Active',
     className:
-      'bg-gradient-to-r from-emerald-500 to-green-500 text-white dark:shadow-lg dark:shadow-emerald-500/25',
+      'bg-gradient-to-r from-success to-success/80 text-success-foreground shadow-lg shadow-success/25',
   },
   ONBOARDING: {
     label: 'Onboarding',
     className:
-      'bg-gradient-to-r from-blue-500 to-indigo-500 text-white dark:shadow-lg dark:shadow-blue-500/25',
+      'bg-gradient-to-r from-accent to-accent/80 text-accent-foreground shadow-lg shadow-accent/25',
   },
   INACTIVE: { label: 'Inactive', className: 'bg-muted text-muted-foreground' },
 };

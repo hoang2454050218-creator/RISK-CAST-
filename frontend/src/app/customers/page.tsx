@@ -11,8 +11,8 @@ import {
 import { springs, staggerContainer, staggerItem } from '@/lib/animations';
 import { CustomerCard } from '@/components/domain/customers';
 import type { Customer } from '@/components/domain/customers';
-import { useCustomersList, useCreateCustomer, useDeleteCustomer } from '@/hooks/useCustomers';
-import { ErrorState } from '@/components/ui/error-state';
+import { useCustomersList, useCreateCustomer } from '@/hooks/useCustomers';
+import { ErrorState } from '@/components/ui/states';
 import type { CustomerListItem } from '@/lib/mock-data';
 
 // ── Well-known ports for route selection ────────────────────
@@ -83,11 +83,11 @@ function MiniPhoneInput({ value, onChange, countryCode, onCountryCodeChange }: {
   return (
     <div className="space-y-1" ref={ref}>
       <label className="text-sm font-medium flex items-center gap-1">
-        <Phone className="h-3 w-3 text-purple-500" /> Phone (WhatsApp) *
+        <Phone className="h-3 w-3 text-action-reroute" /> Phone (WhatsApp) *
       </label>
       <div className="relative flex items-stretch">
         <button type="button" onClick={() => setOpen(!open)}
-          className={`flex items-center gap-1 px-2 rounded-l-lg border border-r-0 bg-muted/70 hover:bg-muted min-w-[80px] text-sm ${open ? 'border-purple-500 ring-2 ring-purple-500/30 z-10' : 'border-border'}`}>
+          className={`flex items-center gap-1 px-2 rounded-l-lg border border-r-0 bg-muted/70 hover:bg-muted min-w-[80px] text-sm ${open ? 'border-action-reroute ring-2 ring-action-reroute/30 z-10' : 'border-border'}`}>
           <span className="text-base">{sel.flag}</span>
           <span className="font-mono text-xs">{sel.code}</span>
           <ChevronDown className={`h-2.5 w-2.5 ml-auto transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -96,12 +96,12 @@ function MiniPhoneInput({ value, onChange, countryCode, onCountryCodeChange }: {
           <input ref={inputRef} type="tel" value={value}
             onChange={(e) => onChange(formatPhone(e.target.value.replace(/[^\d\s\-()]/g, '')))}
             placeholder={sel.format.replace(/#/g, '0')}
-            className={`h-10 w-full rounded-r-lg border bg-muted/50 pl-3 pr-8 text-sm font-mono tracking-wide focus:outline-none focus:ring-2 focus:ring-purple-500/50 ${digits > 0 && digits < 8 ? 'border-amber-400' : 'border-border'}`}
+            className={`h-10 w-full rounded-r-lg border bg-muted/50 pl-3 pr-8 text-sm font-mono tracking-wide focus:outline-none focus:ring-2 focus:ring-action-reroute/50 ${digits > 0 && digits < 8 ? 'border-warning' : 'border-border'}`}
           />
           <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
             {digits === 0 ? <MessageSquare className="h-3 w-3 text-muted-foreground/40" />
-              : digits >= 8 ? <Check className="h-3 w-3 text-emerald-500" />
-              : <span className="text-[9px] font-mono text-amber-500">{digits}/8+</span>}
+              : digits >= 8 ? <Check className="h-3 w-3 text-success" />
+              : <span className="text-[9px] font-mono text-warning">{digits}/8+</span>}
           </div>
         </div>
         <AnimatePresence>
@@ -111,11 +111,11 @@ function MiniPhoneInput({ value, onChange, countryCode, onCountryCodeChange }: {
               <div className="overflow-y-auto max-h-48">
                 {COUNTRY_CODES_SHORT.map((c) => (
                   <button key={c.code} onClick={() => { onCountryCodeChange(c.code); setOpen(false); onChange(''); inputRef.current?.focus(); }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted/80 ${countryCode === c.code ? 'bg-purple-500/10' : ''}`}>
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted/80 ${countryCode === c.code ? 'bg-action-reroute/10' : ''}`}>
                     <span>{c.flag}</span>
                     <span className="flex-1 truncate">{c.label}</span>
                     <span className="text-xs font-mono text-muted-foreground">{c.code}</span>
-                    {countryCode === c.code && <Check className="h-3 w-3 text-purple-500" />}
+                    {countryCode === c.code && <Check className="h-3 w-3 text-action-reroute" />}
                   </button>
                 ))}
               </div>
@@ -152,10 +152,9 @@ type FormStep = 'company' | 'routes' | 'preferences';
 
 export function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const { info, success, error: showError } = useToast();
+  const { success, error: showError } = useToast();
   const { data: customers = [], isLoading, error, refetch } = useCustomersList();
   const createCustomer = useCreateCustomer();
-  const deleteCustomer = useDeleteCustomer();
 
   // Add Customer modal state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -210,9 +209,11 @@ export function CustomersPage() {
   };
 
   const handleSubmitCustomer = async () => {
+    // Guard: prevent double-submit if mutation already in flight
+    if (createCustomer.isPending) return;
     if (!formData.companyName || !formData.phone) return;
 
-    const customerId = `CUST-${Date.now().toString(36).toUpperCase()}`;
+    const customerId = `CUST-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6)}`;
     const primaryRoutes = formData.routes.map((r) => `${r.origin}-${r.destination}`);
 
     try {
@@ -272,11 +273,11 @@ export function CustomersPage() {
             animate={{ opacity: 1, x: 0 }}
           >
             <motion.div
-              className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20"
+              className="p-2 rounded-xl bg-gradient-to-br from-action-reroute/20 to-accent/20"
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Users className="h-6 w-6 text-purple-500" />
+              <Users className="h-6 w-6 text-action-reroute" />
             </motion.div>
             Customers
           </motion.h1>
@@ -298,7 +299,7 @@ export function CustomersPage() {
           whileTap={{ scale: 0.98 }}
         >
           <Button
-            className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg shadow-purple-500/25"
+            className="gap-2 bg-gradient-to-r from-action-reroute to-accent shadow-lg shadow-action-reroute/25"
             onClick={handleAddCustomer}
           >
             <Plus className="h-4 w-4" />
@@ -357,7 +358,8 @@ export function CustomersPage() {
           placeholder="Search customers..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-11 w-full rounded-xl border border-border bg-muted/50 pl-10 pr-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+          maxLength={200}
+          className="h-11 w-full rounded-xl border border-border bg-muted/50 pl-10 pr-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-action-reroute/50 transition-all"
         />
       </motion.div>
 
@@ -408,11 +410,11 @@ export function CustomersPage() {
               <Card className="overflow-hidden shadow-md bg-card shadow-sm">
                 <CardContent className="flex flex-col items-center justify-center py-16">
                   <motion.div
-                    className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 mb-4"
+                    className="p-4 rounded-2xl bg-gradient-to-br from-action-reroute/10 to-accent/10 mb-4"
                     animate={{ rotate: [0, 5, -5, 0] }}
                     transition={{ duration: 3, repeat: Infinity }}
                   >
-                    <Building className="h-12 w-12 text-purple-500" />
+                    <Building className="h-12 w-12 text-action-reroute" />
                   </motion.div>
                   <p className="text-xl font-semibold mb-2">No customers found</p>
                   <p className="text-sm text-muted-foreground mb-4">
@@ -420,7 +422,7 @@ export function CustomersPage() {
                   </p>
                   {!searchQuery && (
                     <Button
-                      className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500"
+                      className="gap-2 bg-gradient-to-r from-action-reroute to-accent"
                       onClick={handleAddCustomer}
                     >
                       <Plus className="h-4 w-4" />
@@ -459,7 +461,7 @@ export function CustomersPage() {
                     <div
                       className={`h-1.5 flex-1 rounded-full transition-colors ${
                         (['company', 'routes', 'preferences'].indexOf(formStep) >= i)
-                          ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+                          ? 'bg-gradient-to-r from-action-reroute to-accent'
                           : 'bg-muted'
                       }`}
                     />
@@ -504,7 +506,8 @@ export function CustomersPage() {
                         value={formData.companyName}
                         onChange={(e) => setFormData((f) => ({ ...f, companyName: e.target.value }))}
                         placeholder="Acme Logistics Co."
-                        className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                        maxLength={200}
+                        className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                       />
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -521,7 +524,8 @@ export function CustomersPage() {
                           value={formData.email}
                           onChange={(e) => setFormData((f) => ({ ...f, email: e.target.value }))}
                           placeholder="ops@company.com"
-                          className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                          maxLength={254}
+                          className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                         />
                       </div>
                     </div>
@@ -530,7 +534,7 @@ export function CustomersPage() {
                       <select
                         value={formData.industry}
                         onChange={(e) => setFormData((f) => ({ ...f, industry: e.target.value }))}
-                        className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                        className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                       >
                         <option value="">Select industry...</option>
                         {INDUSTRIES.map((ind) => (
@@ -549,7 +553,7 @@ export function CustomersPage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-sm text-blue-600 dark:text-blue-400">
+                    <div className="p-3 rounded-lg bg-info/10 border border-info/20 text-sm text-info">
                       <Route className="h-4 w-4 inline mr-1.5" />
                       Add your main shipping routes. RiskCast will monitor chokepoints along these routes and alert you about disruptions.
                     </div>
@@ -560,7 +564,7 @@ export function CustomersPage() {
                         <select
                           value={formData.routeOrigin}
                           onChange={(e) => setFormData((f) => ({ ...f, routeOrigin: e.target.value }))}
-                          className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                          className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                         >
                           <option value="">Select origin...</option>
                           {PORTS.map((p) => (
@@ -573,7 +577,7 @@ export function CustomersPage() {
                         <select
                           value={formData.routeDestination}
                           onChange={(e) => setFormData((f) => ({ ...f, routeDestination: e.target.value }))}
-                          className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                          className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-action-reroute/50"
                         >
                           <option value="">Select destination...</option>
                           {PORTS.filter((p) => p.code !== formData.routeOrigin).map((p) => (
@@ -605,7 +609,7 @@ export function CustomersPage() {
                               className="flex items-center justify-between p-2.5 rounded-lg border bg-muted/30"
                             >
                               <div className="flex items-center gap-2 text-sm">
-                                <Anchor className="h-3.5 w-3.5 text-blue-500" />
+                                <Anchor className="h-3.5 w-3.5 text-info" />
                                 <span className="font-mono font-medium">{route.origin}</span>
                                 <span className="text-muted-foreground text-xs">{originPort?.label}</span>
                                 <span className="text-muted-foreground">→</span>
@@ -614,7 +618,7 @@ export function CustomersPage() {
                               </div>
                               <button
                                 onClick={() => removeRoute(i)}
-                                className="p-1 rounded text-muted-foreground hover:text-red-500 transition-colors"
+                                className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors"
                               >
                                 <X className="h-3.5 w-3.5" />
                               </button>
@@ -646,18 +650,18 @@ export function CustomersPage() {
                         {([
                           {
                             value: 'LOW' as const, label: 'Conservative', desc: 'Alert early, maximize safety',
-                            Icon: ShieldCheck, border: 'border-blue-500', bg: 'bg-blue-500/10',
-                            ring: 'ring-blue-500/30', iconColor: 'text-blue-500',
+                            Icon: ShieldCheck, border: 'border-info', bg: 'bg-info/10',
+                            ring: 'ring-info/30', iconColor: 'text-info',
                           },
                           {
                             value: 'BALANCED' as const, label: 'Balanced', desc: 'Smart filtering, recommended',
-                            Icon: Shield, border: 'border-purple-500', bg: 'bg-purple-500/10',
-                            ring: 'ring-purple-500/30', iconColor: 'text-purple-500',
+                            Icon: Shield, border: 'border-action-reroute', bg: 'bg-action-reroute/10',
+                            ring: 'ring-action-reroute/30', iconColor: 'text-action-reroute',
                           },
                           {
                             value: 'HIGH' as const, label: 'Aggressive', desc: 'Critical disruptions only',
-                            Icon: ShieldAlert, border: 'border-orange-500', bg: 'bg-orange-500/10',
-                            ring: 'ring-orange-500/30', iconColor: 'text-orange-500',
+                            Icon: ShieldAlert, border: 'border-warning', bg: 'bg-warning/10',
+                            ring: 'ring-warning/30', iconColor: 'text-warning',
                           },
                         ]).map((opt) => {
                           const isSelected = formData.riskTolerance === opt.value;
@@ -688,9 +692,9 @@ export function CustomersPage() {
                       <label className="text-sm font-medium">Customer Tier</label>
                       <div className="grid grid-cols-3 gap-2">
                         {([
-                          { value: 'enterprise', label: 'Enterprise', desc: 'Full features + SLA', Icon: Crown, iconColor: 'text-amber-500', border: 'border-amber-500', bg: 'bg-amber-500/10', ring: 'ring-amber-500/30' },
-                          { value: 'mid-market', label: 'Mid-Market', desc: 'Standard features', Icon: Gem, iconColor: 'text-violet-500', border: 'border-violet-500', bg: 'bg-violet-500/10', ring: 'ring-violet-500/30' },
-                          { value: 'startup', label: 'Startup', desc: 'Essential features', Icon: Zap, iconColor: 'text-emerald-500', border: 'border-emerald-500', bg: 'bg-emerald-500/10', ring: 'ring-emerald-500/30' },
+                          { value: 'enterprise', label: 'Enterprise', desc: 'Full features + SLA', Icon: Crown, iconColor: 'text-warning', border: 'border-warning', bg: 'bg-warning/10', ring: 'ring-warning/30' },
+                          { value: 'mid-market', label: 'Mid-Market', desc: 'Standard features', Icon: Gem, iconColor: 'text-action-reroute', border: 'border-action-reroute', bg: 'bg-action-reroute/10', ring: 'ring-action-reroute/30' },
+                          { value: 'startup', label: 'Startup', desc: 'Essential features', Icon: Zap, iconColor: 'text-success', border: 'border-success', bg: 'bg-success/10', ring: 'ring-success/30' },
                         ]).map((opt) => {
                           const isSelected = formData.tier === opt.value;
                           return (
@@ -751,7 +755,7 @@ export function CustomersPage() {
                     <Button
                       onClick={() => setFormStep('routes')}
                       disabled={!canProceedFromCompany}
-                      className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      className="flex-1 bg-gradient-to-r from-action-reroute to-accent"
                     >
                       Next: Trade Routes
                     </Button>
@@ -760,7 +764,7 @@ export function CustomersPage() {
                   {formStep === 'routes' && (
                     <Button
                       onClick={() => setFormStep('preferences')}
-                      className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      className="flex-1 bg-gradient-to-r from-action-reroute to-accent"
                     >
                       Next: Preferences
                     </Button>
@@ -770,7 +774,7 @@ export function CustomersPage() {
                     <Button
                       onClick={handleSubmitCustomer}
                       disabled={!canSubmit || createCustomer.isPending}
-                      className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      className="flex-1 bg-gradient-to-r from-action-reroute to-accent"
                     >
                       {createCustomer.isPending ? (
                         <>

@@ -4,12 +4,12 @@
  * "Mission control for supply chain risk decisions"
  */
 
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SkeletonDashboard } from '@/components/ui/skeleton';
-import { ErrorState } from '@/components/ui/error-state';
+import { ErrorState } from '@/components/ui/states';
 import { UrgencyBadge } from '@/components/domain/common/UrgencyBadge';
 import { SeverityBadge } from '@/components/domain/common/SeverityBadge';
 import { CompactCountdown } from '@/components/domain/common/CountdownTimer';
@@ -18,6 +18,7 @@ import { useDashboardData } from '@/hooks/useDashboard';
 import { useDecisionsList } from '@/hooks/useDecisions';
 import { useSignalsList } from '@/hooks/useSignals';
 import { useEscalationsList } from '@/hooks/useEscalations';
+import { LazyGlobalMap as GlobalMap } from '@/components/domain/map';
 import {
   AlertTriangle,
   Bell,
@@ -33,7 +34,6 @@ import {
   Globe,
   Activity,
   ArrowRight,
-  Shield,
   TrendingDown,
   Ship,
 } from 'lucide-react';
@@ -92,10 +92,6 @@ const activityConfig: Record<string, {
   escalation: { icon: AlertTriangle, color: 'text-warning', bg: 'bg-warning/10', dot: 'bg-warning' },
   customer: { icon: Globe, color: 'text-accent', bg: 'bg-accent/10', dot: 'bg-accent' },
 };
-
-// ─── Chokepoint status map ──────────────────────────────────
-const mapChokepointStatus = (s: string): 'critical' | 'warning' | 'healthy' =>
-  s === 'degraded' ? 'warning' : s === 'operational' ? 'healthy' : 'critical';
 
 // ─── Time formatting ────────────────────────────────────────
 function timeAgo(iso: string): string {
@@ -175,7 +171,7 @@ function PipelineStepper() {
   return (
     <div className="relative">
       {/* Glass container */}
-      <div className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur-sm p-1.5">
+      <div className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm shadow-level-1 p-1.5">
         <div className="flex items-stretch gap-1">
           {steps.map((step, i) => {
             const colors = colorMap[step.color];
@@ -250,7 +246,9 @@ function PipelineStepper() {
 // ═══════════════════════════════════════════════════════════════
 
 export function DashboardPage() {
+  const navigate = useNavigate();
   const { data, isLoading, error, refetch } = useDashboardData();
+  const { data: allSignals = [] } = useSignalsList();
 
   if (isLoading) return <SkeletonDashboard />;
   if (error) return <ErrorState title="Failed to load dashboard" onRetry={refetch} />;
@@ -266,7 +264,6 @@ export function DashboardPage() {
     totalExposureTrend: 0,
   };
   const urgentDecisions = data.urgentDecisions ?? [];
-  const chokepointHealth = data.chokepointHealth ?? [];
   const recentActivity = data.recentActivity ?? [];
 
   return (
@@ -339,9 +336,30 @@ export function DashboardPage() {
         <PipelineStepper />
       </motion.div>
 
-      {/* ── Stats Grid ───────────────────────────────────────── */}
+      {/* ── Hero Metric — Total Exposure ──────────────────────── */}
       <motion.div
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.12, ...springs.smooth }}
+      >
+        <StatCard
+          label="Total Exposure at Risk"
+          value={stats.totalExposure}
+          change={stats.totalExposureTrend}
+          trend={stats.totalExposureTrend >= 0 ? 'up' : 'down'}
+          icon={DollarSign}
+          isCurrency
+          accentColor="red"
+          variant="overlay"
+          tier="hero"
+          sublabel="Across all active decisions and monitored shipments"
+          urgent={stats.totalExposure > 500000}
+        />
+      </motion.div>
+
+      {/* ── Stats Grid — Supporting Metrics ────────────────────── */}
+      <motion.div
+        className="grid gap-4 sm:grid-cols-3"
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
@@ -379,18 +397,7 @@ export function DashboardPage() {
             icon={Clock}
             accentColor="blue"
             variant="overlay"
-          />
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <StatCard
-            label="Total Revenue"
-            value={stats.totalExposure}
-            change={stats.totalExposureTrend}
-            trend={stats.totalExposureTrend >= 0 ? 'up' : 'down'}
-            icon={DollarSign}
-            isCurrency
-            accentColor="emerald"
-            variant="overlay"
+            tier="secondary"
           />
         </motion.div>
       </motion.div>
@@ -405,9 +412,9 @@ export function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, ...springs.smooth }}
         >
-          <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
+          <div className="rounded-2xl border border-border/60 bg-card shadow-level-1 overflow-hidden">
             {/* Section header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60 bg-muted/20">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/40 bg-muted/10">
               <h2 className="text-sm font-semibold text-foreground flex items-center gap-2.5">
                 <div className="p-1.5 rounded-lg bg-warning/10 border border-warning/20">
                   <Zap className="h-3.5 w-3.5 text-warning" />
@@ -575,95 +582,30 @@ export function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Chokepoint Health — 1 column */}
+        {/* Global Chokepoint Map — 1 column */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, ...springs.smooth }}
         >
-          <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden h-full flex flex-col">
+          <div className="rounded-2xl border border-border/60 bg-card shadow-level-1 overflow-hidden h-full flex flex-col">
             {/* Header */}
-            <div className="px-5 py-3.5 border-b border-border/60 bg-muted/20">
+            <div className="px-5 py-3.5 border-b border-border/40 bg-muted/10">
               <h2 className="text-sm font-semibold text-foreground flex items-center gap-2.5">
                 <div className="p-1.5 rounded-lg bg-action-reroute/10 border border-action-reroute/20">
                   <Globe className="h-3.5 w-3.5 text-action-reroute" />
                 </div>
-                Chokepoint Health
+                Global Chokepoints
               </h2>
             </div>
 
-            {/* Content */}
-            <div className="p-3 flex-1 flex flex-col">
-              {chokepointHealth.length > 0 ? (
-                <motion.div className="space-y-1.5" variants={staggerContainer} initial="hidden" animate="visible">
-                  {chokepointHealth.map((cp) => {
-                    const status = mapChokepointStatus(cp.status);
-                    const statusColors = {
-                      critical: { dot: 'bg-error', text: 'text-error', line: 'from-error to-error/40' },
-                      warning: { dot: 'bg-warning', text: 'text-warning', line: 'from-warning to-warning/40' },
-                      healthy: { dot: 'bg-success', text: 'text-success', line: 'from-success to-success/40' },
-                    }[status];
-
-                    return (
-                      <motion.div
-                        key={cp.id}
-                        variants={staggerItem}
-                        className="relative flex items-center justify-between rounded-xl px-3.5 py-3 bg-muted/30 border border-border/40 hover:bg-muted/50 transition-all overflow-hidden"
-                        whileHover={{ x: 2 }}
-                        transition={springs.snappy}
-                      >
-                        <div className={cn('absolute inset-y-0 left-0 w-0.5 bg-gradient-to-b', statusColors.line)} />
-                        <div className="flex items-center gap-2.5 pl-2">
-                          <motion.div
-                            className={cn('h-2.5 w-2.5 rounded-full', statusColors.dot)}
-                            animate={status === 'critical' ? { scale: [1, 1.3, 1], opacity: [1, 0.5, 1] } : {}}
-                            transition={{ duration: 1, repeat: Infinity }}
-                          />
-                          <span className="font-medium text-sm text-foreground">{cp.name}</span>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-mono text-[10px] text-muted-foreground">{cp.affectedShipments} vessels</p>
-                          <p className={cn('font-mono text-sm font-bold', statusColors.text)}>
-                            {cp.transitDelay > 0 ? `+${cp.transitDelay}d` : '0d'}
-                          </p>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </motion.div>
-              ) : (
-                <motion.div
-                  className="flex-1 flex flex-col items-center justify-center py-6 text-center"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={springs.bouncy}
-                >
-                  {/* Animated globe */}
-                  <div className="relative mb-4">
-                    <div className="p-4 rounded-2xl bg-success/[0.06] border border-success/15">
-                      <Globe className="h-7 w-7 text-success/80" />
-                    </div>
-                    {/* Orbiting ring */}
-                    <motion.div
-                      className="absolute inset-0 rounded-2xl border border-success/20"
-                      animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0, 0.4] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                    <motion.div
-                      className="absolute inset-0 rounded-2xl border border-success/10"
-                      animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0, 0.2] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-                    />
-                  </div>
-                  <p className="font-semibold text-sm text-foreground">All Systems Nominal</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">No chokepoint disruptions detected</p>
-                  <div className="flex items-center gap-1 mt-3">
-                    <Shield className="h-3 w-3 text-success/60" />
-                    <span className="text-[10px] font-mono text-success/60 tracking-wider">MONITORING ACTIVE</span>
-                  </div>
-                </motion.div>
-              )}
-            </div>
+            {/* Map */}
+            <GlobalMap
+              signals={allSignals}
+              compact
+              onChokepointClick={(cpId) => navigate(`/signals?chokepoint=${cpId}`)}
+              className="flex-1 min-h-[280px] border-0 rounded-none"
+            />
           </div>
         </motion.div>
       </div>
@@ -674,8 +616,8 @@ export function DashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, ...springs.smooth }}
       >
-        <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60 bg-muted/20">
+        <div className="rounded-2xl border border-border/60 bg-card shadow-level-1 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/40 bg-muted/10">
             <h2 className="text-sm font-semibold text-foreground flex items-center gap-2.5">
               <div className="p-1.5 rounded-lg bg-info/10 border border-info/20">
                 <Activity className="h-3.5 w-3.5 text-info" />

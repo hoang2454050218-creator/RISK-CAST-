@@ -28,6 +28,7 @@ import { useUser } from '@/contexts/user-context';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
+import { formatCurrency } from '@/lib/formatters';
 import { springs, dropdownVariants, staggerContainer, staggerItem } from '@/lib/animations';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDecisionsList, useEscalationsList } from '@/hooks';
@@ -93,9 +94,14 @@ function DataFreshness() {
     label = `${ageMinutes}m ago`;
   }
 
+  const isStale = ageMs >= 300_000;
+
   return (
     <div
-      className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground"
+      className={cn(
+        'freshness-container',
+        isStale && 'border-warning/30 bg-warning/5',
+      )}
       title={`Last sync: ${new Date(dataUpdatedAt).toLocaleTimeString()}`}
     >
       <span className="relative flex h-2 w-2">
@@ -109,7 +115,7 @@ function DataFreshness() {
         )}
         <span className={cn('relative inline-flex h-2 w-2 rounded-full', dotColor)} />
       </span>
-      <span>{label}</span>
+      <span className={cn(isStale && 'text-warning')}>{label}</span>
     </div>
   );
 }
@@ -153,8 +159,8 @@ export function TopBar({
       animate={{ y: 0, opacity: 1 }}
       transition={springs.smooth}
       className={cn(
-        'sticky top-0 z-30 flex h-14 items-center border-b',
-        'bg-background/80 backdrop-blur-xl backdrop-saturate-150 border-border',
+        'sticky top-0 z-30 flex h-14 items-center topbar-border',
+        'topbar-glass border-b-0',
         className,
       )}
       role="banner"
@@ -187,8 +193,8 @@ export function TopBar({
         <motion.button
           onClick={onSearchClick}
           className={cn(
-            'relative w-full max-w-md h-9 rounded-lg border border-border bg-card/60 px-3 text-sm text-left',
-            'hover:bg-card hover:border-accent/30 hover:shadow-sm transition-all duration-200 cursor-pointer',
+            'relative w-full max-w-md h-9 rounded-lg px-3 text-sm text-left',
+            'search-command-trigger',
             'flex items-center gap-2 group',
           )}
           whileHover={{ scale: 1.005 }}
@@ -339,7 +345,7 @@ export function TopBar({
           >
             <Bell className="h-4 w-4" />
             {notificationCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-sm">
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground notification-badge-glow">
                 {notificationCount > 9 ? '9+' : notificationCount}
               </span>
             )}
@@ -369,7 +375,7 @@ export function TopBar({
             aria-haspopup="true"
           >
             <div className="relative flex-shrink-0 flex items-center justify-center">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-white text-[10px] font-bold leading-none">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-accent-foreground text-[10px] font-bold leading-none">
                 {user.initials}
               </div>
               <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-[1.5px] border-card bg-success" />
@@ -436,13 +442,9 @@ function formatTimeRemaining(deadline: string): string {
   return `${mins}m`;
 }
 
-/** Compact currency for notifications */
-function compactUSD(amount: number): string {
-  if (!amount || amount <= 0) return '$0';
-  if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
-  if (amount >= 1_000) return `$${Math.round(amount / 1_000)}K`;
-  return `$${Math.round(amount)}`;
-}
+/** Compact currency — delegate to centralized formatter */
+const compactUSD = (amount: number): string =>
+  formatCurrency(amount, { compact: true });
 
 function NotificationDropdown({
   onClose,
@@ -613,7 +615,7 @@ function NotificationDropdown({
                 'flex w-full flex-col gap-1.5 px-4 py-3 text-left',
                 'hover:bg-muted/60 transition-all duration-200 border-b border-border/50 last:border-0',
                 notif.urgency === 'critical' && 'bg-destructive/[0.03]',
-                notif.urgency === 'urgent' && 'bg-amber-500/[0.02]',
+                notif.urgency === 'urgent' && 'bg-urgency-urgent/[0.02]',
               )}
               whileHover={{ x: 2 }}
             >

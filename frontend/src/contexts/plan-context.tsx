@@ -141,9 +141,16 @@ const DEFAULT_PLAN: PlanInfo = {
 
 // ─── API helpers ─────────────────────────────────────────
 
+import { isBackendOnline } from '@/lib/api';
+
 const API_BASE = import.meta.env.VITE_V2_API_URL || '/api/v1';
 
 async function fetchPlan(): Promise<PlanInfo> {
+  // Health gate: skip network request if backend is known offline
+  // This makes fallback to DEFAULT_PLAN instant, no waiting for timeout
+  const online = await isBackendOnline();
+  if (!online) throw new Error('Backend offline');
+
   const token = localStorage.getItem('riskcast:auth-token') || localStorage.getItem('riskcast:v2-token');
   const apiKey = localStorage.getItem('riskcast:api-key') || import.meta.env.VITE_API_KEY || '';
 
@@ -153,12 +160,24 @@ async function fetchPlan(): Promise<PlanInfo> {
     ...(apiKey ? { 'X-API-Key': apiKey } : {}),
   };
 
-  const res = await fetch(`${API_BASE}/plan/current`, { headers });
-  if (!res.ok) throw new Error(`Failed to fetch plan: ${res.status}`);
-  return res.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5_000); // 5s timeout
+
+  try {
+    const res = await fetch(`${API_BASE}/plan/current`, { headers, signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error(`Failed to fetch plan: ${res.status}`);
+    return res.json();
+  } catch (err) {
+    clearTimeout(timeout);
+    throw err;
+  }
 }
 
 async function requestUpgrade(planId: string): Promise<{ success: boolean; message: string }> {
+  const online = await isBackendOnline();
+  if (!online) throw new Error('Backend offline');
+
   const token = localStorage.getItem('riskcast:auth-token') || localStorage.getItem('riskcast:v2-token');
   const apiKey = localStorage.getItem('riskcast:api-key') || import.meta.env.VITE_API_KEY || '';
 

@@ -24,13 +24,13 @@ const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
       text: 'rounded h-4',
     };
 
-    const shimmerAnimation =
+    const shimmerStyle =
       animation === 'shimmer'
         ? {
             backgroundImage:
-              'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+              'linear-gradient(90deg, transparent 0%, var(--color-border-subtle, rgba(255,255,255,0.15)) 40%, var(--color-border, rgba(255,255,255,0.25)) 50%, var(--color-border-subtle, rgba(255,255,255,0.15)) 60%, transparent 100%)',
             backgroundSize: '200% 100%',
-            animation: 'shimmer 1.5s ease-in-out infinite',
+            animation: 'shimmer 2s ease-in-out infinite',
           }
         : {};
 
@@ -41,7 +41,7 @@ const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
         aria-label="Loading"
         aria-busy="true"
         className={cn(
-          'bg-muted relative overflow-hidden',
+          'bg-muted/70 relative overflow-hidden',
           variantClasses[variant],
           animation === 'pulse' && 'animate-pulse',
           className,
@@ -49,7 +49,7 @@ const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
         style={{
           width,
           height,
-          ...shimmerAnimation,
+          ...shimmerStyle,
           ...style,
         }}
         {...props}
@@ -154,7 +154,7 @@ function SkeletonCard({
   className,
 }: SkeletonCardProps) {
   return (
-    <div className={cn('bg-card rounded-lg border border-border p-6 space-y-4', className)}>
+    <div className={cn('bg-card rounded-xl border border-border shadow-level-1 p-6 space-y-4', className)}>
       {showHeader && (
         <div className="flex items-center gap-4">
           <SkeletonAvatar />

@@ -131,7 +131,7 @@ export function MobileNav({ className }: MobileNavProps) {
                 </span>
                 <button
                   onClick={() => setIsSheetOpen(false)}
-                  className="p-1 rounded-md hover:bg-muted transition-colors"
+                  className="p-2.5 -mr-1.5 rounded-md hover:bg-muted transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                   aria-label="Close menu"
                 >
                   <X className="h-4 w-4 text-muted-foreground" />
@@ -170,7 +170,8 @@ export function MobileNav({ className }: MobileNavProps) {
       {/* Bottom navigation bar */}
       <nav
         className={cn(
-          'fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden',
+          'fixed bottom-0 left-0 right-0 z-40 border-t-0 topbar-border md:hidden',
+          'topbar-glass pb-[env(safe-area-inset-bottom)]',
           className,
         )}
         role="navigation"

@@ -306,10 +306,10 @@ export function FloatingActionButton({
   className,
 }: FloatingActionButtonProps) {
   const variantStyles = {
-    default: 'bg-accent hover:bg-accent-hover text-white shadow-lg shadow-accent/30',
+    default: 'bg-accent hover:bg-accent-hover text-accent-foreground shadow-lg shadow-accent/30',
     urgent:
-      'bg-urgency-urgent hover:bg-urgency-urgent/90 text-white shadow-lg shadow-urgency-urgent/30',
-    success: 'bg-success hover:bg-success/90 text-white shadow-lg shadow-success/30',
+      'bg-urgency-urgent hover:bg-urgency-urgent/90 text-accent-foreground shadow-lg shadow-urgency-urgent/30',
+    success: 'bg-success hover:bg-success/90 text-success-foreground shadow-lg shadow-success/30',
   };
 
   return (

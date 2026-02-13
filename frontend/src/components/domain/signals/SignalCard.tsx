@@ -7,7 +7,6 @@
 import { Link } from 'react-router';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import { ConfidenceIndicator } from '@/components/domain/common/ConfidenceIndicator';
 import {
   AlertTriangle,
   Ship,
@@ -24,10 +23,9 @@ import {
   Layers,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatCurrency, formatDate, formatPercentage } from '@/lib/formatters';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 import { springs } from '@/lib/animations';
 import type { Signal, SignalStatus, EventType, SignalSource } from '@/types/signal';
-import { getConfidenceLevelFromScore } from '@/components/domain/common/ConfidenceIndicator';
 
 interface SignalCardProps {
   signal: Signal;
@@ -36,13 +34,13 @@ interface SignalCardProps {
 }
 
 const eventTypeConfig: Record<EventType, { icon: typeof AlertTriangle; label: string; color: string; bg: string }> = {
-  ROUTE_DISRUPTION: { icon: Ship, label: 'Route Disruption', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
-  PORT_CONGESTION: { icon: MapPin, label: 'Port Congestion', color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' },
-  WEATHER_EVENT: { icon: CloudRain, label: 'Weather Event', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
-  GEOPOLITICAL: { icon: Globe, label: 'Geopolitical', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
-  RATE_SPIKE: { icon: TrendingUp, label: 'Rate Spike', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
-  CARRIER_ISSUE: { icon: Truck, label: 'Carrier Issue', color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20' },
-  CUSTOMS_DELAY: { icon: FileText, label: 'Customs Delay', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+  ROUTE_DISRUPTION: { icon: Ship, label: 'Route Disruption', color: 'text-destructive', bg: 'bg-destructive/10 border-destructive/20' },
+  PORT_CONGESTION: { icon: MapPin, label: 'Port Congestion', color: 'text-warning', bg: 'bg-warning/10 border-warning/20' },
+  WEATHER_EVENT: { icon: CloudRain, label: 'Weather Event', color: 'text-info', bg: 'bg-info/10 border-info/20' },
+  GEOPOLITICAL: { icon: Globe, label: 'Geopolitical', color: 'text-action-reroute', bg: 'bg-action-reroute/10 border-action-reroute/20' },
+  RATE_SPIKE: { icon: TrendingUp, label: 'Rate Spike', color: 'text-urgency-soon', bg: 'bg-urgency-soon/10 border-urgency-soon/20' },
+  CARRIER_ISSUE: { icon: Truck, label: 'Carrier Issue', color: 'text-action-insure', bg: 'bg-action-insure/10 border-action-insure/20' },
+  CUSTOMS_DELAY: { icon: FileText, label: 'Customs Delay', color: 'text-success', bg: 'bg-success/10 border-success/20' },
 };
 
 const statusStyle: Record<SignalStatus, {
@@ -55,66 +53,66 @@ const statusStyle: Record<SignalStatus, {
 }> = {
   ACTIVE: {
     label: 'Active',
-    topGradient: 'from-amber-500 via-orange-500 to-amber-500',
-    badge: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    dotColor: 'bg-amber-400',
-    glowClass: 'rc-glow-amber',
-    borderClass: 'border-amber-500/20',
+    topGradient: 'from-urgency-urgent via-urgency-urgent/80 to-urgency-urgent',
+    badge: 'bg-urgency-urgent/15 text-urgency-urgent border-urgency-urgent/30',
+    dotColor: 'bg-urgency-urgent',
+    glowClass: 'rc-glow-amber', // lint-ignore-token — glow class in index.css
+    borderClass: 'border-urgency-urgent/20',
   },
   CONFIRMED: {
     label: 'Confirmed',
-    topGradient: 'from-red-500 via-red-600 to-red-500',
-    badge: 'bg-red-500/15 text-red-400 border-red-500/30',
-    dotColor: 'bg-red-400',
-    glowClass: 'rc-glow-red',
-    borderClass: 'border-red-500/20',
+    topGradient: 'from-urgency-immediate via-urgency-immediate/80 to-urgency-immediate',
+    badge: 'bg-urgency-immediate/15 text-urgency-immediate border-urgency-immediate/30',
+    dotColor: 'bg-urgency-immediate',
+    glowClass: 'rc-glow-red', // lint-ignore-token
+    borderClass: 'border-urgency-immediate/20',
   },
   EXPIRED: {
     label: 'Expired',
-    topGradient: 'from-zinc-500 via-zinc-600 to-zinc-500',
-    badge: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
-    dotColor: 'bg-zinc-400',
+    topGradient: 'from-muted-foreground/40 via-muted-foreground/30 to-muted-foreground/40',
+    badge: 'bg-muted-foreground/10 text-muted-foreground border-muted-foreground/20',
+    dotColor: 'bg-muted-foreground',
     glowClass: '',
     borderClass: 'border-border',
   },
   DISMISSED: {
     label: 'Dismissed',
-    topGradient: 'from-zinc-500 via-zinc-600 to-zinc-500',
-    badge: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
-    dotColor: 'bg-zinc-400',
+    topGradient: 'from-muted-foreground/40 via-muted-foreground/30 to-muted-foreground/40',
+    badge: 'bg-muted-foreground/10 text-muted-foreground border-muted-foreground/20',
+    dotColor: 'bg-muted-foreground',
     glowClass: '',
     borderClass: 'border-border',
   },
 };
 
 const sourceConfig: Record<SignalSource, { label: string; className: string }> = {
-  POLYMARKET: { label: 'Polymarket', className: 'bg-purple-500/10 text-purple-400 border-purple-500/25' },
-  NEWS: { label: 'News', className: 'bg-blue-500/10 text-blue-400 border-blue-500/25' },
-  AIS: { label: 'AIS', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25' },
-  RATES: { label: 'Rates', className: 'bg-orange-500/10 text-orange-400 border-orange-500/25' },
-  WEATHER: { label: 'Weather', className: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/25' },
-  GOVERNMENT: { label: "Gov't", className: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/25' },
-  SOCIAL_MEDIA: { label: 'Social', className: 'bg-pink-500/10 text-pink-400 border-pink-500/25' },
+  POLYMARKET: { label: 'Polymarket', className: 'bg-action-reroute/10 text-action-reroute border-action-reroute/25' },
+  NEWS: { label: 'News', className: 'bg-info/10 text-info border-info/25' },
+  AIS: { label: 'AIS', className: 'bg-success/10 text-success border-success/25' },
+  RATES: { label: 'Rates', className: 'bg-warning/10 text-warning border-warning/25' },
+  WEATHER: { label: 'Weather', className: 'bg-action-insure/10 text-action-insure border-action-insure/25' },
+  GOVERNMENT: { label: "Gov't", className: 'bg-muted-foreground/10 text-muted-foreground border-muted-foreground/25' },
+  SOCIAL_MEDIA: { label: 'Social', className: 'bg-category-social/10 text-category-social border-category-social/25' },
 };
 
 const defaults = {
-  event: { icon: Radio, label: 'Unknown', color: 'text-zinc-400', bg: 'bg-zinc-500/10 border-zinc-500/20' },
+  event: { icon: Radio, label: 'Unknown', color: 'text-muted-foreground', bg: 'bg-muted-foreground/10 border-muted-foreground/20' },
   status: statusStyle.EXPIRED,
-  source: { label: 'Unknown', className: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' },
+  source: { label: 'Unknown', className: 'bg-muted-foreground/10 text-muted-foreground border-muted-foreground/20' },
 };
 
-// Get probability color
+// Get probability color — uses design tokens
 function getProbColor(p: number) {
-  if (p >= 80) return { text: 'text-red-400', bar: 'bg-red-500', glow: 'rc-text-glow-red' };
-  if (p >= 60) return { text: 'text-amber-400', bar: 'bg-amber-500', glow: 'rc-text-glow-amber' };
-  if (p >= 40) return { text: 'text-blue-400', bar: 'bg-blue-500', glow: 'rc-text-glow-blue' };
-  return { text: 'text-zinc-400', bar: 'bg-zinc-500', glow: '' };
+  if (p >= 80) return { text: 'text-destructive', bar: 'bg-destructive', glow: 'rc-text-glow-red' };
+  if (p >= 60) return { text: 'text-warning', bar: 'bg-warning', glow: 'rc-text-glow-amber' };
+  if (p >= 40) return { text: 'text-info', bar: 'bg-info', glow: 'rc-text-glow-blue' };
+  return { text: 'text-muted-foreground', bar: 'bg-muted-foreground', glow: '' };
 }
 
 function getConfColor(c: number) {
-  if (c >= 80) return { text: 'text-emerald-400', bar: 'bg-emerald-500' };
-  if (c >= 50) return { text: 'text-amber-400', bar: 'bg-amber-500' };
-  return { text: 'text-red-400', bar: 'bg-red-500' };
+  if (c >= 80) return { text: 'text-confidence-high', bar: 'bg-confidence-high' };
+  if (c >= 50) return { text: 'text-confidence-medium', bar: 'bg-confidence-medium' };
+  return { text: 'text-confidence-low', bar: 'bg-confidence-low' };
 }
 
 export function SignalCard({ signal, variant = 'default', className }: SignalCardProps) {
@@ -122,7 +120,6 @@ export function SignalCard({ signal, variant = 'default', className }: SignalCar
   const status = statusStyle[signal.status] ?? defaults.status;
   const source = sourceConfig[signal.primary_source] ?? defaults.source;
   const Icon = evtCfg.icon;
-  const confidenceLevel = getConfidenceLevelFromScore(signal.confidence ?? 0);
   const isActive = signal.status === 'ACTIVE' || signal.status === 'CONFIRMED';
   const probColor = getProbColor(signal.probability);
   const confColor = getConfColor(signal.confidence ?? 0);
@@ -132,17 +129,17 @@ export function SignalCard({ signal, variant = 'default', className }: SignalCar
   }
 
   return (
-    <Link to={`/signals/${signal.signal_id}`}>
+    <Link to={`/signals/${signal.signal_id}`} className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background">
       <motion.div
         role="article"
-        aria-label={`Signal: ${signal.title}, Status: ${signal.status}`}
+        aria-label={`Signal: ${signal.event_title}, Status: ${signal.status}`}
         className={cn(
           'group relative h-full flex flex-col overflow-hidden rounded-2xl',
           'bg-card/80 backdrop-blur-sm',
-          'border transition-all duration-300',
+          'border shadow-level-1 transition-all duration-200',
           isActive ? status.borderClass : 'border-border/40',
           isActive && status.glowClass,
-          'hover:shadow-xl hover:shadow-black/10',
+          'hover:shadow-level-2',
           className,
         )}
         whileHover={{ y: -6, transition: { duration: 0.25, ease: 'easeOut' } }}
@@ -305,14 +302,14 @@ function CompactSignalCard({ signal, className }: { signal: Signal; className?: 
   const probColor = getProbColor(signal.probability);
 
   return (
-    <Link to={`/signals/${signal.signal_id}`}>
+    <Link to={`/signals/${signal.signal_id}`} className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background">
       <motion.div
         className={cn(
           'group relative flex items-center gap-4 p-4 rounded-2xl overflow-hidden',
-          'bg-card/80 backdrop-blur-sm border transition-all duration-300',
+          'bg-card/80 backdrop-blur-sm border shadow-level-1 transition-all duration-200',
           isActive ? status.borderClass : 'border-border/40',
           isActive && status.glowClass,
-          'hover:shadow-lg hover:shadow-black/10',
+          'hover:shadow-level-2',
           className,
         )}
         whileHover={{ x: 4 }}

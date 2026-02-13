@@ -4,10 +4,11 @@
  */
 
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
+import { ActiveFilterChip } from '@/components/ui/active-filter-chip';
 import { SkeletonSignalsList } from '@/components/ui/skeleton';
 import { Pagination } from '@/components/ui/pagination';
 import { useToast } from '@/components/ui/toast';
@@ -32,17 +33,51 @@ type ViewMode = 'grid' | 'list';
 type SortBy = 'probability' | 'confidence' | 'impact' | 'updated';
 
 export function SignalsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState<SortBy>('probability');
   const [filterStatus, setFilterStatus] = useState<SignalStatus | 'ALL'>('ALL');
   const [filterType, setFilterType] = useState<EventType | 'ALL'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterChokepoint, setFilterChokepoint] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const { success } = useToast();
   const navigate = useNavigate();
 
+  // Sync URL params to filter state on mount
+  useEffect(() => {
+    const cp = searchParams.get('chokepoint');
+    if (cp) setFilterChokepoint(cp.toUpperCase());
+    const status = searchParams.get('status');
+    if (status) setFilterStatus(status as SignalStatus);
+    const type = searchParams.get('type');
+    if (type) setFilterType(type as EventType);
+    const q = searchParams.get('q');
+    if (q) setSearchQuery(q);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const { data: signals, isLoading, error, refetch, isRefetching } = useSignalsList();
   const pagination = usePagination({ defaultPageSize: 20 });
+
+  // Sync filters to URL params
+  useEffect(() => {
+    setSearchParams(
+      (prev) => {
+        const syncParam = (key: string, val: string | null, defaultVal?: string) => {
+          if (val && val !== defaultVal && val !== 'ALL') prev.set(key, val);
+          else prev.delete(key);
+        };
+        syncParam('status', filterStatus, 'ALL');
+        syncParam('type', filterType, 'ALL');
+        syncParam('sort', sortBy, 'probability');
+        syncParam('chokepoint', filterChokepoint);
+        if (searchQuery) prev.set('q', searchQuery);
+        else prev.delete('q');
+        return prev;
+      },
+      { replace: true },
+    );
+  }, [filterStatus, filterType, sortBy, filterChokepoint, searchQuery, setSearchParams]);
 
   const handleRefresh = () => {
     refetch();
@@ -56,6 +91,12 @@ export function SignalsPage() {
       .filter((s) => {
         if (filterStatus !== 'ALL' && s.status !== filterStatus) return false;
         if (filterType !== 'ALL' && s.event_type !== filterType) return false;
+        if (filterChokepoint) {
+          const hasCP = s.affected_chokepoints.some(
+            (cp) => cp.toUpperCase() === filterChokepoint || cp.toUpperCase().includes(filterChokepoint!),
+          );
+          if (!hasCP) return false;
+        }
         if (searchQuery) {
           const query = searchQuery.toLowerCase();
           return (
@@ -75,7 +116,7 @@ export function SignalsPage() {
           default: return 0;
         }
       });
-  }, [allSignals, filterStatus, filterType, searchQuery, sortBy]);
+  }, [allSignals, filterStatus, filterType, filterChokepoint, searchQuery, sortBy]);
 
   const activeCount = allSignals.filter((s) => s.status === 'ACTIVE').length;
   const confirmedCount = allSignals.filter((s) => s.status === 'CONFIRMED').length;
@@ -166,7 +207,7 @@ export function SignalsPage() {
 
       {/* ── Live Stats Strip ─────────────────────────────────── */}
       <motion.div
-        className="rounded-2xl border border-border/40 bg-card/60 backdrop-blur-sm p-1.5"
+        className="rounded-2xl border border-border/40 bg-card/60 backdrop-blur-sm shadow-level-1 p-1.5"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, ...springs.smooth }}
@@ -186,18 +227,18 @@ export function SignalsPage() {
               label: 'ACTIVE',
               value: activeCount,
               icon: Zap,
-              color: 'text-blue-400',
-              iconColor: 'text-blue-400',
-              bg: activeCount > 0 ? 'bg-blue-500/[0.06]' : 'bg-muted/20',
+              color: 'text-info',
+              iconColor: 'text-info',
+              bg: activeCount > 0 ? 'bg-info/[0.06]' : 'bg-muted/20',
               glow: activeCount > 0 ? 'rc-text-glow-blue' : '',
             },
             {
               label: 'CRITICAL',
               value: criticalCount,
               icon: AlertTriangle,
-              color: criticalCount > 0 ? 'text-red-400' : 'text-muted-foreground',
-              iconColor: criticalCount > 0 ? 'text-red-400' : 'text-muted-foreground/60',
-              bg: criticalCount > 0 ? 'bg-red-500/[0.06]' : 'bg-muted/20',
+              color: criticalCount > 0 ? 'text-severity-critical' : 'text-muted-foreground',
+              iconColor: criticalCount > 0 ? 'text-severity-critical' : 'text-muted-foreground/60',
+              bg: criticalCount > 0 ? 'bg-severity-critical/[0.06]' : 'bg-muted/20',
               glow: criticalCount > 0 ? 'rc-text-glow-red' : '',
               pulse: criticalCount > 0,
             },
@@ -205,9 +246,9 @@ export function SignalsPage() {
               label: 'CONFIRMED',
               value: confirmedCount,
               icon: Shield,
-              color: 'text-emerald-400',
-              iconColor: 'text-emerald-400',
-              bg: confirmedCount > 0 ? 'bg-emerald-500/[0.06]' : 'bg-muted/20',
+              color: 'text-success',
+              iconColor: 'text-success',
+              bg: confirmedCount > 0 ? 'bg-success/[0.06]' : 'bg-muted/20',
               glow: confirmedCount > 0 ? 'rc-text-glow-green' : '',
             },
           ].map((stat) => (
@@ -227,8 +268,8 @@ export function SignalsPage() {
               </div>
               {'pulse' in stat && stat.pulse && (
                 <span className="relative flex h-2.5 w-2.5 ml-auto shrink-0">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500/50" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive/50" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive" />
                 </span>
               )}
             </div>
@@ -237,7 +278,7 @@ export function SignalsPage() {
       </motion.div>
 
       {/* ── Filters Bar ──────────────────────────────────────── */}
-      <div className="p-3 rounded-2xl bg-card border border-border/60 shadow-sm">
+      <div className="p-3 rounded-2xl bg-card border border-border/60 shadow-level-1">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           {/* Search */}
           <div className="relative flex-1 max-w-sm">
@@ -247,6 +288,7 @@ export function SignalsPage() {
               placeholder="Search signals..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              maxLength={200}
               className="h-9 w-full rounded-xl border border-border bg-muted/50 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent/50 focus:border-accent/50 font-mono"
             />
           </div>
@@ -296,24 +338,46 @@ export function SignalsPage() {
               <button
                 onClick={() => setViewMode('grid')}
                 className={cn(
-                  'p-1.5 rounded-md transition-all',
+                  'p-2.5 sm:p-1.5 rounded-md transition-all min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 inline-flex items-center justify-center',
                   viewMode === 'grid' ? 'bg-card text-accent shadow-sm' : 'text-muted-foreground hover:text-foreground',
                 )}
+                aria-label="Grid view"
               >
                 <LayoutGrid className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
                 className={cn(
-                  'p-1.5 rounded-md transition-all',
+                  'p-2.5 sm:p-1.5 rounded-md transition-all min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 inline-flex items-center justify-center',
                   viewMode === 'list' ? 'bg-card text-accent shadow-sm' : 'text-muted-foreground hover:text-foreground',
                 )}
+                aria-label="List view"
               >
                 <List className="h-4 w-4" />
               </button>
             </div>
           </div>
         </div>
+
+        {/* Active chokepoint filter chip */}
+        {filterChokepoint && (
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-[10px] text-muted-foreground font-mono">Filtered:</span>
+            <ActiveFilterChip
+              label={`Chokepoint: ${filterChokepoint}`}
+              onRemove={() => {
+                setFilterChokepoint(null);
+                setSearchParams((prev) => {
+                  prev.delete('chokepoint');
+                  return prev;
+                });
+              }}
+            />
+            <span className="text-[10px] text-muted-foreground font-mono tabular-nums">
+              {filteredSignals.length} signal{filteredSignals.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ── Signal Grid/List ─────────────────────────────────── */}

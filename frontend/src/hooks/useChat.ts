@@ -95,7 +95,7 @@ export function useChat(initialSessionId?: string) {
           }
         }
       } catch {
-        setError('Không thể kết nối server. Vui lòng thử lại.');
+        setError('Could not connect to server. Please try again.');
         if (!assistantContent) {
           setMessages((prev) => prev.slice(0, -1));
         }

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building, Mail, Phone, ChevronRight } from 'lucide-react';
+import { Building, Mail, Phone, ChevronRight, AlertTriangle } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { springs } from '@/lib/animations';
@@ -15,14 +15,14 @@ export function CustomerCard({ customer }: { customer: Customer }) {
 
   return (
     <Card className="overflow-hidden shadow-md hover:shadow-lg bg-card shadow-sm transition-all duration-300">
-      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-action-reroute/30 to-transparent" />
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
           {/* Avatar */}
           <motion.div
             whileHover={{ scale: 1.05, rotate: 5 }}
             transition={springs.bouncy}
-            className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 text-purple-500 shrink-0"
+            className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-action-reroute/20 to-accent/20 text-action-reroute shrink-0"
           >
             <Building className="h-7 w-7" />
           </motion.div>
@@ -80,17 +80,25 @@ export function CustomerCard({ customer }: { customer: Customer }) {
           </div>
 
           {/* Actions */}
-          <Link to={`/customers/${customer.id}`}>
-            <motion.div
-              whileHover={{ x: 4, scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              transition={springs.snappy}
-            >
-              <Button variant="ghost" size="icon" className="rounded-xl hover:bg-purple-500/10">
-                <ChevronRight className="h-5 w-5" />
+          <div className="flex flex-col gap-1.5 shrink-0">
+            <Link to={`/decisions?customer=${encodeURIComponent(customer.company_name)}`}>
+              <Button variant="ghost" size="sm" className="gap-1 h-7 text-[10px] text-muted-foreground hover:text-foreground">
+                <AlertTriangle className="h-3 w-3" />
+                Decisions
               </Button>
-            </motion.div>
-          </Link>
+            </Link>
+            <Link to={`/customers/${customer.id}`}>
+              <motion.div
+                whileHover={{ x: 4, scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                transition={springs.snappy}
+              >
+                <Button variant="ghost" size="icon" className="rounded-xl hover:bg-action-reroute/10">
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+              </motion.div>
+            </Link>
+          </div>
         </div>
       </CardContent>
     </Card>

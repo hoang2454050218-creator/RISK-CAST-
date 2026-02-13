@@ -14,32 +14,28 @@ import {
   Globe,
   ArrowRight,
   ChevronRight,
-  BarChart3,
   Clock,
   DollarSign,
   Eye,
   Brain,
   Target,
-  TrendingUp,
-  Users,
   CheckCircle,
-  Star,
-  ArrowUpRight,
   Menu,
   X,
   Ship,
   AlertTriangle,
   Activity,
-  Lock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 
 // ─── Animation Variants ──────────────────────────────────
 
+const cubicEase = [0.16, 1, 0.3, 1] as const;
+
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: cubicEase } },
 };
 
 const fadeIn = {
@@ -57,12 +53,7 @@ const staggerContainer = {
 
 const staggerItem = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
-};
-
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.8 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: cubicEase } },
 };
 
 // ─── Section Hook ─────────────────────────────────────────
@@ -114,7 +105,7 @@ function Navbar() {
               whileHover={{ scale: 1.05, rotate: 5 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
             >
-              <Shield className="h-5 w-5 text-white" />
+              <Shield className="h-5 w-5 text-accent-foreground" />
             </motion.div>
             <div>
               <span className="text-lg font-bold tracking-tight text-foreground notranslate" translate="no">RISKCAST</span>
@@ -142,7 +133,7 @@ function Navbar() {
             {isAuthenticated ? (
               <motion.button
                 onClick={() => navigate('/dashboard')}
-                className="px-5 py-2 text-sm font-semibold rounded-lg bg-accent text-white shadow-sm hover:bg-accent-hover transition-all"
+                className="px-5 py-2 text-sm font-semibold rounded-lg bg-accent text-accent-foreground shadow-sm hover:bg-accent-hover transition-all"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -160,7 +151,7 @@ function Navbar() {
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Link
                     to="/auth/register"
-                    className="px-5 py-2 text-sm font-semibold rounded-lg bg-accent text-white shadow-sm hover:bg-accent-hover transition-all inline-flex items-center gap-2"
+                    className="px-5 py-2 text-sm font-semibold rounded-lg bg-accent text-accent-foreground shadow-sm hover:bg-accent-hover transition-all inline-flex items-center gap-2"
                   >
                     Start Free Trial
                     <ArrowRight className="h-4 w-4" />
@@ -209,7 +200,7 @@ function Navbar() {
                 </Link>
                 <Link
                   to="/auth/register"
-                  className="block w-full text-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-accent text-white"
+                  className="block w-full text-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-accent text-accent-foreground"
                 >
                   Start Free Trial
                 </Link>
@@ -249,12 +240,12 @@ function HeroSection() {
           transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
-          className="absolute bottom-1/4 right-1/4 h-[500px] w-[500px] rounded-full bg-indigo-500/[0.04] blur-[100px]"
+          className="absolute bottom-1/4 right-1/4 h-[500px] w-[500px] rounded-full bg-accent/[0.04] blur-[100px]"
           animate={{ x: [0, -40, 0], y: [0, 40, 0] }}
           transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[400px] rounded-full bg-purple-500/[0.03] blur-[80px]"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[400px] rounded-full bg-action-reroute/[0.03] blur-[80px]"
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
         />
@@ -288,7 +279,7 @@ function HeroSection() {
               Supply Chain Risks
             </span>
             <motion.span
-              className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-accent to-purple-500"
+              className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-accent to-action-reroute"
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
               transition={{ delay: 1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -373,7 +364,7 @@ function HeroSection() {
             <div className="flex items-center gap-2 mb-4">
               <div className="flex gap-1.5">
                 <div className="h-3 w-3 rounded-full bg-error/70" />
-                <div className="h-3 w-3 rounded-full bg-yellow-500/70" />
+                <div className="h-3 w-3 rounded-full bg-warning/70" />
                 <div className="h-3 w-3 rounded-full bg-success/70" />
               </div>
               <span className="text-[10px] font-mono text-muted-foreground/40 ml-2 notranslate" translate="no">RISKCAST — Decision Engine v2.0</span>
@@ -403,7 +394,7 @@ function HeroSection() {
                       Cost: $8,500
                     </span>
                     <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3 text-yellow-400" />
+                      <Clock className="h-3 w-3 text-warning" />
                       Deadline: Feb 5, 6PM UTC
                     </span>
                   </div>
@@ -444,7 +435,7 @@ function HeroSection() {
           </div>
 
           {/* Glow effect */}
-          <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-accent/8 via-transparent to-purple-500/8 blur-2xl -z-10" />
+          <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-accent/8 via-transparent to-action-reroute/8 blur-2xl -z-10" />
         </motion.div>
       </motion.div>
     </section>
@@ -496,42 +487,42 @@ function FeaturesSection() {
       icon: Eye,
       title: 'OMEN Signal Engine',
       description: 'Monitors Polymarket, maritime AIS, news feeds, and freight indices. Detects threats before they become headlines.',
-      color: 'from-purple-400 to-purple-600',
+      color: 'from-action-reroute to-action-reroute',
       glow: 'purple',
     },
     {
       icon: Globe,
       title: 'ORACLE Reality Engine',
       description: 'Correlates signals with real-time vessel tracking, port congestion, and freight rates. Shows what IS happening right now.',
-      color: 'from-blue-400 to-blue-600',
+      color: 'from-info to-accent',
       glow: 'blue',
     },
     {
       icon: Brain,
       title: 'RISKCAST Decision Engine',
       description: 'Transforms intelligence into specific actions: REROUTE with MSC for $8,500 by 6PM UTC. Every decision answers 7 critical questions.',
-      color: 'from-blue-400 to-blue-600',
+      color: 'from-info to-accent',
       glow: 'blue',
     },
     {
       icon: Target,
       title: 'Personalized Decisions',
       description: 'Knows YOUR shipments, YOUR routes, YOUR exposure. Calculates dollar impact specific to your containers, not generic percentages.',
-      color: 'from-green-400 to-green-600',
+      color: 'from-success to-success',
       glow: 'green',
     },
     {
       icon: Clock,
       title: 'Inaction Cost Calculator',
       description: 'Every decision includes "If you wait 24h, cost becomes $15,000". Never wonder if you should act — know the cost of not acting.',
-      color: 'from-orange-400 to-orange-600',
+      color: 'from-warning to-urgency-urgent',
       glow: 'orange',
     },
     {
       icon: Ship,
       title: 'WhatsApp Delivery',
       description: 'Critical decisions delivered instantly to your phone via WhatsApp. Act from anywhere — no dashboard required in emergencies.',
-      color: 'from-emerald-400 to-emerald-600',
+      color: 'from-success to-action-insure',
       glow: 'emerald',
     },
   ];
@@ -579,7 +570,7 @@ function FeaturesSection() {
                 'inline-flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br mb-4 shadow-lg',
                 feature.color,
               )}>
-                <feature.icon className="h-5 w-5 text-white" />
+                <feature.icon className="h-5 w-5 text-accent-foreground" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
               <p className="text-sm text-muted-foreground/70 leading-relaxed">{feature.description}</p>
@@ -606,7 +597,7 @@ function HowItWorksSection() {
       title: 'Signal Detection',
       description: 'Polymarket shows 73% probability of Red Sea disruption escalation. News feeds confirm. AIS shows vessel diversions.',
       output: 'Signals + Evidence + Confidence',
-      color: 'from-purple-400 to-purple-600',
+      color: 'from-action-reroute to-action-reroute',
     },
     {
       icon: Globe,
@@ -614,7 +605,7 @@ function HowItWorksSection() {
       title: 'Reality Correlation',
       description: 'Cross-references with live vessel tracking, port congestion data, and freight rate indices. Validates signal accuracy.',
       output: 'Reality Snapshot + Chokepoint Health',
-      color: 'from-blue-400 to-blue-600',
+      color: 'from-info to-accent',
     },
     {
       icon: Brain,
@@ -622,7 +613,7 @@ function HowItWorksSection() {
       title: 'Decision Generation',
       description: 'Matches YOUR shipments to the threat. Calculates dollar exposure, generates specific action with cost and deadline.',
       output: '7 Questions Answered + Specific Action',
-      color: 'from-blue-400 to-blue-600',
+      color: 'from-info to-accent',
     },
     {
       icon: Zap,
@@ -630,7 +621,7 @@ function HowItWorksSection() {
       title: 'Instant Delivery',
       description: 'Decision delivered via WhatsApp with one-tap action. "REROUTE PO-4521 via Cape with MSC — $8,500 — Approve?"',
       output: 'WhatsApp Message + Action Button',
-      color: 'from-green-400 to-green-600',
+      color: 'from-success to-success',
     },
   ];
 
@@ -684,7 +675,7 @@ function HowItWorksSection() {
                       'flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg',
                       step.color,
                     )}>
-                      <step.icon className="h-5 w-5 text-white" />
+                      <step.icon className="h-5 w-5 text-accent-foreground" />
                     </div>
                     <div>
                       <span className="text-[10px] font-mono text-muted-foreground/50 uppercase tracking-wider">Step {index + 1}</span>
@@ -916,7 +907,7 @@ function PricingSection() {
               )}
             >
               {plan.badge && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-accent text-[10px] font-bold text-white uppercase tracking-wider whitespace-nowrap">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-accent text-[10px] font-bold text-accent-foreground uppercase tracking-wider whitespace-nowrap">
                   {plan.badge}
                 </span>
               )}
@@ -958,7 +949,7 @@ function PricingSection() {
                 className={cn(
                   'block w-full text-center py-2.5 rounded-lg text-sm font-semibold transition-all',
                   plan.highlighted
-                    ? 'bg-accent text-white shadow-md hover:bg-accent-hover'
+                    ? 'bg-accent text-accent-foreground shadow-md hover:bg-accent-hover'
                     : 'border border-border/60 text-foreground/70 hover:text-foreground hover:border-border hover:bg-muted/50',
                 )}
               >
@@ -1000,7 +991,7 @@ function CTASection() {
             animate={{ scale: [1, 1.03, 1] }}
             transition={{ duration: 3, repeat: Infinity }}
           >
-            <Shield className="h-8 w-8 text-white" />
+            <Shield className="h-8 w-8 text-accent-foreground" />
           </motion.div>
 
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground tracking-tight">
@@ -1019,7 +1010,7 @@ function CTASection() {
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Link
                 to="/auth/register"
-                className="group inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold rounded-xl bg-accent text-white shadow-lg shadow-accent/20 hover:bg-accent-hover hover:shadow-accent/30 transition-all"
+                className="group inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold rounded-xl bg-accent text-accent-foreground shadow-lg shadow-accent/20 hover:bg-accent-hover hover:shadow-accent/30 transition-all"
               >
                 Start Your Free Trial
                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -1051,7 +1042,7 @@ function Footer() {
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
-                <Shield className="h-4 w-4 text-white" />
+                <Shield className="h-4 w-4 text-accent-foreground" />
               </div>
               <span className="text-sm font-bold text-foreground notranslate" translate="no">RISKCAST</span>
             </div>

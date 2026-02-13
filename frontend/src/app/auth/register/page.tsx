@@ -93,7 +93,7 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-background dark p-4 overflow-hidden" data-theme="dark">
+    <div className="relative flex min-h-screen items-center justify-center bg-background p-4 overflow-hidden">
       {/* Background grid pattern */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.03]"
@@ -116,7 +116,7 @@ export function RegisterPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={springs.smooth}
       >
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-8 backdrop-blur-sm shadow-2xl">
+        <div className="rounded-2xl border border-border bg-card p-8 backdrop-blur-sm shadow-2xl">
           {/* Back link */}
           <motion.div
             initial={{ opacity: 0, x: -10 }}
@@ -126,7 +126,7 @@ export function RegisterPage() {
           >
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 text-[10px] font-mono text-white/30 hover:text-white/60 transition-colors uppercase tracking-wider"
+              className="inline-flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground/50 hover:text-foreground/60 transition-colors uppercase tracking-wider"
             >
               <ArrowLeft className="h-3 w-3" />
               Back to home
@@ -136,14 +136,14 @@ export function RegisterPage() {
           {/* Branding */}
           <div className="mb-6 text-center">
             <motion.div
-              className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-accent/20 to-accent/5"
+              className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-gradient-to-br from-accent/20 to-accent/5"
               animate={{ scale: [1, 1.02, 1] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
               <Shield className="h-7 w-7 text-accent" />
             </motion.div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">Create Account</h1>
-            <p className="mt-1 text-xs font-mono text-white/40 uppercase tracking-widest">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Create Account</h1>
+            <p className="mt-1 text-xs font-mono text-muted-foreground/60 uppercase tracking-widest">
               Start your free trial
             </p>
           </div>
@@ -152,11 +152,11 @@ export function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Full Name */}
             <div className="space-y-1.5">
-              <label htmlFor="register-name" className="text-xs font-mono text-white/50 uppercase tracking-wider">
+              <label htmlFor="register-name" className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
                 Full Name
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
                 <input
                   id="register-name"
                   type="text"
@@ -165,11 +165,12 @@ export function RegisterPage() {
                   placeholder="John Smith"
                   autoComplete="name"
                   autoFocus
+                  maxLength={100}
                   className={cn(
-                    'h-11 w-full rounded-lg border bg-white/[0.03] pl-10 pr-4 text-sm text-white font-mono',
-                    'placeholder:text-white/20',
+                    'h-11 w-full rounded-lg border bg-muted/40 pl-10 pr-4 text-sm text-foreground font-mono',
+                    'placeholder:text-muted-foreground',
                     'focus:outline-none focus:ring-1 focus:ring-accent/50 focus:border-accent/40',
-                    'border-white/[0.08] hover:border-white/[0.12]',
+                    'border-border hover:border-accent/30',
                     'transition-colors',
                   )}
                 />
@@ -178,11 +179,11 @@ export function RegisterPage() {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <label htmlFor="register-email" className="text-xs font-mono text-white/50 uppercase tracking-wider">
+              <label htmlFor="register-email" className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
                 <input
                   id="register-email"
                   type="email"
@@ -190,11 +191,12 @@ export function RegisterPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
                   autoComplete="email"
+                  maxLength={254}
                   className={cn(
-                    'h-11 w-full rounded-lg border bg-white/[0.03] pl-10 pr-4 text-sm text-white font-mono',
-                    'placeholder:text-white/20',
+                    'h-11 w-full rounded-lg border bg-muted/40 pl-10 pr-4 text-sm text-foreground font-mono',
+                    'placeholder:text-muted-foreground',
                     'focus:outline-none focus:ring-1 focus:ring-accent/50 focus:border-accent/40',
-                    'border-white/[0.08] hover:border-white/[0.12]',
+                    'border-border hover:border-accent/30',
                     'transition-colors',
                   )}
                 />
@@ -203,11 +205,11 @@ export function RegisterPage() {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label htmlFor="register-password" className="text-xs font-mono text-white/50 uppercase tracking-wider">
+              <label htmlFor="register-password" className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
                 <input
                   id="register-password"
                   type={showPassword ? 'text' : 'password'}
@@ -215,18 +217,19 @@ export function RegisterPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Min 6 characters"
                   autoComplete="new-password"
+                  maxLength={128}
                   className={cn(
-                    'h-11 w-full rounded-lg border bg-white/[0.03] pl-10 pr-10 text-sm text-white font-mono',
-                    'placeholder:text-white/20',
+                    'h-11 w-full rounded-lg border bg-muted/40 pl-10 pr-10 text-sm text-foreground font-mono',
+                    'placeholder:text-muted-foreground',
                     'focus:outline-none focus:ring-1 focus:ring-accent/50 focus:border-accent/40',
-                    'border-white/[0.08] hover:border-white/[0.12]',
+                    'border-border hover:border-accent/30',
                     'transition-colors',
                   )}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground/60 transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -246,23 +249,23 @@ export function RegisterPage() {
                         key={level}
                         className={cn(
                           'h-1 flex-1 rounded-full transition-colors duration-300',
-                          level <= passwordStrength.level ? passwordStrength.color : 'bg-white/[0.06]',
+                          level <= passwordStrength.level ? passwordStrength.color : 'bg-muted',
                         )}
                       />
                     ))}
                   </div>
-                  <p className="text-[10px] font-mono text-white/30">{passwordStrength.label}</p>
+                  <p className="text-[10px] font-mono text-muted-foreground/50">{passwordStrength.label}</p>
                 </motion.div>
               )}
             </div>
 
             {/* Confirm Password */}
             <div className="space-y-1.5">
-              <label htmlFor="register-confirm" className="text-xs font-mono text-white/50 uppercase tracking-wider">
+              <label htmlFor="register-confirm" className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
                 Confirm Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
                 <input
                   id="register-confirm"
                   type={showPassword ? 'text' : 'password'}
@@ -270,11 +273,12 @@ export function RegisterPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Repeat password"
                   autoComplete="new-password"
+                  maxLength={128}
                   className={cn(
-                    'h-11 w-full rounded-lg border bg-white/[0.03] pl-10 pr-10 text-sm text-white font-mono',
-                    'placeholder:text-white/20',
+                    'h-11 w-full rounded-lg border bg-muted/40 pl-10 pr-10 text-sm text-foreground font-mono',
+                    'placeholder:text-muted-foreground',
                     'focus:outline-none focus:ring-1 focus:ring-accent/50 focus:border-accent/40',
-                    'border-white/[0.08] hover:border-white/[0.12]',
+                    'border-border hover:border-accent/30',
                     'transition-colors',
                     confirmPassword && password !== confirmPassword && 'border-error/40',
                     confirmPassword && password === confirmPassword && 'border-success/40',
@@ -299,16 +303,16 @@ export function RegisterPage() {
                   'h-4 w-4 rounded border transition-colors',
                   agreed
                     ? 'bg-accent border-accent'
-                    : 'border-white/[0.15] group-hover:border-white/[0.25] bg-white/[0.03]',
+                    : 'border-border group-hover:border-accent/30 bg-muted/40',
                 )}>
                   {agreed && <CheckCircle className="h-4 w-4 text-accent-foreground" />}
                 </div>
               </div>
-              <span className="text-[11px] text-white/40 leading-relaxed">
+              <span className="text-[11px] text-muted-foreground/60 leading-relaxed">
                 I agree to the{' '}
-                <a href="#" className="text-accent/60 hover:text-accent transition-colors">Terms of Service</a>
+                <span className="text-accent/60 underline cursor-pointer">Terms of Service</span>
                 {' '}and{' '}
-                <a href="#" className="text-accent/60 hover:text-accent transition-colors">Privacy Policy</a>
+                <span className="text-accent/60 underline cursor-pointer">Privacy Policy</span>
               </span>
             </label>
 
@@ -341,7 +345,7 @@ export function RegisterPage() {
 
           {/* Login link */}
           <div className="mt-6 text-center">
-            <p className="text-[11px] text-white/30 font-mono">
+            <p className="text-[11px] text-muted-foreground/50 font-mono">
               Already have an account?{' '}
               <Link to="/auth/login" className="text-accent/60 hover:text-accent transition-colors font-medium">
                 Sign in
@@ -351,27 +355,18 @@ export function RegisterPage() {
 
           {/* Separator */}
           <div className="mt-5 flex items-center gap-3">
-            <div className="flex-1 border-t border-white/[0.06]" />
-            <span className="text-[9px] font-mono text-white/15 uppercase">or</span>
-            <div className="flex-1 border-t border-white/[0.06]" />
+            <div className="flex-1 border-t border-border" />
+            <span className="text-[9px] font-mono text-muted-foreground/30 uppercase">or</span>
+            <div className="flex-1 border-t border-border" />
           </div>
 
-          {/* Test Account Info */}
-          <div className="mt-4 p-3 rounded-lg border border-white/[0.06] bg-white/[0.02]">
-            <p className="text-[10px] font-mono text-white/30 mb-2 uppercase tracking-wider">Test Account</p>
-            <div className="space-y-1">
-              <p className="text-[11px] font-mono text-white/50">
-                Email: <span className="text-accent/70">hoangpro268@gmail.com</span>
-              </p>
-              <p className="text-[11px] font-mono text-white/50">
-                Pass: <span className="text-accent/70">Hoang2672004</span>
-              </p>
-            </div>
+          {/* Sign in redirect */}
+          <div className="mt-4 text-center">
             <Link
               to="/auth/login"
-              className="mt-2 inline-block text-[10px] font-mono text-accent/50 hover:text-accent transition-colors"
+              className="text-[10px] font-mono text-accent/50 hover:text-accent transition-colors"
             >
-              Go to login →
+              Already registered? Sign in →
             </Link>
           </div>
         </div>

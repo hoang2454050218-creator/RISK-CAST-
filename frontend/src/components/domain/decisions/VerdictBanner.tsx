@@ -21,7 +21,7 @@ import {
   MapPin,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatCurrencyRange } from '@/lib/formatters';
 import { springs } from '@/lib/animations';
 import { CompactCountdown } from '@/components/domain/common/CountdownTimer';
 import type { Decision } from '@/types/decision';
@@ -41,7 +41,7 @@ const SEVERITY_BORDER: Record<string, string> = {
 
 const SEVERITY_BG: Record<string, string> = {
   CRITICAL: 'bg-destructive/[0.03]',
-  HIGH: 'bg-amber-500/[0.02]',
+  HIGH: 'bg-urgency-urgent/[0.02]',
   MEDIUM: '',
   LOW: '',
 };
@@ -66,6 +66,9 @@ export function VerdictBanner({ decision, onAct, className }: VerdictBannerProps
   const deadline = action?.deadline ?? decision.q2_when?.decision_deadline;
   const confidence = decision.q6_confidence?.confidence_score ?? 0;
   const worstCase = decision.q7_inaction?.worst_case_scenario;
+  const exposureCI = decision.q3_severity?.exposure_ci_90;
+  const actionCostCI = action?.cost_ci_90;
+  const inactionCostCI = decision.q7_inaction?.inaction_cost_ci_90;
   const topRoute = decision.q3_severity?.breakdown_by_shipment?.[0]?.route
     ?? decision.q1_what?.affected_routes?.[0]
     ?? '';
@@ -93,11 +96,17 @@ export function VerdictBanner({ decision, onAct, className }: VerdictBannerProps
             <DollarSign className="h-4 w-4 text-destructive/60 flex-shrink-0" />
             <span className={cn(
               'text-lg font-bold font-mono tabular-nums tracking-tight',
-              exposure >= 200000 ? 'text-destructive' : exposure >= 100000 ? 'text-amber-500' : 'text-foreground',
+              exposure >= 200000 ? 'text-destructive' : exposure >= 100000 ? 'text-urgency-urgent' : 'text-foreground',
             )}>
               {formatCurrency(exposure, { compact: true })}
             </span>
-            <span className="text-xs text-muted-foreground font-mono">at risk</span>
+            {exposureCI ? (
+              <span className="text-[10px] text-muted-foreground/60 font-mono tabular-nums">
+                ({formatCurrencyRange(exposureCI.lower, exposureCI.upper, { compact: true })})
+              </span>
+            ) : (
+              <span className="text-xs text-muted-foreground font-mono">at risk</span>
+            )}
           </div>
 
           {/* Shipments + Route */}
@@ -148,6 +157,11 @@ export function VerdictBanner({ decision, onAct, className }: VerdictBannerProps
           {actionCost > 0 && (
             <p className="text-xs font-mono text-muted-foreground mt-0.5 tabular-nums">
               Cost: {formatCurrency(actionCost, { compact: true })}
+              {actionCostCI && (
+                <span className="text-[10px] text-muted-foreground/50 ml-1">
+                  ({formatCurrencyRange(actionCostCI.lower, actionCostCI.upper, { compact: true })})
+                </span>
+              )}
             </p>
           )}
         </div>
@@ -178,6 +192,11 @@ export function VerdictBanner({ decision, onAct, className }: VerdictBannerProps
           )}>
             {inactionCost > 0 ? formatCurrency(inactionCost, { compact: true }) : '—'}
           </p>
+          {inactionCostCI && inactionCost > 0 && (
+            <p className="text-[10px] font-mono text-destructive/40 mt-0.5 tabular-nums">
+              {formatCurrencyRange(inactionCostCI.lower, inactionCostCI.upper, { compact: true })}
+            </p>
+          )}
           {decision.q7_inaction?.inaction_delay_days > 0 && (
             <p className="text-[10px] font-mono text-destructive/50 mt-0.5">
               +{decision.q7_inaction.inaction_delay_days}d delay
@@ -196,6 +215,9 @@ export function VerdictBanner({ decision, onAct, className }: VerdictBannerProps
           </p>
           <p className="text-[10px] font-mono text-muted-foreground/50 mt-0.5">
             {decision.q6_confidence?.overall_confidence ?? ''}
+            {decision.q6_confidence?.confidence_factors?.length
+              ? ` · ${decision.q6_confidence.confidence_factors.length} factors`
+              : ''}
           </p>
         </div>
       </div>

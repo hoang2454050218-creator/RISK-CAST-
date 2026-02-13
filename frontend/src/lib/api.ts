@@ -20,7 +20,7 @@ let _backendOnline: boolean | null = null; // null = not checked yet
 let _lastHealthCheck = 0;
 const HEALTH_CHECK_INTERVAL = 30_000; // Re-check every 30s
 
-async function isBackendOnline(): Promise<boolean> {
+export async function isBackendOnline(): Promise<boolean> {
   // If mock is disabled, always report backend as online (force real API calls)
   if (MOCK_DISABLED) return true;
 
@@ -47,6 +47,15 @@ async function isBackendOnline(): Promise<boolean> {
   return _backendOnline;
 }
 
+/**
+ * Mark backend as offline (used by api-v2.ts on 5xx / network errors).
+ * Prevents subsequent requests from hitting the network for 30 seconds.
+ */
+export function markBackendOffline() {
+  _backendOnline = false;
+  _lastHealthCheck = Date.now();
+}
+
 // Run health check immediately on module load (non-blocking)
 isBackendOnline();
 
@@ -67,6 +76,13 @@ export class ApiError extends Error {
 
 // ─── Core fetch wrapper ──────────────────────────────────
 async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  // Health gate: fail fast when backend is known to be offline.
+  // This prevents 500 errors flooding the browser console.
+  const online = await isBackendOnline();
+  if (!online) {
+    throw new ApiError(0, 'Backend offline');
+  }
+
   const cleanEndpoint = endpoint.replace(/\/+$/, '') || endpoint;
   const url = `${API_BASE_URL}${cleanEndpoint}`;
 
@@ -79,47 +95,71 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
     ...options.headers,
   };
 
-  const response = await fetch(url, { ...options, headers });
+  try {
+    const response = await fetch(url, { ...options, headers });
 
-  if (!response.ok) {
-    let data: unknown;
-    try {
-      data = await response.json();
-    } catch {
-      // Response body is not JSON
+    if (!response.ok) {
+      // Mark backend offline on 5xx to prevent subsequent requests
+      if (response.status >= 500) {
+        markBackendOffline();
+      }
+      let data: unknown;
+      try {
+        data = await response.json();
+      } catch {
+        // Response body is not JSON
+      }
+      throw new ApiError(response.status, response.statusText, data);
     }
-    throw new ApiError(response.status, response.statusText, data);
-  }
 
-  if (response.status === 204) return undefined as T;
-  return response.json();
+    if (response.status === 204) return undefined as T;
+    return response.json();
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    // Network errors = backend offline
+    markBackendOffline();
+    throw new ApiError(0, 'Network error');
+  }
 }
 
 // ─── Mock fallback wrapper ───────────────────────────────
+import { dataSourceStatus } from '@/lib/data-source-status';
+
 /**
  * Wraps an API call with a mock data fallback.
  *
  * KEY: Checks backend health FIRST. If backend is known to be offline,
  * returns mock data immediately WITHOUT making a network request.
  * This prevents ERR_CONNECTION_REFUSED errors flooding the console.
+ *
+ * IMPORTANT: Updates dataSourceStatus so the UI shows a DEMO MODE banner
+ * when mock data is being used. Users must always know when data is simulated.
  */
-export async function withMockFallback<T>(apiCall: () => Promise<T>, mockData: T): Promise<T> {
+export async function withMockFallback<T>(apiCall: () => Promise<T>, mockData: T, endpoint?: string): Promise<T> {
   // When mock is disabled, always call real API — errors propagate to caller
   if (MOCK_DISABLED) {
-    return apiCall();
+    const result = await apiCall();
+    dataSourceStatus.setRealDataReceived();
+    return result;
   }
 
   // Skip network call entirely if backend is known to be offline
   const online = await isBackendOnline();
   if (!online) {
+    dataSourceStatus.setMockMode(true, endpoint);
     return mockData;
   }
 
   try {
-    return await apiCall();
+    const result = await apiCall();
+    dataSourceStatus.setRealDataReceived();
+    return result;
   } catch {
-    // Any error → fall back to mock data silently
-    _backendOnline = false; // Mark offline so subsequent calls skip network
+    // Any error → fall back to mock data, notify UI
+    // markBackendOffline() sets BOTH _backendOnline AND _lastHealthCheck
+    // so subsequent calls skip network for 30 seconds (no re-checking /health)
+    markBackendOffline();
+    dataSourceStatus.setMockMode(true, endpoint);
     return mockData;
   }
 }

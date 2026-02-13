@@ -20,15 +20,15 @@ export function ActiveFilterChip({ label, onRemove }: ActiveFilterChipProps) {
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.8 }}
-      className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-mono rounded bg-muted text-foreground border border-border"
+      className="inline-flex items-center gap-1.5 pl-3 pr-1 py-1.5 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-mono rounded bg-muted text-foreground border border-border min-h-[44px] sm:min-h-0"
     >
       {label}
       <button
         onClick={onRemove}
         aria-label={`Remove filter: ${label}`}
-        className="rounded hover:bg-muted p-0.5"
+        className="rounded hover:bg-muted-foreground/10 p-2 sm:p-0.5 -mr-0.5 sm:mr-0"
       >
-        <X className="h-2.5 w-2.5" />
+        <X className="h-3 w-3 sm:h-2.5 sm:w-2.5" />
       </button>
     </motion.span>
   );

@@ -9,7 +9,7 @@ import { CompactCountdown } from '@/components/domain/common/CountdownTimer';
 import { useToast } from '@/components/ui/toast';
 import { useUser } from '@/contexts/user-context';
 import { useEscalationDetail } from '@/hooks/useEscalationDetail';
-import { ErrorState } from '@/components/ui/error-state';
+import { ErrorState } from '@/components/ui/states';
 import {
   ArrowLeft,
   Clock,
@@ -432,6 +432,7 @@ export function EscalationDetailPage() {
                   placeholder="Add a comment..."
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
+                  maxLength={1000}
                   className="flex-1 h-10 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                   onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
                 />

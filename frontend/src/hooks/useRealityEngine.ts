@@ -9,6 +9,23 @@ import { useQuery } from '@tanstack/react-query';
 import { v2Signals, v2Analytics, type AnalyticsTimeSeries } from '@/lib/api-v2';
 import { withMockFallback } from '@/lib/api';
 
+export interface RealityRate {
+  route: string;
+  currentRate: number;
+  previousRate: number;
+  change: number;
+  lastUpdated: string;
+}
+
+export interface RealityVesselAlert {
+  id: string;
+  vesselName: string;
+  alertType: string;
+  description: string;
+  timestamp: string;
+  location: string;
+}
+
 export interface RealityData {
   signals: Array<{
     id: string;
@@ -21,6 +38,8 @@ export interface RealityData {
   risk_trend: AnalyticsTimeSeries | null;
   total_active_signals: number;
   last_updated: string | null;
+  rates: RealityRate[];
+  vesselAlerts: RealityVesselAlert[];
 }
 
 // ── Mock reality data for offline fallback ───────────────────
@@ -86,6 +105,13 @@ const mockRealityData: RealityData = {
   },
   total_active_signals: 5,
   last_updated: new Date(Date.now() - 1 * 3600000).toISOString(),
+  rates: [
+    { route: 'Asia–Europe', currentRate: 3200, previousRate: 2850, change: 12.3, lastUpdated: new Date(Date.now() - 2 * 3600000).toISOString() },
+    { route: 'Asia–US East', currentRate: 4100, previousRate: 4300, change: -4.7, lastUpdated: new Date(Date.now() - 1 * 3600000).toISOString() },
+  ],
+  vesselAlerts: [
+    { id: 'va_001', vesselName: 'MSC Oscar', alertType: 'port_congestion', description: 'Port congestion — 48h delay', timestamp: new Date(Date.now() - 3 * 3600000).toISOString(), location: 'Singapore' },
+  ],
 };
 
 export function useRealityEngine() {
@@ -116,6 +142,8 @@ export function useRealityEngine() {
           risk_trend: trend,
           total_active_signals: signals.length,
           last_updated: signals[0]?.created_at ?? null,
+          rates: [],
+          vesselAlerts: [],
         };
       },
       mockRealityData,

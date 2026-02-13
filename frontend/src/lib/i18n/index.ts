@@ -80,10 +80,15 @@ export interface Translations {
     confirm: string;
     loading: string;
     error: string;
+    errorDescription: string;
+    errorTitle: string;
     retry: string;
     viewAll: string;
     showMore: string;
     showLess: string;
+    offline: string;
+    unknownError: string;
+    connectionFailed: string;
   };
 
   // Time & Dates
@@ -182,10 +187,15 @@ export const en: Translations = {
     confirm: 'Confirm',
     loading: 'Loading...',
     error: 'Error',
+    errorDescription: 'Something went wrong. Please try again.',
+    errorTitle: 'Something went wrong',
     retry: 'Retry',
     viewAll: 'View all',
     showMore: 'Show more',
     showLess: 'Show less',
+    offline: 'Server connection lost. Reconnecting...',
+    unknownError: 'An unexpected error occurred.',
+    connectionFailed: 'Could not connect to server. Please try again.',
   },
 
   time: {
@@ -281,10 +291,15 @@ export const vi: Translations = {
     confirm: 'Xác nhận',
     loading: 'Đang tải...',
     error: 'Lỗi',
+    errorDescription: 'Đã xảy ra lỗi. Vui lòng thử lại.',
+    errorTitle: 'Đã xảy ra lỗi',
     retry: 'Thử lại',
     viewAll: 'Xem tất cả',
     showMore: 'Xem thêm',
     showLess: 'Thu gọn',
+    offline: 'Mất kết nối server. Đang thử kết nối lại...',
+    unknownError: 'Đã xảy ra lỗi không mong muốn.',
+    connectionFailed: 'Không thể kết nối server. Vui lòng thử lại.',
   },
 
   time: {
@@ -335,7 +350,8 @@ export interface I18nContext {
   setLocale: (locale: Locale) => void;
 }
 
-// Re-export useFormatters hook
+// Re-export hooks from provider
+export { useTranslations, useI18n, useLocale } from './provider';
 export { useFormatters } from './useFormatters';
 
 export default { en, vi, getTranslations };

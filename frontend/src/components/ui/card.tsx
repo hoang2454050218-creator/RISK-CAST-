@@ -36,7 +36,7 @@ interface CardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
   hoverEffect?: 'lift' | 'glow' | 'scale' | 'none';
   urgency?: 'immediate' | 'urgent' | 'soon' | 'watch';
   isInteractive?: boolean;
-  animate?: boolean;
+  enableAnimation?: boolean;
 }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
@@ -47,25 +47,29 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       hoverEffect = 'lift',
       urgency,
       isInteractive = false,
-      animate = true,
+      enableAnimation = true,
       children,
       ...props
     },
     ref,
   ) => {
     const variantClasses = {
-      default: 'bg-card border border-border hover:shadow-card-hover transition-shadow',
-      premium: 'card-premium bg-card hover:shadow-card-hover transition-shadow',
-      glass: 'card-glass',
+      default: cn(
+        'bg-card border border-border shadow-level-1 backdrop-blur-sm',
+        'hover:shadow-level-2 hover:border-[var(--light-card-border-hover,var(--color-border))]',
+        'transition-[box-shadow,border-color,transform] duration-200 ease-out',
+      ),
+      premium: 'card-premium bg-card shadow-level-2 hover:shadow-level-3 transition-shadow',
+      glass: 'card-glass shadow-level-2',
       outline: 'bg-transparent border-2 border-border hover:border-accent/30 transition-colors',
       ghost: 'bg-transparent border-0 shadow-none',
     };
 
     const urgencyClasses = {
-      immediate: 'border-l-4 border-l-urgency-immediate',
-      urgent: 'border-l-4 border-l-urgency-urgent',
-      soon: 'border-l-4 border-l-urgency-soon',
-      watch: 'border-l-4 border-l-urgency-watch',
+      immediate: 'urgency-card-immediate',
+      urgent: 'urgency-card-urgent',
+      soon: 'urgency-card-soon',
+      watch: 'urgency-card-watch',
     };
 
     const hoverVariants =
@@ -91,13 +95,13 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         tabIndex={isInteractive ? 0 : undefined}
         onKeyDown={handleKeyDown}
         className={cn(
-          'rounded-lg text-card-foreground shadow-card',
+          'rounded-xl text-card-foreground',
           variantClasses[variant],
           urgency && urgencyClasses[urgency],
-          isInteractive && 'cursor-pointer',
+          isInteractive && 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
           className,
         )}
-        initial={animate ? 'rest' : undefined}
+        initial={enableAnimation ? 'rest' : undefined}
         whileHover={isInteractive && hoverEffect !== 'none' ? 'hover' : undefined}
         whileTap={isInteractive ? 'tap' : undefined}
         variants={hoverVariants}
@@ -192,8 +196,8 @@ interface UrgencyCardProps extends CardProps {
 const UrgencyCard = React.forwardRef<HTMLDivElement, UrgencyCardProps>(
   ({ urgency, showGlow = true, className, ...props }, ref) => {
     const glowClasses = {
-      immediate: showGlow ? 'urgency-glow-immediate' : '',
-      urgent: showGlow ? 'urgency-glow-urgent' : '',
+      immediate: showGlow ? 'glow-danger-soft breathe-glow' : '',
+      urgent: showGlow ? 'glow-warning-soft' : '',
       soon: '',
       watch: '',
     };

@@ -9,6 +9,7 @@ import { useState, useCallback } from 'react';
 import { AlertTriangle, Zap, TrendingUp, Activity, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSignalsV2, useTriggerScan } from '@/hooks/useSignalsV2';
+import { formatPercentage } from '@/lib/formatters';
 import { useSSE, type SSEEvent } from '@/hooks/useSSE';
 
 const TYPE_ICONS: Record<string, typeof AlertTriangle> = {
@@ -19,10 +20,10 @@ const TYPE_ICONS: Record<string, typeof AlertTriangle> = {
 };
 
 const TYPE_LABELS: Record<string, string> = {
-  payment_risk: 'Rủi ro thanh toán',
-  payment_behavior_change: 'Thay đổi hành vi',
-  route_disruption: 'Gián đoạn tuyến',
-  order_risk_composite: 'Rủi ro đơn hàng',
+  payment_risk: 'Payment Risk',
+  payment_behavior_change: 'Behavior Change',
+  route_disruption: 'Route Disruption',
+  order_risk_composite: 'Order Risk',
 };
 
 function severityColor(score: number): string {
@@ -76,7 +77,7 @@ export function SignalFeedV2() {
       <div className="divide-y divide-border max-h-[400px] overflow-y-auto">
         {isLoading && (
           <div className="px-4 py-8 text-center text-xs text-muted-foreground">
-            Đang tải signals...
+            Loading signals...
           </div>
         )}
 
@@ -119,7 +120,7 @@ export function SignalFeedV2() {
                   </div>
                   <div className="text-right shrink-0">
                     <div className="text-[10px] font-mono text-muted-foreground">
-                      conf {(signal.confidence * 100).toFixed(0)}%
+                      conf {formatPercentage(signal.confidence)}
                     </div>
                   </div>
                 </div>

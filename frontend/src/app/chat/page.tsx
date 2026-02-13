@@ -41,7 +41,7 @@ export default function ChatPage() {
               </h3>
               <button
                 onClick={() => setSelectedSession(undefined)}
-                className="h-7 w-7 rounded-lg flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-md shadow-blue-500/20"
+                className="h-7 w-7 rounded-lg flex items-center justify-center bg-accent hover:bg-accent/90 text-accent-foreground transition-colors shadow-md shadow-accent/20"
                 title="New chat"
               >
                 <Plus className="h-3.5 w-3.5" />
@@ -89,9 +89,9 @@ export default function ChatPage() {
         className="hidden lg:flex h-full w-4 items-center justify-center border-r border-border hover:bg-muted transition-colors"
       >
         {sidebarOpen ? (
-          <ChevronLeft className="h-3 w-3 text-slate-400" />
+          <ChevronLeft className="h-3 w-3 text-muted-foreground" />
         ) : (
-          <ChevronRight className="h-3 w-3 text-slate-400" />
+          <ChevronRight className="h-3 w-3 text-muted-foreground" />
         )}
       </button>
 

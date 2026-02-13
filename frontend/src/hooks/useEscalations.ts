@@ -4,7 +4,7 @@
  * Uses withMockFallback for graceful degradation when backend is offline.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import {
   getEscalations,
   getEscalation,
@@ -14,6 +14,7 @@ import {
   commentEscalation,
   withMockFallback,
 } from '@/lib/api';
+import { toast } from '@/components/ui/toast';
 
 import type { Escalation } from '@/components/domain/escalations';
 
@@ -121,7 +122,13 @@ export function useApproveEscalation() {
   return useMutation({
     mutationFn: ({ id, notes }: { id: string; notes?: string }) =>
       approveEscalation(id, notes),
-    onSuccess: () => qc.invalidateQueries({ queryKey: escalationKeys.lists() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: escalationKeys.lists() });
+      toast.success('Escalation approved');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to approve escalation: ${error.message}`);
+    },
   });
 }
 
@@ -130,7 +137,13 @@ export function useRejectEscalation() {
   return useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
       rejectEscalation(id, reason),
-    onSuccess: () => qc.invalidateQueries({ queryKey: escalationKeys.lists() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: escalationKeys.lists() });
+      toast.success('Escalation rejected');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to reject escalation: ${error.message}`);
+    },
   });
 }
 
@@ -139,7 +152,13 @@ export function useAssignEscalation() {
   return useMutation({
     mutationFn: ({ id, assignee }: { id: string; assignee: string }) =>
       assignEscalation(id, assignee),
-    onSuccess: () => qc.invalidateQueries({ queryKey: escalationKeys.lists() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: escalationKeys.lists() });
+      toast.success('Escalation assigned');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to assign escalation: ${error.message}`);
+    },
   });
 }
 
@@ -148,6 +167,12 @@ export function useCommentEscalation() {
   return useMutation({
     mutationFn: ({ id, message }: { id: string; message: string }) =>
       commentEscalation(id, message),
-    onSuccess: () => qc.invalidateQueries({ queryKey: escalationKeys.lists() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: escalationKeys.lists() });
+      toast.success('Comment added');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to add comment: ${error.message}`);
+    },
   });
 }

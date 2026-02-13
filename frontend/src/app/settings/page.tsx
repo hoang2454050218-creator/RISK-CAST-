@@ -253,13 +253,13 @@ export function SettingsPage() {
   };
 
   const tabs: { id: SettingsTab; label: string; icon: typeof User; desc: string; color: string }[] = [
-    { id: 'profile', label: 'Profile', icon: User, desc: 'Account info', color: 'from-blue-500 to-indigo-500' },
-    { id: 'company', label: 'Company', icon: Building2, desc: 'Setup & routes', color: 'from-violet-500 to-purple-500' },
-    { id: 'notifications', label: 'Alerts', icon: Bell, desc: 'Notifications', color: 'from-amber-500 to-orange-500' },
-    { id: 'thresholds', label: 'Thresholds', icon: Sliders, desc: 'Auto-escalation', color: 'from-rose-500 to-red-500' },
-    { id: 'team', label: 'Team', icon: Users, desc: 'Members & roles', color: 'from-purple-500 to-pink-500' },
-    { id: 'appearance', label: 'Display', icon: Palette, desc: 'Theme & layout', color: 'from-teal-500 to-cyan-500' },
-    { id: 'keyboard', label: 'Shortcuts', icon: Keyboard, desc: 'Hotkeys', color: 'from-slate-500 to-zinc-500' },
+    { id: 'profile', label: 'Profile', icon: User, desc: 'Account info', color: 'from-info to-accent' },
+    { id: 'company', label: 'Company', icon: Building2, desc: 'Setup & routes', color: 'from-action-reroute to-action-reroute' },
+    { id: 'notifications', label: 'Alerts', icon: Bell, desc: 'Notifications', color: 'from-warning to-urgency-urgent' },
+    { id: 'thresholds', label: 'Thresholds', icon: Sliders, desc: 'Auto-escalation', color: 'from-destructive to-error' },
+    { id: 'team', label: 'Team', icon: Users, desc: 'Members & roles', color: 'from-action-reroute to-accent' },
+    { id: 'appearance', label: 'Display', icon: Palette, desc: 'Theme & layout', color: 'from-action-insure to-action-insure' },
+    { id: 'keyboard', label: 'Shortcuts', icon: Keyboard, desc: 'Hotkeys', color: 'from-muted-foreground to-muted' },
   ];
 
   const activeTabData = tabs.find((t) => t.id === activeTab);
@@ -273,7 +273,7 @@ export function SettingsPage() {
     >
       {/* Page Header */}
       <motion.div
-        className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-primary/5 via-transparent to-violet-500/5 border border-border/30"
+        className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-primary/5 via-transparent to-action-reroute/5 border border-border/30"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={springs.smooth}
@@ -281,13 +281,13 @@ export function SettingsPage() {
         <div className="flex items-center gap-4">
           <div className="relative">
             <motion.div
-              className="p-3 rounded-2xl bg-gradient-to-br from-primary to-violet-600 shadow-lg shadow-primary/20"
+              className="p-3 rounded-2xl bg-gradient-to-br from-primary to-action-reroute shadow-lg shadow-primary/20"
               whileHover={{ scale: 1.05 }}
             >
-              <Settings2 className="h-6 w-6 text-white" />
+              <Settings2 className="h-6 w-6 text-accent-foreground" />
             </motion.div>
             <motion.div
-              className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-background"
+              className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-success border-2 border-background"
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
@@ -319,8 +319,8 @@ export function SettingsPage() {
             className={cn(
               'gap-2 shadow-lg transition-all rounded-xl px-6',
               saved
-                ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'
-                : 'bg-gradient-to-r from-primary to-violet-600 hover:from-primary/90 hover:to-violet-600/90 text-white shadow-primary/20',
+                ? 'bg-success hover:bg-success/90 text-success-foreground shadow-success/20'
+                : 'bg-gradient-to-r from-primary to-action-reroute hover:from-primary/90 hover:to-action-reroute/90 text-accent-foreground shadow-primary/20',
             )}
           >
             {saved ? (
@@ -357,21 +357,21 @@ export function SettingsPage() {
                       className={cn(
                         'group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm transition-all relative',
                         isActive
-                          ? 'bg-gradient-to-r from-primary/8 to-violet-500/5 text-foreground font-medium shadow-sm'
+                          ? 'bg-gradient-to-r from-primary/8 to-action-reroute/5 text-foreground font-medium shadow-sm'
                           : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
                       )}
                     >
                       {isActive && (
                         <motion.div
                           layoutId="settings-tab-indicator"
-                          className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-gradient-to-b from-primary to-violet-500"
+                          className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-gradient-to-b from-primary to-action-reroute"
                           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                         />
                       )}
                       <div className={cn(
                         'w-9 h-9 rounded-xl flex items-center justify-center transition-all shrink-0',
                         isActive
-                          ? `bg-gradient-to-br ${tab.color} text-white shadow-md`
+                          ? `bg-gradient-to-br ${tab.color} text-accent-foreground shadow-md`
                           : 'bg-muted/50 text-muted-foreground group-hover:bg-muted',
                       )}>
                         <Icon className="h-4 w-4" />
@@ -431,13 +431,14 @@ export function SettingsPage() {
 function SectionCard({ children, accentColor = 'primary', className = '' }: { children: React.ReactNode; accentColor?: string; className?: string }) {
   const colorMap: Record<string, string> = {
     primary: 'via-primary/40',
-    blue: 'via-blue-500/40',
-    violet: 'via-violet-500/40',
-    amber: 'via-amber-500/40',
-    rose: 'via-rose-500/40',
-    teal: 'via-teal-500/40',
-    purple: 'via-purple-500/40',
-    emerald: 'via-emerald-500/40',
+    blue: 'via-info/40',
+    violet: 'via-action-reroute/40',
+    amber: 'via-warning/40',
+    rose: 'via-destructive/40',
+    teal: 'via-action-insure/40',
+    purple: 'via-action-reroute/40',
+    emerald: 'via-success/40',
+    indigo: 'via-accent/40',
   };
   return (
     <Card className={cn('relative border-border/40 shadow-sm', className)}>
@@ -468,8 +469,8 @@ function ProfileSettings() {
     <SectionCard accentColor="blue">
       <CardHeader>
         <CardTitle className="flex items-center gap-3 text-lg">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-500/20">
-            <User className="h-4.5 w-4.5 text-white" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-info to-accent flex items-center justify-center shadow-md shadow-info/20">
+            <User className="h-4.5 w-4.5 text-accent-foreground" />
           </div>
           Profile
         </CardTitle>
@@ -478,7 +479,7 @@ function ProfileSettings() {
       <CardContent className="space-y-5">
         {/* Avatar section */}
         <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border border-border/40">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-xl font-bold shadow-md shadow-blue-500/20">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-info to-accent flex items-center justify-center text-accent-foreground text-xl font-bold shadow-md shadow-info/20">
             {user.name.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1">
@@ -530,7 +531,7 @@ function ProfileSettings() {
           />
         </div>
         <div className="pt-1">
-          <Button onClick={handleSave} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+          <Button onClick={handleSave} className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground shadow-sm">
             <Save className="h-4 w-4" />
             Save Profile
           </Button>
@@ -683,7 +684,7 @@ function SmartPhoneInput({
   return (
     <div className="space-y-1.5">
       <label className={cn(labelClass, 'flex items-center gap-1.5')}>
-        <Phone className="h-3.5 w-3.5 text-violet-500" />
+        <Phone className="h-3.5 w-3.5 text-action-reroute" />
         Phone (WhatsApp) *
       </label>
       <div className="relative flex items-stretch" ref={dropdownRef}>
@@ -711,7 +712,7 @@ function SmartPhoneInput({
             placeholder={selectedCountry.format.replace(/#/g, '0')}
             className={cn(
               'h-11 w-full rounded-r-xl border bg-background pl-4 pr-10 text-sm font-mono tracking-wide focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all',
-              digitCount > 0 && digitCount < 8 ? 'border-amber-400' : 'border-border/60',
+              digitCount > 0 && digitCount < 8 ? 'border-warning' : 'border-border/60',
             )}
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -719,10 +720,10 @@ function SmartPhoneInput({
               <MessageSquare className="h-4 w-4 text-muted-foreground/30" />
             ) : digitCount >= 8 ? (
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                <Check className="h-4 w-4 text-emerald-500" />
+                <Check className="h-4 w-4 text-success" />
               </motion.div>
             ) : (
-              <span className="text-[10px] font-mono text-amber-500">{digitCount}/8+</span>
+              <span className="text-[10px] font-mono text-warning">{digitCount}/8+</span>
             )}
           </div>
         </div>
@@ -788,7 +789,7 @@ function SmartPhoneInput({
           className="text-[11px] text-muted-foreground font-mono pl-1"
         >
           Full: <span className="text-foreground">{fullNumber}</span>
-          {digitCount >= 8 && <span className="text-emerald-500 ml-1.5">Valid</span>}
+          {digitCount >= 8 && <span className="text-success ml-1.5">Valid</span>}
         </motion.p>
       )}
     </div>
@@ -911,12 +912,12 @@ function CompanySetupSettings() {
       <SectionCard accentColor="emerald">
         <CardContent className="py-12 text-center space-y-4">
           <motion.div
-            className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 border border-emerald-500/20 flex items-center justify-center"
+            className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-success/20 to-success/20 border border-success/20 flex items-center justify-center"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', damping: 10 }}
           >
-            <Check className="h-8 w-8 text-emerald-500" />
+            <Check className="h-8 w-8 text-success" />
           </motion.div>
           <h3 className="text-lg font-bold">Company Setup Complete!</h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -924,7 +925,7 @@ function CompanySetupSettings() {
             {chokepoints.size} chokepoint{chokepoints.size !== 1 ? 's' : ''} for <strong>{companyName}</strong>.
           </p>
           <div className="flex gap-3 justify-center pt-2">
-            <Button className="gap-2 bg-violet-600 hover:bg-violet-700 text-white" onClick={() => navigate('/customers')}>
+            <Button className="gap-2 bg-action-reroute hover:bg-action-reroute/90 text-accent-foreground" onClick={() => navigate('/customers')}>
               View Customers <ArrowRight className="h-4 w-4" />
             </Button>
             <Button variant="outline" onClick={() => navigate('/dashboard')}>Go to Dashboard</Button>
@@ -940,11 +941,11 @@ function CompanySetupSettings() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="p-4 rounded-xl bg-gradient-to-r from-violet-500/8 to-purple-500/8 border border-violet-500/15 flex items-center justify-between"
+        className="p-4 rounded-xl bg-gradient-to-r from-action-reroute/8 to-action-reroute/8 border border-action-reroute/15 flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-violet-500/15 flex items-center justify-center">
-            <Sparkles className="h-4.5 w-4.5 text-violet-500" />
+          <div className="w-9 h-9 rounded-lg bg-action-reroute/15 flex items-center justify-center">
+            <Sparkles className="h-4.5 w-4.5 text-action-reroute" />
           </div>
           <div>
             <p className="text-sm font-medium">Want a guided setup?</p>
@@ -954,7 +955,7 @@ function CompanySetupSettings() {
         <Button
           variant="outline"
           size="sm"
-          className="gap-1.5 border-violet-500/25 hover:bg-violet-500/8 text-violet-600 dark:text-violet-400"
+          className="gap-1.5 border-action-reroute/25 hover:bg-action-reroute/8 text-action-reroute"
           onClick={() => navigate('/onboarding')}
         >
           <Sparkles className="h-3.5 w-3.5" />
@@ -966,8 +967,8 @@ function CompanySetupSettings() {
       <SectionCard accentColor="violet">
         <CardHeader>
         <CardTitle className="flex items-center gap-3 text-lg">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-md shadow-violet-500/20">
-            <Building2 className="h-4.5 w-4.5 text-white" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-action-reroute to-action-reroute flex items-center justify-center shadow-md shadow-action-reroute/20">
+            <Building2 className="h-4.5 w-4.5 text-accent-foreground" />
           </div>
           Company Profile
         </CardTitle>
@@ -1009,9 +1010,9 @@ function CompanySetupSettings() {
           {/* Company Description */}
           <div className="space-y-2">
             <label className={cn(labelClass, 'flex items-center gap-1.5')}>
-              <Brain className="h-3.5 w-3.5 text-violet-500" />
+              <Brain className="h-3.5 w-3.5 text-action-reroute" />
               Company Description
-              <span className="text-[10px] bg-violet-500/10 text-violet-600 dark:text-violet-400 px-1.5 py-0.5 rounded-full font-medium ml-1">AI-enhanced</span>
+              <span className="text-[10px] bg-action-reroute/10 text-action-reroute px-1.5 py-0.5 rounded-full font-medium ml-1">AI-enhanced</span>
             </label>
             <textarea
               value={companyDescription}
@@ -1053,8 +1054,8 @@ function CompanySetupSettings() {
       <SectionCard accentColor="teal">
         <CardHeader>
           <CardTitle className="flex items-center gap-3 text-lg">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center shadow-md shadow-teal-500/20">
-              <Package className="h-4.5 w-4.5 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-action-insure to-success flex items-center justify-center shadow-md shadow-action-insure/20">
+              <Package className="h-4.5 w-4.5 text-accent-foreground" />
             </div>
             Cargo Types
           </CardTitle>
@@ -1074,21 +1075,21 @@ function CompanySetupSettings() {
                   className={cn(
                     'flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-sm text-left transition-all relative overflow-hidden',
                     selected
-                      ? 'bg-teal-500/10 border-teal-500/40 text-teal-700 dark:text-teal-300 font-medium shadow-sm shadow-teal-500/5'
-                      : 'bg-muted/20 border-border/40 text-muted-foreground hover:border-teal-500/25 hover:bg-muted/40 hover:text-foreground',
+                      ? 'bg-action-insure/10 border-action-insure/40 text-action-insure font-medium shadow-sm shadow-action-insure/5'
+                      : 'bg-muted/20 border-border/40 text-muted-foreground hover:border-action-insure/25 hover:bg-muted/40 hover:text-foreground',
                   )}
                 >
-                  {selected && <motion.div layoutId="cargo-bg" className="absolute inset-0 bg-gradient-to-br from-teal-500/8 to-emerald-500/5" />}
+                  {selected && <motion.div layoutId="cargo-bg" className="absolute inset-0 bg-gradient-to-br from-action-insure/8 to-success/5" />}
                   <div className={cn(
                     'w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors relative z-10',
-                    selected ? 'bg-teal-500/15' : 'bg-muted/50',
+                    selected ? 'bg-action-insure/15' : 'bg-muted/50',
                   )}>
-                    <CargoIcon className={cn('h-3.5 w-3.5', selected ? 'text-teal-500' : 'text-muted-foreground/50')} />
+                    <CargoIcon className={cn('h-3.5 w-3.5', selected ? 'text-action-insure' : 'text-muted-foreground/50')} />
                   </div>
                   <span className="truncate relative z-10 text-[13px]">{cargo}</span>
                   {selected && (
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="ml-auto shrink-0 relative z-10">
-                      <Check className="h-3.5 w-3.5 text-teal-500" />
+                      <Check className="h-3.5 w-3.5 text-action-insure" />
                     </motion.div>
                   )}
                 </motion.button>
@@ -1096,7 +1097,7 @@ function CompanySetupSettings() {
             })}
           </div>
           {cargoTypes.length > 0 && (
-            <p className="text-xs text-teal-600 dark:text-teal-400 mt-3 flex items-center gap-1.5">
+            <p className="text-xs text-action-insure mt-3 flex items-center gap-1.5">
               <Check className="h-3 w-3" />
               {cargoTypes.length} cargo type{cargoTypes.length !== 1 ? 's' : ''} selected — risk signals will be customized
             </p>
@@ -1111,15 +1112,15 @@ function CompanySetupSettings() {
       <SectionCard accentColor="blue">
         <CardHeader>
           <CardTitle className="flex items-center gap-3 text-lg">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-500/20">
-              <Route className="h-4.5 w-4.5 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-info to-accent flex items-center justify-center shadow-md shadow-info/20">
+              <Route className="h-4.5 w-4.5 text-accent-foreground" />
             </div>
             Trade Routes
           </CardTitle>
           <CardDescription>Define your shipping routes — auto-detect chokepoints and monitor disruptions</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/15 text-sm text-blue-600 dark:text-blue-400 flex items-start gap-2">
+          <div className="p-3 rounded-xl bg-info/5 border border-info/15 text-sm text-info flex items-start gap-2">
             <Anchor className="h-4 w-4 mt-0.5 shrink-0" />
             <span>Select origin and destination ports. We&apos;ll auto-identify chokepoints along those routes.</span>
           </div>
@@ -1157,14 +1158,14 @@ function CompanySetupSettings() {
                   <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
                     className="flex items-center justify-between p-3 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors">
                     <div className="flex items-center gap-2 text-sm">
-                      <Ship className="h-4 w-4 text-blue-500 shrink-0" />
+                      <Ship className="h-4 w-4 text-info shrink-0" />
                       <span className="font-mono font-medium">{route.origin}</span>
                       <span className="text-xs text-muted-foreground hidden sm:inline">{orig?.label}</span>
                       <ArrowRight className="h-3 w-3 text-muted-foreground" />
                       <span className="font-mono font-medium">{route.destination}</span>
                       <span className="text-xs text-muted-foreground hidden sm:inline">{dest?.label}</span>
                     </div>
-                    <button onClick={() => removeRoute(i)} className="p-1 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all">
+                    <button onClick={() => removeRoute(i)} className="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
                       <X className="h-4 w-4" />
                     </button>
                   </motion.div>
@@ -1174,14 +1175,14 @@ function CompanySetupSettings() {
           )}
 
           {chokepoints.size > 0 && (
-            <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/15">
-              <p className="text-xs font-medium text-amber-600 dark:text-amber-400 mb-2 flex items-center gap-1.5">
+            <div className="p-3 rounded-xl bg-warning/5 border border-warning/15">
+              <p className="text-xs font-medium text-warning mb-2 flex items-center gap-1.5">
                 <AlertTriangle className="h-3.5 w-3.5" />
                 Auto-detected Chokepoints ({chokepoints.size}):
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {Array.from(chokepoints).map((cp) => (
-                  <Badge key={cp} variant="outline" className="text-xs bg-amber-500/8 text-amber-600 border-amber-500/25">
+                  <Badge key={cp} variant="outline" className="text-xs bg-warning/8 text-warning border-warning/25">
                     {cp.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
                   </Badge>
                 ))}
@@ -1195,8 +1196,8 @@ function CompanySetupSettings() {
       <SectionCard accentColor="amber">
         <CardHeader>
           <CardTitle className="flex items-center gap-3 text-lg">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/20">
-              <Shield className="h-4.5 w-4.5 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-warning to-urgency-urgent flex items-center justify-center shadow-md shadow-warning/20">
+              <Shield className="h-4.5 w-4.5 text-accent-foreground" />
             </div>
             Risk Preferences
           </CardTitle>
@@ -1212,12 +1213,12 @@ function CompanySetupSettings() {
                   value: 'LOW' as const, label: 'Conservative',
                   desc: 'Alert early, maximize safety. Best for high-value cargo.',
                   Icon: ShieldCheck, colorKey: 'blue',
-                  gradient: 'from-blue-500/15 to-cyan-500/15',
-                  hoverGradient: 'from-blue-500/6 to-cyan-500/4',
-                  border: 'border-blue-500/60', ring: 'ring-blue-500/25',
-                  hoverBorder: 'hover:border-blue-400/30',
-                  bg: 'bg-blue-500/8', iconColor: 'text-blue-500',
-                  iconBg: 'bg-blue-500/10',
+                  gradient: 'from-info/15 to-action-insure/15',
+                  hoverGradient: 'from-info/6 to-action-insure/4',
+                  border: 'border-info/60', ring: 'ring-info/25',
+                  hoverBorder: 'hover:border-info/30',
+                  bg: 'bg-info/8', iconColor: 'text-info',
+                  iconBg: 'bg-info/10',
                   dot: '#3b82f6',
                   features: ['Early warnings', 'Lower thresholds', 'More alerts'],
                 },
@@ -1225,12 +1226,12 @@ function CompanySetupSettings() {
                   value: 'BALANCED' as const, label: 'Balanced',
                   desc: 'Smart filtering to reduce noise. Recommended for most businesses.',
                   Icon: Shield, colorKey: 'violet',
-                  gradient: 'from-violet-500/15 to-purple-500/15',
-                  hoverGradient: 'from-violet-500/6 to-purple-500/4',
-                  border: 'border-violet-500/60', ring: 'ring-violet-500/25',
-                  hoverBorder: 'hover:border-violet-400/30',
-                  bg: 'bg-violet-500/8', iconColor: 'text-violet-500',
-                  iconBg: 'bg-violet-500/10',
+                  gradient: 'from-action-reroute/15 to-action-reroute/15',
+                  hoverGradient: 'from-action-reroute/6 to-action-reroute/4',
+                  border: 'border-action-reroute/60', ring: 'ring-action-reroute/25',
+                  hoverBorder: 'hover:border-action-reroute/30',
+                  bg: 'bg-action-reroute/8', iconColor: 'text-action-reroute',
+                  iconBg: 'bg-action-reroute/10',
                   dot: '#8b5cf6',
                   features: ['Smart filtering', 'Balanced alerts', 'Prioritized'],
                 },
@@ -1238,12 +1239,12 @@ function CompanySetupSettings() {
                   value: 'HIGH' as const, label: 'Aggressive',
                   desc: 'Only critical disruptions. For experienced teams with high risk appetite.',
                   Icon: ShieldAlert, colorKey: 'orange',
-                  gradient: 'from-orange-500/15 to-red-500/15',
-                  hoverGradient: 'from-orange-500/6 to-red-500/4',
-                  border: 'border-orange-500/60', ring: 'ring-orange-500/25',
-                  hoverBorder: 'hover:border-orange-400/30',
-                  bg: 'bg-orange-500/8', iconColor: 'text-orange-500',
-                  iconBg: 'bg-orange-500/10',
+                  gradient: 'from-urgency-urgent/15 to-destructive/15',
+                  hoverGradient: 'from-urgency-urgent/6 to-destructive/4',
+                  border: 'border-urgency-urgent/60', ring: 'ring-urgency-urgent/25',
+                  hoverBorder: 'hover:border-urgency-urgent/30',
+                  bg: 'bg-urgency-urgent/8', iconColor: 'text-urgency-urgent',
+                  iconBg: 'bg-urgency-urgent/10',
                   dot: '#f97316',
                   features: ['Critical only', 'Higher thresholds', 'Minimal noise'],
                 },
@@ -1298,31 +1299,31 @@ function CompanySetupSettings() {
                 {
                   value: 'enterprise', label: 'Enterprise',
                   desc: 'Full platform access with SLA guarantees and priority support',
-                  Icon: Crown, gradient: 'from-amber-500/12 to-orange-500/12',
-                  hoverGradient: 'from-amber-500/5 to-orange-500/3',
-                  border: 'border-amber-500/60', ring: 'ring-amber-500/25',
-                  hoverBorder: 'hover:border-amber-400/30',
-                  iconColor: 'text-amber-500', iconBg: 'bg-amber-500/10', badge: 'Recommended',
+                  Icon: Crown, gradient: 'from-warning/12 to-urgency-urgent/12',
+                  hoverGradient: 'from-warning/5 to-urgency-urgent/3',
+                  border: 'border-warning/60', ring: 'ring-warning/25',
+                  hoverBorder: 'hover:border-warning/30',
+                  iconColor: 'text-warning', iconBg: 'bg-warning/10', badge: 'Recommended',
                   features: ['Unlimited routes', 'AI analysis', 'SLA guarantee', '24/7 support'],
                 },
                 {
                   value: 'mid-market', label: 'Mid-Market',
                   desc: 'Core monitoring with standard features for growing teams',
-                  Icon: Gem, gradient: 'from-violet-500/12 to-purple-500/12',
-                  hoverGradient: 'from-violet-500/5 to-purple-500/3',
-                  border: 'border-violet-500/60', ring: 'ring-violet-500/25',
-                  hoverBorder: 'hover:border-violet-400/30',
-                  iconColor: 'text-violet-500', iconBg: 'bg-violet-500/10', badge: null,
+                  Icon: Gem, gradient: 'from-action-reroute/12 to-action-reroute/12',
+                  hoverGradient: 'from-action-reroute/5 to-action-reroute/3',
+                  border: 'border-action-reroute/60', ring: 'ring-action-reroute/25',
+                  hoverBorder: 'hover:border-action-reroute/30',
+                  iconColor: 'text-action-reroute', iconBg: 'bg-action-reroute/10', badge: null,
                   features: ['Up to 20 routes', 'Basic AI', 'Email support'],
                 },
                 {
                   value: 'startup', label: 'Startup',
                   desc: 'Essential risk monitoring to get started quickly',
-                  Icon: Zap, gradient: 'from-emerald-500/12 to-teal-500/12',
-                  hoverGradient: 'from-emerald-500/5 to-teal-500/3',
-                  border: 'border-emerald-500/60', ring: 'ring-emerald-500/25',
-                  hoverBorder: 'hover:border-emerald-400/30',
-                  iconColor: 'text-emerald-500', iconBg: 'bg-emerald-500/10', badge: null,
+                  Icon: Zap, gradient: 'from-success/12 to-action-insure/12',
+                  hoverGradient: 'from-success/5 to-action-insure/3',
+                  border: 'border-success/60', ring: 'ring-success/25',
+                  hoverBorder: 'hover:border-success/30',
+                  iconColor: 'text-success', iconBg: 'bg-success/10', badge: null,
                   features: ['Up to 5 routes', 'Basic alerts', 'Community'],
                 },
               ]).map((opt) => {
@@ -1347,7 +1348,7 @@ function CompanySetupSettings() {
                         </div>
                         {opt.badge && (
                           <span className={cn('text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full',
-                            isSelected ? 'bg-amber-500 text-white shadow-sm' : 'bg-amber-500/10 text-amber-600')}>
+                            isSelected ? 'bg-warning text-accent-foreground shadow-sm' : 'bg-warning/10 text-warning')}>
                             {opt.badge}
                           </span>
                         )}
@@ -1375,8 +1376,8 @@ function CompanySetupSettings() {
       <SectionCard accentColor="rose">
         <CardHeader>
           <CardTitle className="flex items-center gap-3 text-lg">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-md shadow-rose-500/20">
-              <BellRing className="h-4.5 w-4.5 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-destructive to-accent flex items-center justify-center shadow-md shadow-destructive/20">
+              <BellRing className="h-4.5 w-4.5 text-accent-foreground" />
             </div>
             Alert Channels
           </CardTitle>
@@ -1392,9 +1393,9 @@ function CompanySetupSettings() {
               const Icon = ch.icon;
               const enabled = alertChannels[ch.key];
               const colorMap: Record<string, { border: string; bg: string; ring: string; icon: string; hoverBorder: string; iconBg: string }> = {
-                emerald: { border: 'border-emerald-500/60', bg: 'bg-emerald-500/8', ring: 'ring-emerald-500/25', icon: 'text-emerald-500', hoverBorder: 'hover:border-emerald-400/30', iconBg: 'bg-emerald-500/10' },
-                blue: { border: 'border-blue-500/60', bg: 'bg-blue-500/8', ring: 'ring-blue-500/25', icon: 'text-blue-500', hoverBorder: 'hover:border-blue-400/30', iconBg: 'bg-blue-500/10' },
-                amber: { border: 'border-amber-500/60', bg: 'bg-amber-500/8', ring: 'ring-amber-500/25', icon: 'text-amber-500', hoverBorder: 'hover:border-amber-400/30', iconBg: 'bg-amber-500/10' },
+                emerald: { border: 'border-success/60', bg: 'bg-success/8', ring: 'ring-success/25', icon: 'text-success', hoverBorder: 'hover:border-success/30', iconBg: 'bg-success/10' },
+                blue: { border: 'border-info/60', bg: 'bg-info/8', ring: 'ring-info/25', icon: 'text-info', hoverBorder: 'hover:border-info/30', iconBg: 'bg-info/10' },
+                amber: { border: 'border-warning/60', bg: 'bg-warning/8', ring: 'ring-warning/25', icon: 'text-warning', hoverBorder: 'hover:border-warning/30', iconBg: 'bg-warning/10' },
               };
               const colors = colorMap[ch.color];
               return (
@@ -1410,7 +1411,7 @@ function CompanySetupSettings() {
                     <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center transition-colors', enabled ? colors.bg : colors.iconBg)}>
                       <Icon className={cn('h-4 w-4 transition-colors', enabled ? colors.icon : `${colors.icon} opacity-50`)} />
                     </div>
-                    <div className={cn('w-9 h-5 rounded-full transition-colors relative', enabled ? 'bg-emerald-500' : 'bg-muted-foreground/20')}>
+                    <div className={cn('w-9 h-5 rounded-full transition-colors relative', enabled ? 'bg-success' : 'bg-muted-foreground/20')}>
                       <motion.div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm"
                         animate={{ left: enabled ? '1rem' : '0.125rem' }}
                         transition={{ type: 'spring', stiffness: 500, damping: 30 }} />
@@ -1429,8 +1430,8 @@ function CompanySetupSettings() {
       <SectionCard accentColor="purple">
         <CardHeader>
           <CardTitle className="flex items-center gap-3 text-lg">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-md shadow-indigo-500/20">
-              <Gauge className="h-4.5 w-4.5 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-info flex items-center justify-center shadow-md shadow-accent/20">
+              <Gauge className="h-4.5 w-4.5 text-accent-foreground" />
             </div>
             Alert Intelligence
           </CardTitle>
@@ -1440,9 +1441,9 @@ function CompanySetupSettings() {
           {/* Reroute Cost Tolerance */}
           <div className="space-y-3">
             <label className={cn(labelClass, 'flex items-center gap-1.5')}>
-              <TrendingUp className="h-3.5 w-3.5 text-indigo-500" />
+              <TrendingUp className="h-3.5 w-3.5 text-accent" />
               Reroute Cost Tolerance
-              <span className="text-[10px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded-full font-medium ml-1">AI uses this</span>
+              <span className="text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded-full font-medium ml-1">AI uses this</span>
             </label>
             <p className="text-xs text-muted-foreground -mt-1">
               Maximum acceptable premium for rerouting your shipments. Higher = more routing options, lower = more cost-focused.
@@ -1455,9 +1456,9 @@ function CompanySetupSettings() {
                 step={5}
                 value={maxReroutePremium}
                 onChange={(e) => setMaxReroutePremium(Number(e.target.value))}
-                className="flex-1 h-2 rounded-full accent-indigo-500 bg-muted cursor-pointer"
+                className="flex-1 h-2 rounded-full accent-accent bg-muted cursor-pointer"
               />
-              <span className="text-sm font-mono font-bold text-indigo-600 dark:text-indigo-400 min-w-[3rem] text-right">{maxReroutePremium}%</span>
+              <span className="text-sm font-mono font-bold text-accent min-w-[3rem] text-right">{maxReroutePremium}%</span>
             </div>
             <div className="flex justify-between text-[10px] text-muted-foreground px-1">
               <span>Cost-focused (0%)</span>
@@ -1471,7 +1472,7 @@ function CompanySetupSettings() {
           {/* Min Probability Filter */}
           <div className="space-y-3">
             <label className={cn(labelClass, 'flex items-center gap-1.5')}>
-              <Filter className="h-3.5 w-3.5 text-blue-500" />
+              <Filter className="h-3.5 w-3.5 text-info" />
               Alert Sensitivity
             </label>
             <p className="text-xs text-muted-foreground -mt-1">
@@ -1485,9 +1486,9 @@ function CompanySetupSettings() {
                 step={5}
                 value={minProbability}
                 onChange={(e) => setMinProbability(Number(e.target.value))}
-                className="flex-1 h-2 rounded-full accent-blue-500 bg-muted cursor-pointer"
+                className="flex-1 h-2 rounded-full accent-info bg-muted cursor-pointer"
               />
-              <span className="text-sm font-mono font-bold text-blue-600 dark:text-blue-400 min-w-[3rem] text-right">{minProbability}%</span>
+              <span className="text-sm font-mono font-bold text-info min-w-[3rem] text-right">{minProbability}%</span>
             </div>
             <div className="flex justify-between text-[10px] text-muted-foreground px-1">
               <span>Sensitive (10%)</span>
@@ -1502,7 +1503,7 @@ function CompanySetupSettings() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <label className={cn(labelClass, 'flex items-center gap-1.5')}>
-                <DollarSign className="h-3.5 w-3.5 text-emerald-500" />
+                <DollarSign className="h-3.5 w-3.5 text-success" />
                 Min Exposure (USD)
               </label>
               <p className="text-[11px] text-muted-foreground -mt-0.5">Only alert when potential loss exceeds this</p>
@@ -1518,7 +1519,7 @@ function CompanySetupSettings() {
             </div>
             <div className="space-y-2">
               <label className={cn(labelClass, 'flex items-center gap-1.5')}>
-                <Bell className="h-3.5 w-3.5 text-amber-500" />
+                <Bell className="h-3.5 w-3.5 text-warning" />
                 Max Alerts / Day
               </label>
               <p className="text-[11px] text-muted-foreground -mt-0.5">Limit daily alert volume</p>
@@ -1538,7 +1539,7 @@ function CompanySetupSettings() {
           {/* Quiet Hours */}
           <div className="space-y-3">
             <label className={cn(labelClass, 'flex items-center gap-1.5')}>
-              <MoonStar className="h-3.5 w-3.5 text-slate-500" />
+              <MoonStar className="h-3.5 w-3.5 text-muted-foreground" />
               Quiet Hours
               <span className="text-xs text-muted-foreground font-normal ml-1">(optional)</span>
             </label>
@@ -1562,7 +1563,7 @@ function CompanySetupSettings() {
           {/* Smart Toggles */}
           <div className="space-y-3">
             <label className={cn(labelClass, 'flex items-center gap-1.5')}>
-              <ToggleLeft className="h-3.5 w-3.5 text-violet-500" />
+              <ToggleLeft className="h-3.5 w-3.5 text-action-reroute" />
               Smart Alert Content
             </label>
             <div className="space-y-2">
@@ -1579,7 +1580,7 @@ function CompanySetupSettings() {
                     onClick={() => toggle.onChange(!toggle.value)}
                     className={cn(
                       'relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ml-3',
-                      toggle.value ? (toggle.color === 'emerald' ? 'bg-emerald-500' : 'bg-blue-500') : 'bg-muted-foreground/20',
+                      toggle.value ? (toggle.color === 'emerald' ? 'bg-success' : 'bg-info') : 'bg-muted-foreground/20',
                     )}
                   >
                     <motion.span
@@ -1599,12 +1600,12 @@ function CompanySetupSettings() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="p-5 rounded-2xl bg-gradient-to-r from-violet-500/8 via-purple-500/5 to-indigo-500/8 border border-violet-500/20"
+        className="p-5 rounded-2xl bg-gradient-to-r from-action-reroute/8 via-action-reroute/5 to-accent/8 border border-action-reroute/20"
       >
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-md shadow-violet-500/20 shrink-0">
-              <Brain className="h-5 w-5 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-action-reroute to-action-reroute flex items-center justify-center shadow-md shadow-action-reroute/20 shrink-0">
+              <Brain className="h-5 w-5 text-accent-foreground" />
             </div>
             <div>
               <h3 className="font-semibold">Ready to activate?</h3>
@@ -1623,7 +1624,7 @@ function CompanySetupSettings() {
             onClick={handleSetup}
             disabled={!companyName || phone.replace(/\D/g, '').length < 8 || createCustomer.isPending}
             size="lg"
-            className="gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-500/25 px-8 shrink-0 rounded-xl"
+            className="gap-2 bg-gradient-to-r from-action-reroute to-action-reroute hover:from-action-reroute/90 hover:to-action-reroute/90 text-accent-foreground shadow-lg shadow-action-reroute/25 px-8 shrink-0 rounded-xl"
           >
             {createCustomer.isPending ? (
               <><Loader2 className="h-4 w-4 animate-spin" /> Creating...</>
@@ -1640,7 +1641,8 @@ function CompanySetupSettings() {
 function NotificationSettings() {
   const { success, error: toastError } = useToast();
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8002';
-  const API_KEY = 'riskcast-dev-key-2026';
+  // API key fetched from environment — never hardcoded in source
+  const API_KEY = import.meta.env.VITE_API_KEY || '';
 
   // ── State ──
   const [webhookUrl, setWebhookUrl] = useState('');
@@ -1686,13 +1688,13 @@ function NotificationSettings() {
         }),
       });
       if (res.ok) {
-        success('Đã lưu cài đặt thông báo');
+        success('Notification settings saved');
       } else {
         const data = await res.json();
-        toastError(data.detail || 'Lỗi lưu cài đặt');
+        toastError(data.detail || 'Failed to save settings');
       }
     } catch {
-      toastError('Không thể kết nối server');
+      toastError('Could not connect to server');
     } finally {
       setSaving(false);
     }
@@ -1712,16 +1714,16 @@ function NotificationSettings() {
       if (data.success) success(data.message);
       else toastError(data.message);
     } catch {
-      setTestResult({ success: false, message: 'Không thể kết nối server' });
+      setTestResult({ success: false, message: 'Could not connect to server' });
     } finally {
       setTesting(false);
     }
   };
 
   const toggleItems: { label: string; description: string; value: boolean; toggle: () => void; icon: typeof AlertTriangle; color: string; bg: string }[] = [
-    { label: 'Rủi ro nghiêm trọng', description: 'CRITICAL — cần xử lý ngay lập tức', value: notifyCritical, toggle: () => setNotifyCritical(v => !v), icon: AlertTriangle, color: 'text-red-500', bg: 'bg-red-500/10' },
-    { label: 'Rủi ro mức cao', description: 'HIGH — cần xem trong ngày', value: notifyHigh, toggle: () => setNotifyHigh(v => !v), icon: Bell, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-    { label: 'Cảnh báo', description: 'WARNING — theo dõi, chưa cần hành động', value: notifyWarning, toggle: () => setNotifyWarning(v => !v), icon: BellRing, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
+    { label: 'Critical Risk', description: 'CRITICAL — requires immediate action', value: notifyCritical, toggle: () => setNotifyCritical(v => !v), icon: AlertTriangle, color: 'text-error', bg: 'bg-error/10' },
+    { label: 'High Risk', description: 'HIGH — review within the day', value: notifyHigh, toggle: () => setNotifyHigh(v => !v), icon: Bell, color: 'text-warning', bg: 'bg-warning/10' },
+    { label: 'Cảnh báo', description: 'WARNING — theo dõi, chưa cần hành động', value: notifyWarning, toggle: () => setNotifyWarning(v => !v), icon: BellRing, color: 'text-warning', bg: 'bg-warning/10' },
   ];
 
   if (loading) {
@@ -1740,25 +1742,25 @@ function NotificationSettings() {
       <SectionCard accentColor="indigo">
         <CardHeader>
           <CardTitle className="flex items-center gap-3 text-lg">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md shadow-indigo-500/20">
-              <MessageSquare className="h-4.5 w-4.5 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-action-reroute flex items-center justify-center shadow-md shadow-accent/20">
+              <MessageSquare className="h-4.5 w-4.5 text-accent-foreground" />
             </div>
-            Discord — Nhận thông báo rủi ro
+            Discord — Risk Notifications
           </CardTitle>
           <CardDescription>
-            Kết nối Discord server của bạn để nhận cảnh báo trực tiếp khi phát hiện rủi ro
+            Connect your Discord server to receive direct alerts when risks are detected
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           {/* Guide */}
-          <div className="rounded-xl bg-indigo-500/5 border border-indigo-500/10 p-4 space-y-3">
-            <p className="text-sm font-semibold text-indigo-400">Hướng dẫn kết nối (chỉ 2 phút)</p>
+          <div className="rounded-xl bg-accent/5 border border-accent/10 p-4 space-y-3">
+            <p className="text-sm font-semibold text-accent">Setup Guide (2 minutes)</p>
             <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
-              <li>Mở <strong>Discord</strong> → vào server bạn muốn nhận thông báo</li>
-              <li>Click chuột phải vào <strong>kênh</strong> (channel) → <strong>Edit Channel</strong></li>
-              <li>Chọn tab <strong>Integrations</strong> → <strong>Webhooks</strong> → <strong>New Webhook</strong></li>
-              <li>Đặt tên (vd: "RiskCast") → Click <strong>Copy Webhook URL</strong></li>
-              <li>Dán URL vào ô bên dưới → <strong>Lưu</strong> → <strong>Gửi test</strong></li>
+              <li>Open <strong>Discord</strong> → go to the server you want notifications in</li>
+              <li>Right-click on a <strong>channel</strong> → <strong>Edit Channel</strong></li>
+              <li>Go to <strong>Integrations</strong> → <strong>Webhooks</strong> → <strong>New Webhook</strong></li>
+              <li>Name it (e.g. &quot;RiskCast&quot;) → Click <strong>Copy Webhook URL</strong></li>
+              <li>Paste URL below → <strong>Save</strong> → <strong>Send Test</strong></li>
             </ol>
           </div>
 
@@ -1773,34 +1775,34 @@ function NotificationSettings() {
                 placeholder="https://discord.com/api/webhooks/..."
                 className={cn(
                   'flex-1 h-10 px-3 rounded-lg border bg-muted/30 text-sm font-mono',
-                  'placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/30',
+                  'placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-accent/30',
                   webhookUrl && !webhookUrl.startsWith('https://discord.com/api/webhooks/')
-                    ? 'border-red-500/50 focus:ring-red-500/30'
+                    ? 'border-destructive/50 focus:ring-destructive/30'
                     : 'border-border/50',
                 )}
               />
             </div>
             {webhookUrl && !webhookUrl.startsWith('https://discord.com/api/webhooks/') && (
-              <p className="text-xs text-red-400">URL phải bắt đầu bằng https://discord.com/api/webhooks/</p>
+              <p className="text-xs text-error">URL must start with https://discord.com/api/webhooks/</p>
             )}
           </div>
 
           {/* Enable toggle */}
           <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/20 border border-border/20">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-500/10">
-                <MessageSquare className="h-4 w-4 text-indigo-400" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-accent/10">
+                <MessageSquare className="h-4 w-4 text-accent" />
               </div>
               <div>
-                <p className="font-medium text-sm">Bật thông báo Discord</p>
-                <p className="text-xs text-muted-foreground">Gửi cảnh báo rủi ro vào kênh Discord của bạn</p>
+                <p className="font-medium text-sm">Enable Discord Notifications</p>
+                <p className="text-xs text-muted-foreground">Send risk alerts to your Discord channel</p>
               </div>
             </div>
             <button
               onClick={() => setDiscordEnabled(v => !v)}
               className={cn(
                 'relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0',
-                discordEnabled ? 'bg-indigo-500' : 'bg-muted-foreground/20',
+                discordEnabled ? 'bg-accent' : 'bg-muted-foreground/20',
               )}
             >
               <motion.span
@@ -1815,7 +1817,7 @@ function NotificationSettings() {
           <div className="flex items-center gap-3">
             <Button onClick={handleSave} disabled={saving} className="gap-2">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Lưu cài đặt
+              Save Settings
             </Button>
             <Button
               variant="outline"
@@ -1824,7 +1826,7 @@ function NotificationSettings() {
               className="gap-2"
             >
               {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-              Gửi test
+              Send Test
             </Button>
           </div>
 
@@ -1836,8 +1838,8 @@ function NotificationSettings() {
               className={cn(
                 'rounded-lg p-3 text-sm border',
                 testResult.success
-                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                  : 'bg-red-500/10 border-red-500/20 text-red-400',
+                  ? 'bg-success/10 border-success/20 text-success'
+                  : 'bg-destructive/10 border-destructive/20 text-destructive',
               )}
             >
               {testResult.success ? '✅' : '❌'} {testResult.message}
@@ -1850,12 +1852,12 @@ function NotificationSettings() {
       <SectionCard accentColor="amber">
         <CardHeader>
           <CardTitle className="flex items-center gap-3 text-lg">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/20">
-              <Bell className="h-4.5 w-4.5 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-warning to-urgency-urgent flex items-center justify-center shadow-md shadow-warning/20">
+              <Bell className="h-4.5 w-4.5 text-accent-foreground" />
             </div>
-            Loại thông báo
+            Notification Types
           </CardTitle>
-          <CardDescription>Chọn mức độ cảnh báo bạn muốn nhận</CardDescription>
+          <CardDescription>Choose which alert severity levels you want to receive</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           {toggleItems.map((item, index) => {
@@ -1911,8 +1913,8 @@ function ThresholdSettings() {
     <SectionCard accentColor="rose">
       <CardHeader>
         <CardTitle className="flex items-center gap-3 text-lg">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-red-500 flex items-center justify-center shadow-md shadow-rose-500/20">
-            <Sliders className="h-4.5 w-4.5 text-white" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-destructive to-error flex items-center justify-center shadow-md shadow-destructive/20">
+            <Sliders className="h-4.5 w-4.5 text-accent-foreground" />
           </div>
           Decision Thresholds
         </CardTitle>
@@ -1971,14 +1973,14 @@ function TeamSettings() {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-3 text-lg">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md shadow-purple-500/20">
-                <Users className="h-4.5 w-4.5 text-white" />
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-action-reroute to-accent flex items-center justify-center shadow-md shadow-action-reroute/20">
+                <Users className="h-4.5 w-4.5 text-accent-foreground" />
               </div>
               Team Members
             </CardTitle>
             <CardDescription>Manage who has access to RISKCAST</CardDescription>
           </div>
-          <Button size="sm" className="bg-violet-600 hover:bg-violet-700 text-white shadow-sm" onClick={() => setShowInviteModal(true)}>
+          <Button size="sm" className="bg-action-reroute hover:bg-action-reroute/90 text-accent-foreground shadow-sm" onClick={() => setShowInviteModal(true)}>
             <Plus className="h-3.5 w-3.5 mr-1" /> Invite
           </Button>
         </CardHeader>
@@ -1988,7 +1990,7 @@ function TeamSettings() {
               <motion.div key={member.email} variants={staggerItem}
                 className="flex items-center justify-between rounded-xl p-3.5 bg-muted/20 hover:bg-muted/40 border border-transparent hover:border-border/30 transition-all">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/15 to-pink-500/15 text-violet-500 font-bold text-sm">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-action-reroute/15 to-accent/15 text-action-reroute font-bold text-sm">
                     {member.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -2000,8 +2002,8 @@ function TeamSettings() {
                   <Badge variant="outline" className="bg-muted/40 text-xs">{member.role}</Badge>
                   <Badge className={cn('text-[10px]',
                     member.status === 'Invited'
-                      ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20'
-                      : 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20',
+                      ? 'bg-info/10 text-info border border-info/20'
+                      : 'bg-success/10 text-success border border-success/20',
                   )}>
                     {member.status}
                   </Badge>
@@ -2053,7 +2055,7 @@ function TeamSettings() {
                   </div>
                 </div>
                 <div className="flex gap-3 mt-6">
-                  <Button onClick={handleInvite} disabled={!inviteEmail} className="flex-1 bg-violet-600 hover:bg-violet-700 text-white">
+                  <Button onClick={handleInvite} disabled={!inviteEmail} className="flex-1 bg-action-reroute hover:bg-action-reroute/90 text-accent-foreground">
                     Send Invite
                   </Button>
                   <Button variant="outline" onClick={() => setShowInviteModal(false)} className="flex-1">Cancel</Button>
@@ -2125,8 +2127,8 @@ function AppearanceSettings() {
     <SectionCard accentColor="teal">
       <CardHeader>
         <CardTitle className="flex items-center gap-3 text-lg">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-md shadow-teal-500/20">
-            <Palette className="h-4.5 w-4.5 text-white" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-action-insure to-action-insure flex items-center justify-center shadow-md shadow-action-insure/20">
+            <Palette className="h-4.5 w-4.5 text-accent-foreground" />
           </div>
           Appearance
         </CardTitle>
@@ -2265,8 +2267,8 @@ function KeyboardShortcutsSettings() {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-3 text-lg">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-500 to-zinc-500 flex items-center justify-center shadow-md shadow-slate-500/20">
-                <Keyboard className="h-4.5 w-4.5 text-white" />
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-muted-foreground to-muted flex items-center justify-center shadow-md shadow-muted/20">
+                <Keyboard className="h-4.5 w-4.5 text-accent-foreground" />
               </div>
               Keyboard Shortcuts
             </CardTitle>

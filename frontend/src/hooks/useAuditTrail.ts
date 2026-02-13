@@ -4,7 +4,7 @@
  * Uses withMockFallback for graceful degradation when backend is offline.
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { v2Audit, type AuditEvent, type AuditTrailResponse } from '@/lib/api-v2';
 import { withMockFallback } from '@/lib/api';
 
@@ -139,8 +139,10 @@ export function useAuditTrail(filters?: { action?: string; offset?: number; limi
     queryFn: () => withMockFallback(
       () => v2Audit.list(filters),
       mockAuditTrailResponse,
+      'audit-trail',
     ),
-    staleTime: 30_000,
+    staleTime: 600_000,
+    placeholderData: keepPreviousData,
     retry: 2,
   });
 }
@@ -150,7 +152,9 @@ export function useAuditIntegrity() {
     queryKey: ['audit', 'integrity'],
     queryFn: () => withMockFallback(
       () => v2Audit.integrity(),
-      { status: 'verified', total_entries: mockAuditEvents.length, chain_intact: true },
+      // NEVER fake audit integrity — return null chain_intact when using mock data
+      { status: 'unavailable', total_entries: mockAuditEvents.length, chain_intact: null as unknown as boolean },
+      'audit-integrity',
     ),
     staleTime: 60_000,
     retry: 1,

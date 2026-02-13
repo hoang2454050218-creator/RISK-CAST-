@@ -14,10 +14,10 @@ import { ChatInput } from './ChatInput';
 import { SuggestionCard } from './SuggestionCard';
 
 const QUICK_PROMPTS = [
-  { label: 'Tổng quan tuần', icon: TrendingUp, query: 'Tổng quan tuần này' },
-  { label: 'Thanh toán quá hạn', icon: AlertTriangle, query: 'Tình hình thanh toán quá hạn' },
-  { label: 'Đơn hàng rủi ro', icon: Shield, query: 'Đơn hàng nào cần chú ý?' },
-  { label: 'Brief hôm nay', icon: Zap, query: 'Brief sáng nay' },
+  { label: 'Weekly Overview', icon: TrendingUp, query: 'Weekly risk overview' },
+  { label: 'Overdue Payments', icon: AlertTriangle, query: 'Overdue payment status' },
+  { label: 'At-Risk Orders', icon: Shield, query: 'Which orders need attention?' },
+  { label: "Today's Brief", icon: Zap, query: 'Morning brief' },
 ];
 
 export function ChatPanel() {
@@ -49,8 +49,8 @@ export function ChatPanel() {
       <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/80 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Sparkles className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-lg shadow-accent/20">
+              <Sparkles className="h-4 w-4 text-accent-foreground" />
             </div>
             <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-success border-2 border-background" />
           </div>
@@ -60,7 +60,7 @@ export function ChatPanel() {
             </h2>
             <p className="text-[10px] text-muted-foreground font-mono">
               {isStreaming ? (
-                <span className="text-blue-400 animate-pulse">Analyzing...</span>
+                <span className="text-accent animate-pulse">Analyzing...</span>
               ) : sessionId ? (
                 <span>Session active</span>
               ) : (
@@ -90,15 +90,15 @@ export function ChatPanel() {
               className="flex flex-col items-center justify-center h-full px-6 py-12"
             >
               {/* Logo */}
-              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 via-blue-400 to-blue-600 flex items-center justify-center shadow-2xl shadow-blue-500/30 mb-6">
-                <Sparkles className="h-8 w-8 text-white" />
+              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-accent via-accent/80 to-accent flex items-center justify-center shadow-2xl shadow-accent/30 mb-6">
+                <Sparkles className="h-8 w-8 text-accent-foreground" />
               </div>
 
               <h3 className="text-lg font-bold text-foreground mb-1">
                 RiskCast Intelligence
               </h3>
               <p className="text-sm text-muted-foreground text-center max-w-sm mb-8">
-                Phân tích rủi ro thông minh dựa trên dữ liệu doanh nghiệp. Hỏi bằng tiếng Việt.
+                Intelligent risk analysis powered by your company data. Ask anything.
               </p>
 
               {/* Quick prompts grid */}
@@ -111,10 +111,10 @@ export function ChatPanel() {
                       whileHover={{ scale: 1.02, y: -1 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleQuickPrompt(p.query)}
-                      className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-4 py-3 text-left hover:border-accent/50 hover:shadow-md hover:shadow-blue-500/5 transition-all group"
+                      className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-4 py-3 text-left hover:border-accent/50 hover:shadow-md hover:shadow-accent/5 transition-all group"
                     >
                       <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center group-hover:bg-accent/10 transition-colors shrink-0">
-                        <Icon className="h-4 w-4 text-muted-foreground group-hover:text-blue-500 transition-colors" />
+                        <Icon className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
                       </div>
                       <span className="text-xs font-medium text-foreground/80 group-hover:text-accent transition-colors">
                         {p.label}

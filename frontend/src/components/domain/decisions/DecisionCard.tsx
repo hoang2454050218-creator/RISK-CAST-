@@ -57,33 +57,33 @@ const urgencyStyle: Record<Urgency, {
   exposureColor: string;
 }> = {
   IMMEDIATE: {
-    gradient: 'from-red-500 via-red-600 to-red-500',
-    topGradient: 'from-red-500 via-red-600 to-red-500',
-    bgTint: 'from-red-500/[0.03] to-transparent',
-    glowClass: 'rc-glow-red',
-    borderClass: 'border-red-500/25',
-    exposureColor: 'text-red-400 rc-text-glow-red',
+    gradient: 'from-urgency-immediate via-urgency-immediate/80 to-urgency-immediate',
+    topGradient: 'from-urgency-immediate via-urgency-immediate/80 to-urgency-immediate',
+    bgTint: 'from-urgency-immediate/[0.03] to-transparent',
+    glowClass: 'rc-glow-red', // lint-ignore-token — glow classes defined in index.css
+    borderClass: 'border-urgency-immediate/25',
+    exposureColor: 'text-urgency-immediate',
   },
   URGENT: {
-    gradient: 'from-amber-500 via-orange-500 to-amber-500',
-    topGradient: 'from-amber-500 via-orange-500 to-amber-500',
-    bgTint: 'from-amber-500/[0.02] to-transparent',
-    glowClass: 'rc-glow-amber',
-    borderClass: 'border-amber-500/20',
-    exposureColor: 'text-amber-400 rc-text-glow-amber',
+    gradient: 'from-urgency-urgent via-urgency-urgent/80 to-urgency-urgent',
+    topGradient: 'from-urgency-urgent via-urgency-urgent/80 to-urgency-urgent',
+    bgTint: 'from-urgency-urgent/[0.02] to-transparent',
+    glowClass: 'rc-glow-amber', // lint-ignore-token
+    borderClass: 'border-urgency-urgent/20',
+    exposureColor: 'text-urgency-urgent',
   },
   SOON: {
-    gradient: 'from-amber-400 via-yellow-500 to-amber-400',
-    topGradient: 'from-amber-400 via-yellow-500 to-amber-400',
-    bgTint: 'from-amber-400/[0.02] to-transparent',
+    gradient: 'from-urgency-soon via-urgency-soon/80 to-urgency-soon',
+    topGradient: 'from-urgency-soon via-urgency-soon/80 to-urgency-soon',
+    bgTint: 'from-urgency-soon/[0.02] to-transparent',
     glowClass: '',
-    borderClass: 'border-amber-400/15',
-    exposureColor: 'text-amber-400',
+    borderClass: 'border-urgency-soon/15',
+    exposureColor: 'text-urgency-soon',
   },
   WATCH: {
-    gradient: 'from-blue-500 via-blue-400 to-blue-500',
-    topGradient: 'from-blue-500 via-blue-400 to-blue-500',
-    bgTint: 'from-blue-500/[0.02] to-transparent',
+    gradient: 'from-accent via-accent/80 to-accent',
+    topGradient: 'from-accent via-accent/80 to-accent',
+    bgTint: 'from-accent/[0.02] to-transparent',
     glowClass: '',
     borderClass: 'border-border/40',
     exposureColor: 'text-foreground',
@@ -91,9 +91,9 @@ const urgencyStyle: Record<Urgency, {
 };
 
 function getExposureColor(usd: number) {
-  if (usd >= 200000) return 'text-red-400 rc-text-glow-red';
-  if (usd >= 100000) return 'text-amber-400 rc-text-glow-amber';
-  if (usd >= 50000) return 'text-amber-300';
+  if (usd >= 200000) return 'text-urgency-immediate';
+  if (usd >= 100000) return 'text-urgency-urgent';
+  if (usd >= 50000) return 'text-urgency-soon';
   return 'text-foreground';
 }
 
@@ -146,17 +146,17 @@ export function DecisionCard({
       aria-label={`Decision: ${decision.q1_what?.event_summary ?? 'Unknown'}`}
       className={cn(
         'group relative h-full flex flex-col overflow-hidden rounded-2xl',
-        'bg-card/80 backdrop-blur-sm border transition-all duration-300',
+        'bg-card/80 backdrop-blur-sm border shadow-level-1 transition-all duration-200',
         isPending ? urgency.borderClass : 'border-border/40',
         isPending && urgency.glowClass,
-        isImmediate && isPending && 'border-l-2 border-l-red-500/50',
-        'hover:shadow-xl hover:shadow-black/10',
+        isImmediate && isPending && 'border-l-2 border-l-urgency-immediate/50 breathe-glow',
+        'hover:shadow-level-2',
         className,
       )}
       whileHover={{ y: -6, transition: { duration: 0.25, ease: 'easeOut' } }}
     >
       {/* ── Top accent bar with shimmer ── */}
-      <div className={cn('h-1.5 w-full bg-gradient-to-r relative overflow-hidden', isPending ? urgency.topGradient : 'from-zinc-500 to-zinc-600')}>
+      <div className={cn('h-1.5 w-full bg-gradient-to-r relative overflow-hidden', isPending ? urgency.topGradient : 'from-muted-foreground/40 to-muted-foreground/30')}>
         {isPending && (
           <motion.div
             className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent"
@@ -328,7 +328,7 @@ export function DecisionCard({
               size="sm"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAcknowledge(decision.decision_id); }}
               disabled={isLoading}
-              className="h-7 px-3 text-xs font-semibold font-mono border-0 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white shadow-sm hover:shadow-lg hover:shadow-emerald-500/20 transition-all"
+              className="h-7 px-3 text-xs font-semibold font-mono border-0 rounded-lg bg-success hover:bg-success/90 text-success-foreground shadow-sm hover:shadow-lg hover:shadow-success/20 transition-all"
             >
               {isLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1" />}
               Accept
@@ -386,14 +386,14 @@ function CompactDecisionCard({
   ];
 
   const cardContent = (
-    <Link to={`/decisions/${decision.decision_id}`}>
+    <Link to={`/decisions/${decision.decision_id}`} className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background">
       <motion.div
         className={cn(
           'group relative flex flex-col gap-2 p-4 rounded-2xl overflow-hidden',
-          'bg-card/80 backdrop-blur-sm border transition-all duration-300',
+          'bg-card/80 backdrop-blur-sm border shadow-level-1 transition-all duration-200',
           isPending ? urgency.borderClass : 'border-border/40',
           isPending && urgency.glowClass,
-          'hover:shadow-lg hover:shadow-black/10',
+          'hover:shadow-level-2',
           className,
         )}
         whileHover={{ x: 4 }}

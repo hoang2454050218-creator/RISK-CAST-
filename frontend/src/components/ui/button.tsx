@@ -6,21 +6,23 @@ import { cn } from '@/lib/utils';
 import { springs } from '@/lib/animations';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 relative overflow-hidden',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 relative overflow-hidden',
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground shadow-sm hover:bg-primary-light',
-        destructive: 'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90',
+        default:
+          'bg-gradient-to-b from-primary to-primary/90 text-primary-foreground shadow-sm hover:shadow-md hover:from-primary/95 hover:to-primary/85',
+        destructive:
+          'bg-gradient-to-b from-destructive to-destructive/90 text-destructive-foreground shadow-sm hover:shadow-md hover:from-destructive/95 hover:to-destructive/85',
         outline:
-          'border border-border bg-background shadow-sm hover:bg-muted hover:text-foreground',
+          'border border-border bg-background/80 backdrop-blur-sm shadow-sm hover:bg-muted hover:text-foreground hover:border-accent/20',
         secondary: 'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80',
-        ghost: 'hover:bg-muted hover:text-foreground',
+        ghost: 'hover:bg-muted/80 hover:text-foreground',
         link: 'text-accent underline-offset-4 hover:underline',
 
         // Premium variants with gradients
         premium:
-          'bg-gradient-to-r from-accent to-purple-600 text-white shadow-md hover:shadow-lg hover:shadow-accent/25',
+          'bg-gradient-to-r from-accent to-action-reroute text-accent-foreground shadow-md hover:shadow-lg hover:shadow-accent/25',
         'premium-outline': 'border-2 border-accent bg-transparent text-accent hover:bg-accent/10',
 
         // Action-specific variants
@@ -200,12 +202,13 @@ function ButtonGroup({ children, className }: ButtonGroupProps) {
       {React.Children.map(children, (child, index) => {
         if (!React.isValidElement(child)) return child;
 
+        const el = child as React.ReactElement<ButtonProps>;
         const isFirst = index === 0;
         const isLast = index === React.Children.count(children) - 1;
 
-        return React.cloneElement(child as React.ReactElement<ButtonProps>, {
+        return React.cloneElement(el, {
           className: cn(
-            child.props.className,
+            el.props.className,
             !isFirst && '-ml-px',
             !isFirst && !isLast && 'rounded-none',
             isFirst && 'rounded-r-none',
