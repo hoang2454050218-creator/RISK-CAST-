@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\engine\calibration.py
+# hypothesis_version: 6.151.2
+
+[0.0, 1e-07, 0.01, 0.05, 1.0, 1.5, 100, 'platt_scaling_fitted']

@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\analyzers\payment_risk.py
+# hypothesis_version: 6.151.2
+
+[0.2, 0.3, 0.75, 0.8, 0.95, 1.2, 1.5, 100, 'avg_days_overdue', 'change_ratio', 'customer', 'customer_name', 'customer_tier', 'historical_avg_delay', 'improving', 'insufficient_data', 'internal_payment', 'late_payments', 'late_ratio_90d', 'payment_risk', 'recent_avg_delay', 'stable', 'total_payments', 'trend', 'worsening']

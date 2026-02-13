@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\decisions\schemas.py
+# hypothesis_version: 6.151.2
+
+[0.0, 'acknowledged', 'acted_upon', 'critical', 'delay_shipment', 'escalate_to_human', 'escalated', 'expired', 'hedge_exposure', 'high', 'insure', 'low', 'moderate', 'monitor_only', 'overridden', 'pending', 'recommended', 'reroute', 'split_shipment', 'unknown']

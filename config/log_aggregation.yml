@@ -1,0 +1,494 @@
+# =============================================================================
+# RISKCAST LOG AGGREGATION CONFIGURATION
+# =============================================================================
+#
+# D1 COMPLIANCE: Centralized log aggregation configuration
+#
+# This configuration sets up the log aggregation stack:
+# - Fluent Bit as the log shipper
+# - Elasticsearch as the log store
+# - Kibana for visualization
+# - Structured logging with JSON format
+#
+# =============================================================================
+
+# =============================================================================
+# FLUENT BIT INPUT CONFIGURATION
+# =============================================================================
+
+fluent_bit:
+  service:
+    flush: 1
+    daemon: off
+    log_level: info
+    http_server: on
+    http_listen: 0.0.0.0
+    http_port: 2020
+    storage.metrics: on
+
+  inputs:
+    # Application logs (JSON format)
+    - name: tail
+      tag: riskcast.app
+      path: /var/log/riskcast/*.log
+      parser: json
+      db: /var/log/fluent-bit/riskcast.db
+      mem_buf_limit: 50MB
+      skip_long_lines: on
+      refresh_interval: 10
+
+    # Decision audit logs
+    - name: tail
+      tag: riskcast.audit
+      path: /var/log/riskcast/audit/*.log
+      parser: json
+      db: /var/log/fluent-bit/audit.db
+      mem_buf_limit: 100MB
+      skip_long_lines: off
+      refresh_interval: 5
+
+    # Container logs (Kubernetes)
+    - name: tail
+      tag: kube.*
+      path: /var/log/containers/riskcast-*.log
+      parser: docker
+      db: /var/log/fluent-bit/kube.db
+      mem_buf_limit: 50MB
+      skip_long_lines: on
+
+    # System metrics
+    - name: systemd
+      tag: host.systemd
+      systemd_filter: _SYSTEMD_UNIT=docker.service
+      read_from_tail: on
+
+  parsers:
+    - name: json
+      format: json
+      time_key: timestamp
+      time_format: "%Y-%m-%dT%H:%M:%S.%L%z"
+      decode_field_as: escaped_utf8 message
+      
+    - name: docker
+      format: json
+      time_key: time
+      time_format: "%Y-%m-%dT%H:%M:%S.%L%z"
+
+  filters:
+    # Add Kubernetes metadata
+    - name: kubernetes
+      match: kube.*
+      kube_url: https://kubernetes.default.svc:443
+      kube_ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      kube_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      merge_log: on
+      keep_log: off
+      k8s-logging.parser: on
+      k8s-logging.exclude: on
+
+    # Enrich with environment info
+    - name: record_modifier
+      match: riskcast.*
+      record:
+        environment: ${ENVIRONMENT}
+        service: riskcast
+        version: ${VERSION}
+
+    # Parse nested JSON in message field
+    - name: parser
+      match: riskcast.*
+      key_name: message
+      parser: json
+      preserve_key: false
+      reserve_data: true
+
+    # Add trace context if available
+    - name: lua
+      match: riskcast.*
+      script: /fluent-bit/scripts/trace_context.lua
+      call: add_trace_context
+
+  outputs:
+    # Elasticsearch for storage
+    - name: es
+      match: riskcast.*
+      host: ${ELASTICSEARCH_HOST}
+      port: ${ELASTICSEARCH_PORT}
+      index: riskcast-logs-%Y.%m.%d
+      type: _doc
+      logstash_format: on
+      logstash_prefix: riskcast
+      retry_limit: 5
+      buffer_size: 5MB
+      tls: on
+      tls.verify: on
+      tls.ca_file: /fluent-bit/certs/ca.crt
+      suppress_type_name: on
+      trace_output: off
+
+    # Separate index for audit logs
+    - name: es
+      match: riskcast.audit
+      host: ${ELASTICSEARCH_HOST}
+      port: ${ELASTICSEARCH_PORT}
+      index: riskcast-audit-%Y.%m.%d
+      type: _doc
+      logstash_format: on
+      logstash_prefix: riskcast-audit
+      retry_limit: false  # Never lose audit logs
+      buffer_size: 10MB
+      tls: on
+      tls.verify: on
+      tls.ca_file: /fluent-bit/certs/ca.crt
+      suppress_type_name: on
+
+    # Stdout for debugging
+    - name: stdout
+      match: "*"
+      format: json_lines
+
+# =============================================================================
+# ELASTICSEARCH INDEX TEMPLATES
+# =============================================================================
+
+elasticsearch:
+  templates:
+    # Main logs template
+    riskcast-logs:
+      index_patterns:
+        - "riskcast-*"
+      settings:
+        number_of_shards: 3
+        number_of_replicas: 1
+        refresh_interval: "5s"
+        index.lifecycle.name: "riskcast-logs-policy"
+        index.lifecycle.rollover_alias: "riskcast-logs"
+      mappings:
+        dynamic_templates:
+          - strings:
+              match_mapping_type: string
+              mapping:
+                type: keyword
+        properties:
+          timestamp:
+            type: date
+            format: "strict_date_optional_time||epoch_millis"
+          level:
+            type: keyword
+          logger:
+            type: keyword
+          message:
+            type: text
+            analyzer: standard
+          trace_id:
+            type: keyword
+          span_id:
+            type: keyword
+          decision_id:
+            type: keyword
+          customer_id:
+            type: keyword
+          error:
+            type: text
+          stack_trace:
+            type: text
+          duration_ms:
+            type: float
+          environment:
+            type: keyword
+          service:
+            type: keyword
+          version:
+            type: keyword
+
+    # Audit logs template (longer retention, no updates)
+    riskcast-audit:
+      index_patterns:
+        - "riskcast-audit-*"
+      settings:
+        number_of_shards: 5
+        number_of_replicas: 2
+        refresh_interval: "1s"
+        index.lifecycle.name: "riskcast-audit-policy"
+        index.lifecycle.rollover_alias: "riskcast-audit"
+        index.blocks.write: false
+      mappings:
+        dynamic: strict
+        properties:
+          timestamp:
+            type: date
+          record_id:
+            type: keyword
+          decision_id:
+            type: keyword
+          customer_id:
+            type: keyword
+          action:
+            type: keyword
+          actor:
+            type: keyword
+          actor_type:
+            type: keyword
+          hash_chain:
+            type: keyword
+          previous_hash:
+            type: keyword
+          signature:
+            type: keyword
+          payload:
+            type: object
+            enabled: true
+          metadata:
+            type: object
+            enabled: true
+
+  # Index Lifecycle Management
+  lifecycle_policies:
+    riskcast-logs-policy:
+      phases:
+        hot:
+          actions:
+            rollover:
+              max_size: "50GB"
+              max_age: "1d"
+        warm:
+          min_age: "7d"
+          actions:
+            shrink:
+              number_of_shards: 1
+            forcemerge:
+              max_num_segments: 1
+        cold:
+          min_age: "30d"
+          actions:
+            freeze: {}
+        delete:
+          min_age: "90d"
+          actions:
+            delete: {}
+
+    riskcast-audit-policy:
+      phases:
+        hot:
+          actions:
+            rollover:
+              max_size: "100GB"
+              max_age: "30d"
+        warm:
+          min_age: "90d"
+          actions:
+            shrink:
+              number_of_shards: 1
+            forcemerge:
+              max_num_segments: 1
+        cold:
+          min_age: "365d"
+          actions:
+            freeze: {}
+        # Audit logs: 7 year retention
+        delete:
+          min_age: "2555d"
+          actions:
+            delete: {}
+
+# =============================================================================
+# KIBANA SAVED OBJECTS
+# =============================================================================
+
+kibana:
+  dashboards:
+    - name: RISKCAST Operations
+      description: Main operations dashboard
+      panels:
+        - title: Log Volume
+          type: area
+          query: "*"
+          aggregations:
+            - date_histogram:
+                field: timestamp
+                interval: 1m
+        
+        - title: Error Rate
+          type: line
+          query: "level:ERROR OR level:CRITICAL"
+          aggregations:
+            - date_histogram:
+                field: timestamp
+                interval: 5m
+
+        - title: Decision Throughput
+          type: metric
+          query: "logger:riskcast.decision"
+          aggregations:
+            - cardinality:
+                field: decision_id
+
+        - title: Top Errors
+          type: pie
+          query: "level:ERROR"
+          aggregations:
+            - terms:
+                field: error.keyword
+                size: 10
+
+    - name: RISKCAST Audit Trail
+      description: Audit log viewer
+      panels:
+        - title: Audit Events Timeline
+          type: area
+          query: "*"
+          index: riskcast-audit-*
+          aggregations:
+            - date_histogram:
+                field: timestamp
+                interval: 1h
+
+        - title: Events by Action
+          type: pie
+          query: "*"
+          index: riskcast-audit-*
+          aggregations:
+            - terms:
+                field: action
+                size: 20
+
+  saved_searches:
+    - name: Recent Errors
+      query: "level:(ERROR OR CRITICAL)"
+      sort: timestamp:desc
+      columns:
+        - timestamp
+        - level
+        - logger
+        - message
+        - trace_id
+
+    - name: Decision Audit Trail
+      query: "*"
+      index: riskcast-audit-*
+      sort: timestamp:desc
+      columns:
+        - timestamp
+        - decision_id
+        - action
+        - actor
+        - customer_id
+
+# =============================================================================
+# ALERTING (Elasticsearch Watcher)
+# =============================================================================
+
+alerting:
+  watches:
+    - name: high_error_rate
+      trigger:
+        schedule:
+          interval: "5m"
+      input:
+        search:
+          request:
+            indices:
+              - "riskcast-*"
+            body:
+              query:
+                bool:
+                  must:
+                    - range:
+                        timestamp:
+                          gte: "now-5m"
+                    - terms:
+                        level: ["ERROR", "CRITICAL"]
+              size: 0
+      condition:
+        compare:
+          ctx.payload.hits.total.value:
+            gt: 100
+      actions:
+        slack_alert:
+          webhook:
+            url: ${SLACK_WEBHOOK_URL}
+            body: |
+              {
+                "text": "RISKCAST High Error Rate Alert",
+                "attachments": [{
+                  "color": "danger",
+                  "text": "{{ctx.payload.hits.total.value}} errors in last 5 minutes"
+                }]
+              }
+
+    - name: audit_integrity_check
+      trigger:
+        schedule:
+          interval: "1h"
+      input:
+        search:
+          request:
+            indices:
+              - "riskcast-audit-*"
+            body:
+              query:
+                bool:
+                  must:
+                    - range:
+                        timestamp:
+                          gte: "now-1h"
+              aggs:
+                chain_breaks:
+                  filter:
+                    script:
+                      source: "doc['previous_hash'].value != null && !doc['hash_chain'].value.startsWith(doc['previous_hash'].value)"
+      condition:
+        compare:
+          ctx.payload.aggregations.chain_breaks.doc_count:
+            gt: 0
+      actions:
+        pagerduty_alert:
+          webhook:
+            url: ${PAGERDUTY_WEBHOOK_URL}
+            body: |
+              {
+                "routing_key": "${PAGERDUTY_ROUTING_KEY}",
+                "event_action": "trigger",
+                "payload": {
+                  "summary": "RISKCAST Audit Chain Integrity Violation",
+                  "severity": "critical",
+                  "source": "riskcast-audit"
+                }
+              }
+
+# =============================================================================
+# STRUCTURED LOGGING FORMAT
+# =============================================================================
+
+logging_format:
+  # Required fields for all log entries
+  required_fields:
+    - timestamp     # ISO8601 format
+    - level         # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    - logger        # Logger name (e.g., riskcast.decision)
+    - message       # Human-readable message
+
+  # Optional but recommended fields
+  recommended_fields:
+    - trace_id      # Distributed trace ID
+    - span_id       # Span ID within trace
+    - decision_id   # Decision identifier
+    - customer_id   # Customer identifier
+    - duration_ms   # Operation duration
+    - error         # Error message if applicable
+    - stack_trace   # Stack trace for errors
+
+  # Example log entry
+  example:
+    timestamp: "2024-01-15T10:30:45.123Z"
+    level: "INFO"
+    logger: "riskcast.decision"
+    message: "Decision generated successfully"
+    trace_id: "abc123def456"
+    span_id: "span789"
+    decision_id: "DEC-2024-001234"
+    customer_id: "CUST-001"
+    duration_ms: 145.5
+    metadata:
+      action_type: "REROUTE"
+      confidence: 0.85

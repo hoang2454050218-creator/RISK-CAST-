@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\services\context_builder.py
+# hypothesis_version: 6.151.2
+
+[0.5, 100, 200, 3000, 6000, 'Asia/Ho_Chi_Minh', 'Không có dữ liệu.', 'Không có signal.', 'N/A', 'Tin nhắn đầu tiên.', '_', '_intent_method', '`', 'brief', 'confidence', 'context', 'customer', 'customer_id', 'customer_inquiry', 'customer_summary', 'entity', 'evidence', 'fallback', 'general', 'haiku', 'historical_lookup', 'id', 'incidents_7d', 'json\n', 'method', 'morning_brief', 'omen', 'order', 'order_risk_check', 'orders_7d', 'overdue', 'payment_overview', 'payments_overdue', 'raw', 'recommendation', 'regex', 'route', 'route_inquiry', 'severity_score', 'signal_type', 'similar_incidents', 'source', 'type', 'unknown', 'weekly_overview']

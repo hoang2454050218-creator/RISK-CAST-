@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\pipeline\integrity.py
+# hypothesis_version: 6.151.2
+
+['check_id', 'checked_at', 'counts', 'description', 'duplicate_in_ledger', 'error', 'errors', 'failed', 'info', 'ingest_failed', 'is_consistent', 'issues', 'missing_from_db', 'orphaned_in_db', 'period_hours', 'severity', 'signal_id', 'total_db_records', 'total_issues', 'total_ledger_entries', 'type', 'warning', 'warnings']

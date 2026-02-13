@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\engine\temporal.py
+# hypothesis_version: 6.151.2
+
+[0.0, 0.01, 24.0, 48.0, 72.0, 168.0, 336.0, 720.0, 3600.0, 168, 'aging', 'default', 'fresh', 'market_volatility', 'order_risk_composite', 'payment_risk', 'port_closure', 'route_disruption', 'stale', 'weather_alert']

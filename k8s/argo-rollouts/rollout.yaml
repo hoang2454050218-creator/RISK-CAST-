@@ -1,0 +1,503 @@
+# RISKCAST Argo Rollouts Configuration
+#
+# Implements canary deployment with automatic rollback based on metrics.
+#
+# Addresses audit gap: D3.4 Zero-Downtime Ops (+10 points)
+#
+# Prerequisites:
+# - Argo Rollouts controller installed
+# - Istio service mesh (for traffic routing)
+# - Prometheus metrics available
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: riskcast
+  namespace: riskcast
+  labels:
+    app: riskcast
+    team: platform
+spec:
+  # Number of replicas
+  replicas: 5
+  
+  # Keep last 3 revisions for rollback
+  revisionHistoryLimit: 3
+  
+  # Pod selector
+  selector:
+    matchLabels:
+      app: riskcast
+  
+  # Pod template
+  template:
+    metadata:
+      labels:
+        app: riskcast
+        version: "{{ .Values.image.tag }}"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: riskcast
+      
+      # Anti-affinity for HA
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - riskcast
+                topologyKey: "kubernetes.io/hostname"
+      
+      containers:
+        - name: riskcast
+          image: "riskcast/riskcast:{{ .Values.image.tag | default 'latest' }}"
+          imagePullPolicy: Always
+          
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          
+          # Environment configuration
+          envFrom:
+            - configMapRef:
+                name: riskcast-config
+            - secretRef:
+                name: riskcast-secrets
+          
+          # Health probes
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          
+          # Startup probe for slow starts
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30  # 150 seconds max startup
+          
+          # Resources
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+          
+          # Security context
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          
+          # Volume mounts
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /app/.cache
+      
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+  
+  # ============================================================================
+  # CANARY DEPLOYMENT STRATEGY
+  # ============================================================================
+  strategy:
+    canary:
+      # Traffic management
+      canaryService: riskcast-canary
+      stableService: riskcast-stable
+      
+      # Istio traffic routing
+      trafficRouting:
+        istio:
+          virtualService:
+            name: riskcast-vsvc
+            routes:
+              - primary
+          destinationRule:
+            name: riskcast-destrule
+            canarySubsetName: canary
+            stableSubsetName: stable
+      
+      # Maximum unavailable during rollout
+      maxUnavailable: 1
+      maxSurge: 2
+      
+      # ======================================================================
+      # CANARY STEPS - Progressive rollout with analysis
+      # ======================================================================
+      steps:
+        # Step 1: Deploy canary with 5% traffic
+        - setWeight: 5
+        - pause: {duration: 5m}
+        
+        # Step 2: Run initial analysis
+        - analysis:
+            templates:
+              - templateName: canary-analysis
+            args:
+              - name: service-name
+                value: riskcast-canary
+              - name: canary-weight
+                value: "5"
+        
+        # Step 3: Increase to 10%
+        - setWeight: 10
+        - pause: {duration: 5m}
+        
+        # Step 4: Increase to 25%
+        - setWeight: 25
+        - pause: {duration: 10m}
+        
+        # Step 5: Run comprehensive analysis
+        - analysis:
+            templates:
+              - templateName: canary-analysis
+              - templateName: decision-quality-analysis
+            args:
+              - name: service-name
+                value: riskcast-canary
+              - name: canary-weight
+                value: "25"
+        
+        # Step 6: Increase to 50%
+        - setWeight: 50
+        - pause: {duration: 15m}
+        
+        # Step 7: Run final analysis before full rollout
+        - analysis:
+            templates:
+              - templateName: canary-analysis
+              - templateName: decision-quality-analysis
+            args:
+              - name: service-name
+                value: riskcast-canary
+              - name: canary-weight
+                value: "50"
+        
+        # Step 8: Increase to 75%
+        - setWeight: 75
+        - pause: {duration: 10m}
+        
+        # Step 9: Full rollout
+        - setWeight: 100
+      
+      # ======================================================================
+      # ANALYSIS CONFIGURATION
+      # ======================================================================
+      analysis:
+        # Keep history of successful/failed analyses
+        successfulRunHistoryLimit: 3
+        unsuccessfulRunHistoryLimit: 5
+      
+      # ======================================================================
+      # ANTI-AFFINITY
+      # ======================================================================
+      antiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution: {}
+        preferredDuringSchedulingIgnoredDuringExecution:
+          weight: 100
+
+---
+# ============================================================================
+# ANALYSIS TEMPLATE - Core Metrics
+# ============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: canary-analysis
+  namespace: riskcast
+spec:
+  args:
+    - name: service-name
+    - name: canary-weight
+      value: "10"
+  
+  metrics:
+    # =========================================================================
+    # ERROR RATE - Must be < 1%
+    # =========================================================================
+    - name: error-rate
+      interval: 1m
+      count: 5  # Run 5 times
+      successCondition: result[0] < 0.01
+      failureLimit: 3
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            sum(rate(http_requests_total{service="{{ args.service-name }}",status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{service="{{ args.service-name }}"}[5m]))
+    
+    # =========================================================================
+    # LATENCY P99 - Must be < 2s
+    # =========================================================================
+    - name: latency-p99
+      interval: 1m
+      count: 5
+      successCondition: result[0] < 2
+      failureLimit: 3
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            histogram_quantile(0.99, 
+              sum(rate(http_request_duration_seconds_bucket{service="{{ args.service-name }}"}[5m])) 
+              by (le)
+            )
+    
+    # =========================================================================
+    # LATENCY P95 - Must be < 1s
+    # =========================================================================
+    - name: latency-p95
+      interval: 1m
+      count: 5
+      successCondition: result[0] < 1
+      failureLimit: 3
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            histogram_quantile(0.95, 
+              sum(rate(http_request_duration_seconds_bucket{service="{{ args.service-name }}"}[5m])) 
+              by (le)
+            )
+    
+    # =========================================================================
+    # DECISION LATENCY - Must be < 2s
+    # =========================================================================
+    - name: decision-latency
+      interval: 1m
+      count: 5
+      successCondition: result[0] < 2
+      failureLimit: 2
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            histogram_quantile(0.99,
+              sum(rate(decision_latency_seconds_bucket{service="{{ args.service-name }}"}[5m]))
+              by (le)
+            )
+    
+    # =========================================================================
+    # CPU UTILIZATION - Should not spike
+    # =========================================================================
+    - name: cpu-utilization
+      interval: 2m
+      count: 3
+      successCondition: result[0] < 0.9
+      failureLimit: 2
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            avg(
+              rate(container_cpu_usage_seconds_total{pod=~"riskcast-.*-canary.*"}[5m])
+              /
+              container_spec_cpu_quota{pod=~"riskcast-.*-canary.*"} * 100000
+            )
+    
+    # =========================================================================
+    # MEMORY UTILIZATION - Should not spike
+    # =========================================================================
+    - name: memory-utilization
+      interval: 2m
+      count: 3
+      successCondition: result[0] < 0.85
+      failureLimit: 2
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            avg(
+              container_memory_usage_bytes{pod=~"riskcast-.*-canary.*"}
+              /
+              container_spec_memory_limit_bytes{pod=~"riskcast-.*-canary.*"}
+            )
+
+---
+# ============================================================================
+# ANALYSIS TEMPLATE - Decision Quality
+# ============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: decision-quality-analysis
+  namespace: riskcast
+spec:
+  args:
+    - name: service-name
+  
+  metrics:
+    # =========================================================================
+    # DECISION ACCURACY - Must not degrade
+    # =========================================================================
+    - name: decision-accuracy
+      interval: 5m
+      count: 3
+      successCondition: result[0] >= 0.60
+      failureLimit: 2
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            sum(decisions_accurate_total{service="{{ args.service-name }}"})
+            /
+            sum(decisions_with_outcome_total{service="{{ args.service-name }}"})
+    
+    # =========================================================================
+    # AUDIT TRAIL COMPLETENESS - Must be 100%
+    # =========================================================================
+    - name: audit-completeness
+      interval: 2m
+      count: 3
+      successCondition: result[0] >= 0.999
+      failureLimit: 1  # Any missing audit is critical
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            1 - (
+              sum(decisions_without_audit_total{service="{{ args.service-name }}"})
+              /
+              sum(decisions_total{service="{{ args.service-name }}"})
+            )
+    
+    # =========================================================================
+    # SIGNAL PROCESSING - Must keep up
+    # =========================================================================
+    - name: signal-lag
+      interval: 2m
+      count: 3
+      successCondition: result[0] < 60  # Less than 60s lag
+      failureLimit: 2
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            max(signal_processing_lag_seconds{service="{{ args.service-name }}"})
+
+---
+# ============================================================================
+# VIRTUAL SERVICE - Traffic Routing
+# ============================================================================
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: riskcast-vsvc
+  namespace: riskcast
+spec:
+  hosts:
+    - riskcast
+    - riskcast.riskcast.svc.cluster.local
+  http:
+    - name: primary
+      route:
+        - destination:
+            host: riskcast-stable
+            port:
+              number: 8000
+          weight: 100  # Managed by Argo Rollouts
+        - destination:
+            host: riskcast-canary
+            port:
+              number: 8000
+          weight: 0  # Managed by Argo Rollouts
+
+---
+# ============================================================================
+# DESTINATION RULE - Subsets
+# ============================================================================
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: riskcast-destrule
+  namespace: riskcast
+spec:
+  host: riskcast
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        h2UpgradePolicy: UPGRADE
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 1000
+    loadBalancer:
+      simple: LEAST_CONN
+  subsets:
+    - name: stable
+      labels:
+        rollouts-pod-template-hash: stable
+    - name: canary
+      labels:
+        rollouts-pod-template-hash: canary
+
+---
+# ============================================================================
+# SERVICES - Stable and Canary
+# ============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: riskcast-stable
+  namespace: riskcast
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+      name: http
+  selector:
+    app: riskcast
+    # Selector managed by Argo Rollouts
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: riskcast-canary
+  namespace: riskcast
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+      name: http
+  selector:
+    app: riskcast
+    # Selector managed by Argo Rollouts

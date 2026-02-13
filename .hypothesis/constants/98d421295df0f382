@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\auth\router.py
+# hypothesis_version: 6.151.2
+
+[401, 409, 429, 500, ',', '/api/v1/auth', '/login', '/register', 'Retry-After', 'User-Agent', 'X-Forwarded-For', 'admin', 'audit_log_failed', 'auth', 'email', 'login', 'login_blocked', 'login_failed', 'register', 'unknown', 'user_logged_in', 'user_registered', 'utf-8']

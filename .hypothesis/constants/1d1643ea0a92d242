@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\analyzers\order_risk.py
+# hypothesis_version: 6.151.2
+
+[0.15, 0.3, 0.4, 100, 100000000, 500000000, 'confirmed', 'customer', 'customer_id', 'customer_risk', 'customer_tier', 'in_transit', 'internal_order', 'new', 'new_customer', 'new_customer_factor', 'order', 'order_number', 'order_risk_composite', 'order_risk_scored', 'pending', 'route', 'route_id', 'route_risk', 'total_value', 'value', 'value_factor', 'weights']

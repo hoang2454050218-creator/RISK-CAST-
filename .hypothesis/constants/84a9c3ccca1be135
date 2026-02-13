@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\services\dashboard_service.py
+# hypothesis_version: 6.151.2
+
+[0.0, 3600, 86400, 'No customer data', 'avg_risk', 'cnt', 'day', 'fresh', 'no_data', 'order', 'outdated', 'stale']

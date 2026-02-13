@@ -1,0 +1,244 @@
+{{/* RISKCAST Alertmanager Slack Templates */}}
+{{/* Provides consistent, actionable alert formatting for Slack notifications */}}
+
+{{/* ============================================================================ */}}
+{{/* COMMON TEMPLATES */}}
+{{/* ============================================================================ */}}
+
+{{/* Alert title - used across all severity levels */}}
+{{ define "slack.title" }}
+{{ if eq .Status "firing" }}🔴{{ else }}✅{{ end }} [{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}
+{{ end }}
+
+{{/* Silence URL helper */}}
+{{ define "slack.silence_url" }}
+https://alertmanager.riskcast.io/#/silences/new?filter=%7Balertname%3D%22{{ .CommonLabels.alertname }}%22%2Cservice%3D%22{{ .CommonLabels.service }}%22%7D
+{{ end }}
+
+{{/* Common text template */}}
+{{ define "slack.text" }}
+*Service:* {{ .CommonLabels.service | default "unknown" }}
+*Severity:* {{ .CommonLabels.severity | default "unknown" }}
+*Description:* {{ .CommonAnnotations.description }}
+
+{{ if .CommonAnnotations.runbook_url }}📖 <{{ .CommonAnnotations.runbook_url }}|View Runbook>{{ end }}
+
+*Firing:* {{ .Alerts.Firing | len }} | *Resolved:* {{ .Alerts.Resolved | len }}
+{{ end }}
+
+{{/* ============================================================================ */}}
+{{/* CRITICAL ALERTS */}}
+{{/* ============================================================================ */}}
+
+{{ define "slack.critical.text" }}
+🚨 *CRITICAL ALERT REQUIRES IMMEDIATE ATTENTION*
+
+*Service:* {{ .CommonLabels.service | default "unknown" }}
+*Started:* {{ (index .Alerts 0).StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+*Description:* {{ .CommonAnnotations.description }}
+
+{{ if .CommonAnnotations.impact }}*Impact:* {{ .CommonAnnotations.impact }}{{ end }}
+
+*Firing Alerts:*
+{{ range .Alerts.Firing }}
+• {{ .Annotations.summary }}
+  - Labels: {{ range $key, $value := .Labels }}{{ $key }}={{ $value }} {{ end }}
+{{ end }}
+
+{{ if .CommonAnnotations.runbook_url }}
+📖 *Runbook:* <{{ .CommonAnnotations.runbook_url }}|Open Runbook>
+{{ end }}
+
+📊 *Dashboard:* <https://grafana.riskcast.io/d/riskcast-overview?var-service={{ .CommonLabels.service }}|View Dashboard>
+🔇 *Silence:* <{{ template "slack.silence_url" . }}|Create Silence>
+{{ end }}
+
+{{/* ============================================================================ */}}
+{{/* HIGH SEVERITY ALERTS */}}
+{{/* ============================================================================ */}}
+
+{{ define "slack.high.text" }}
+*Service:* {{ .CommonLabels.service | default "unknown" }}
+*Description:* {{ .CommonAnnotations.description }}
+
+{{ if .CommonAnnotations.impact }}*Potential Impact:* {{ .CommonAnnotations.impact }}{{ end }}
+
+*Alerts:*
+{{ range .Alerts.Firing }}
+• {{ .Annotations.summary }}
+{{ end }}
+
+{{ if .CommonAnnotations.runbook_url }}📖 <{{ .CommonAnnotations.runbook_url }}|View Runbook>{{ end }}
+{{ end }}
+
+{{/* ============================================================================ */}}
+{{/* BUSINESS ALERTS */}}
+{{/* ============================================================================ */}}
+
+{{ define "slack.business.text" }}
+📈 *Business Metric Alert*
+
+*Metric:* {{ .CommonLabels.metric | default .CommonLabels.alertname }}
+*Description:* {{ .CommonAnnotations.description }}
+
+{{ if .CommonAnnotations.current_value }}*Current Value:* {{ .CommonAnnotations.current_value }}{{ end }}
+{{ if .CommonAnnotations.threshold }}*Threshold:* {{ .CommonAnnotations.threshold }}{{ end }}
+
+{{ if .CommonAnnotations.business_impact }}
+*Business Impact:*
+{{ .CommonAnnotations.business_impact }}
+{{ end }}
+
+{{ if .CommonAnnotations.recommended_action }}
+*Recommended Action:*
+{{ .CommonAnnotations.recommended_action }}
+{{ end }}
+
+📊 <https://grafana.riskcast.io/d/business-metrics|View Business Dashboard>
+{{ end }}
+
+{{/* ============================================================================ */}}
+{{/* SLO ALERTS */}}
+{{/* ============================================================================ */}}
+
+{{ define "slack.slo.text" }}
+📊 *SLO Burn Rate Alert*
+
+*SLO:* {{ .CommonLabels.slo_name }}
+*Burn Rate:* {{ .CommonLabels.burn_rate }}x ({{ if gt .CommonLabels.burn_rate "10" }}🔴 CRITICAL{{ else if gt .CommonLabels.burn_rate "5" }}🟠 HIGH{{ else }}🟡 ELEVATED{{ end }})
+*Window:* {{ .CommonLabels.window }}
+
+{{ .CommonAnnotations.description }}
+
+{{ if .CommonAnnotations.error_budget }}
+*Error Budget Status:*
+• Remaining: {{ .CommonAnnotations.error_budget }}
+• At current burn rate: {{ .CommonAnnotations.budget_exhaustion }}
+{{ end }}
+
+📖 <{{ .CommonAnnotations.runbook_url }}|SLO Runbook>
+📊 <https://grafana.riskcast.io/d/slo-overview|SLO Dashboard>
+{{ end }}
+
+{{/* ============================================================================ */}}
+{{/* DEPLOYMENT ALERTS */}}
+{{/* ============================================================================ */}}
+
+{{ define "slack.deployment.text" }}
+🚀 *Deployment Alert*
+
+*Rollout:* {{ .CommonLabels.rollout | default "unknown" }}
+*Phase:* {{ .CommonLabels.phase | default "unknown" }}
+*Canary Weight:* {{ .CommonLabels.canary_weight | default "N/A" }}%
+
+{{ .CommonAnnotations.description }}
+
+{{ if eq .CommonLabels.phase "Paused" }}
+⚠️ *Deployment is paused due to analysis failure*
+{{ if .CommonAnnotations.failure_reason }}Reason: {{ .CommonAnnotations.failure_reason }}{{ end }}
+{{ end }}
+
+🔄 <https://argo.riskcast.io/rollouts/riskcast|Argo Rollouts Dashboard>
+{{ end }}
+
+{{/* ============================================================================ */}}
+{{/* CHAOS EXPERIMENT ALERTS */}}
+{{/* ============================================================================ */}}
+
+{{ define "slack.chaos.text" }}
+🧪 *Chaos Experiment Alert*
+
+*Experiment:* {{ .CommonLabels.experiment_id }}
+*Type:* {{ .CommonLabels.experiment_type }}
+*Target:* {{ .CommonLabels.target }}
+
+{{ .CommonAnnotations.description }}
+
+{{ if eq .Status "firing" }}
+⚠️ *Experiment triggered alert condition*
+{{ if .CommonAnnotations.abort_reason }}Abort Reason: {{ .CommonAnnotations.abort_reason }}{{ end }}
+{{ else }}
+✅ *Experiment completed/recovered*
+{{ end }}
+{{ end }}
+
+{{/* ============================================================================ */}}
+{{/* POST-MORTEM ALERTS */}}
+{{/* ============================================================================ */}}
+
+{{ define "slack.postmortem.text" }}
+📝 *Post-Mortem Alert*
+
+{{ if eq .CommonLabels.alertname "PostMortemOverdue" }}
+⏰ *Post-mortem is overdue!*
+
+*Incident:* {{ .CommonLabels.incident_id }}
+*Severity:* {{ .CommonLabels.severity }}
+*Age:* {{ .CommonAnnotations.age_hours }} hours (deadline was 48h)
+
+Please complete the post-mortem ASAP.
+{{ else if eq .CommonLabels.alertname "ActionItemOverdue" }}
+📋 *Action item is overdue!*
+
+*Post-mortem:* {{ .CommonLabels.postmortem_id }}
+*Item:* {{ .CommonAnnotations.action_item }}
+*Owner:* {{ .CommonAnnotations.owner }}
+*Due:* {{ .CommonAnnotations.due_date }}
+{{ end }}
+
+📝 <https://riskcast.io/postmortems|View Post-Mortems>
+{{ end }}
+
+{{/* ============================================================================ */}}
+{{/* PAGERDUTY TEMPLATES */}}
+{{/* ============================================================================ */}}
+
+{{ define "pagerduty.description" }}
+[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertname }} - {{ .CommonLabels.service }}
+{{ end }}
+
+{{/* ============================================================================ */}}
+{{/* EMAIL TEMPLATES */}}
+{{/* ============================================================================ */}}
+
+{{ define "email.critical.html" }}
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .header { background-color: #dc3545; color: white; padding: 20px; border-radius: 5px; }
+    .content { padding: 20px; background-color: #f8f9fa; border-radius: 5px; margin-top: 10px; }
+    .alert-item { background-color: white; padding: 15px; margin: 10px 0; border-left: 4px solid #dc3545; }
+    .footer { margin-top: 20px; font-size: 12px; color: #666; }
+    .button { display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🚨 Critical Alert: {{ .CommonLabels.alertname }}</h1>
+  </div>
+  <div class="content">
+    <p><strong>Service:</strong> {{ .CommonLabels.service }}</p>
+    <p><strong>Severity:</strong> {{ .CommonLabels.severity }}</p>
+    <p><strong>Description:</strong> {{ .CommonAnnotations.description }}</p>
+    
+    <h3>Firing Alerts ({{ .Alerts.Firing | len }})</h3>
+    {{ range .Alerts.Firing }}
+    <div class="alert-item">
+      <strong>{{ .Annotations.summary }}</strong>
+      <p>Started: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}</p>
+    </div>
+    {{ end }}
+    
+    <p>
+      <a href="{{ .CommonAnnotations.runbook_url }}" class="button">View Runbook</a>
+      <a href="https://grafana.riskcast.io/d/riskcast-overview" class="button">Open Dashboard</a>
+    </p>
+  </div>
+  <div class="footer">
+    <p>This is an automated alert from RISKCAST Alertmanager.</p>
+  </div>
+</body>
+</html>
+{{ end }}

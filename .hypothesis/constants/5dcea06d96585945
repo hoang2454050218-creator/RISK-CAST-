@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\services\resilience.py
+# hypothesis_version: 6.151.2
+
+[0.0, 0.5, 1.0, 16.0, 30.0, 60.0, 'T', 'circuit_closed', 'circuit_half_open', 'circuit_opened', 'circuit_reopened', 'claude_llm', 'closed', 'half_open', 'omen', 'open', 'operation', 'retry_attempt', 'retry_exhausted', 'webhook']

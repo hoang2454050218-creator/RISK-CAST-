@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\api\routers\chat.py
+# hypothesis_version: 6.151.2
+
+[200, 404, '/api/v1/chat', '/message', '/sessions', 'Cache-Control', 'X-Accel-Buffering', 'assistant', 'chat', 'cid', 'content', 'data_keys', 'intent_method', 'intent_type', 'llm_stream_error', 'method', 'no', 'no-cache', 'postgresql', 'role', 'signals_count', 'text/event-stream', 'type', 'unknown', 'user']

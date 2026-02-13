@@ -1,0 +1,266 @@
+# RISKCAST Business Alerts
+#
+# Alerts for business-critical metrics that may not be technical failures
+# but impact business outcomes.
+
+groups:
+  # ============================================================================
+  # DECISION GENERATION ALERTS
+  # ============================================================================
+  - name: business.decisions
+    interval: 1m
+    rules:
+      # No decisions generated in 30 minutes
+      - alert: NoDecisionsGenerated
+        expr: |
+          sum(increase(decisions_total[30m])) == 0
+        for: 5m
+        labels:
+          severity: high
+          alerttype: business
+          metric: decision_generation
+        annotations:
+          summary: "No decisions generated in 30 minutes"
+          description: "RISKCAST has not generated any decisions in the last 30 minutes."
+          business_impact: "Customers may not be receiving timely risk alerts."
+          recommended_action: "Check OMEN signal flow, Oracle data feeds, and decision service health."
+          runbook_url: "https://runbooks.riskcast.io/business/no-decisions"
+      
+      # Decision rate dropped significantly
+      - alert: LowDecisionRate
+        expr: |
+          (
+            sum(rate(decisions_total[15m]))
+            /
+            sum(rate(decisions_total[1h] offset 1d))
+          ) < 0.3
+        for: 15m
+        labels:
+          severity: medium
+          alerttype: business
+          metric: decision_rate
+        annotations:
+          summary: "Decision rate dropped 70% vs yesterday"
+          description: |
+            Current decision rate is {{ $value | humanizePercentage }} of yesterday's rate.
+          business_impact: "Potential reduction in customer alerts."
+          recommended_action: "Investigate signal pipeline and customer activity."
+          runbook_url: "https://runbooks.riskcast.io/business/low-decision-rate"
+
+  # ============================================================================
+  # CUSTOMER EXPOSURE ALERTS
+  # ============================================================================
+  - name: business.exposure
+    interval: 1m
+    rules:
+      # High customer exposure without alerts
+      - alert: HighExposureNoAlerts
+        expr: |
+          (
+            sum(customer_exposure_usd{status="unnotified"}) > 1000000
+          )
+          and
+          (
+            sum(increase(alerts_sent_total[1h])) == 0
+          )
+        for: 30m
+        labels:
+          severity: critical
+          alerttype: business
+          metric: customer_exposure
+        annotations:
+          summary: "High customer exposure ($1M+) with no alerts sent"
+          description: |
+            Customers have ${{ $value | humanize }} in unnotified exposure.
+          business_impact: "Customers may experience losses without warning."
+          recommended_action: "Check alert delivery pipeline and WhatsApp integration."
+          runbook_url: "https://runbooks.riskcast.io/business/high-exposure"
+      
+      # Unusual exposure spike
+      - alert: ExposureSpike
+        expr: |
+          (
+            sum(customer_exposure_usd)
+            /
+            avg_over_time(sum(customer_exposure_usd)[7d:1h])
+          ) > 3
+        for: 15m
+        labels:
+          severity: medium
+          alerttype: business
+          metric: exposure_spike
+        annotations:
+          summary: "Customer exposure spiked 3x vs weekly average"
+          description: "Total exposure is 3x higher than the 7-day average."
+          business_impact: "Increased risk for customers during market events."
+
+  # ============================================================================
+  # ALERT DELIVERY ALERTS
+  # ============================================================================
+  - name: business.delivery
+    interval: 1m
+    rules:
+      # WhatsApp delivery failures
+      - alert: WhatsAppDeliveryFailures
+        expr: |
+          (
+            sum(rate(whatsapp_delivery_failures_total[15m]))
+            /
+            sum(rate(whatsapp_delivery_attempts_total[15m]))
+          ) > 0.1
+        for: 10m
+        labels:
+          severity: high
+          alerttype: business
+          metric: whatsapp_delivery
+        annotations:
+          summary: "WhatsApp delivery failure rate > 10%"
+          description: |
+            {{ $value | humanizePercentage }} of WhatsApp messages are failing.
+          business_impact: "Customers may not receive critical alerts."
+          recommended_action: "Check Twilio integration and WhatsApp API status."
+          runbook_url: "https://runbooks.riskcast.io/business/whatsapp-failures"
+      
+      # No alerts delivered
+      - alert: NoAlertsDelivered
+        expr: |
+          sum(increase(alerts_delivered_total[1h])) == 0
+          and
+          sum(increase(decisions_requiring_alert_total[1h])) > 0
+        for: 15m
+        labels:
+          severity: critical
+          alerttype: business
+          metric: alert_delivery
+        annotations:
+          summary: "No alerts delivered despite decisions requiring alerts"
+          description: "Alerter service may be down or misconfigured."
+          business_impact: "Customers receiving no notifications."
+          runbook_url: "https://runbooks.riskcast.io/business/no-alerts"
+
+  # ============================================================================
+  # DATA QUALITY ALERTS
+  # ============================================================================
+  - name: business.data_quality
+    interval: 1m
+    rules:
+      # Signal quality degradation
+      - alert: SignalQualityDegraded
+        expr: |
+          avg(signal_confidence_score) < 0.5
+        for: 30m
+        labels:
+          severity: medium
+          alerttype: business
+          metric: signal_quality
+        annotations:
+          summary: "Average signal confidence below 50%"
+          description: |
+            Signal confidence is {{ $value | humanizePercentage }}.
+            Data quality from sources may be degraded.
+          business_impact: "Decision quality may be affected."
+          recommended_action: "Check Polymarket, AIS, and other data sources."
+      
+      # Stale external data
+      - alert: ExternalDataStale
+        expr: |
+          max(time() - external_data_last_update_timestamp{source=~"polymarket|ais|freightos"}) > 900
+        for: 5m
+        labels:
+          severity: high
+          alerttype: business
+          metric: data_freshness
+        annotations:
+          summary: "External data source is stale (>15min)"
+          description: "Data from {{ $labels.source }} is {{ $value | humanizeDuration }} old."
+          business_impact: "Decisions based on outdated information."
+
+  # ============================================================================
+  # MODEL QUALITY ALERTS
+  # ============================================================================
+  - name: business.model_quality
+    interval: 5m
+    rules:
+      # Decision accuracy drop
+      - alert: DecisionAccuracyDrop
+        expr: |
+          (
+            sum(rate(decisions_accurate_total[1d]))
+            /
+            sum(rate(decisions_with_outcome_total[1d]))
+          ) < 0.5
+        for: 1h
+        labels:
+          severity: high
+          alerttype: business
+          metric: decision_accuracy
+        annotations:
+          summary: "Decision accuracy dropped below 50%"
+          description: |
+            24-hour decision accuracy is {{ $value | humanizePercentage }}.
+          business_impact: "Customers may receive suboptimal recommendations."
+          recommended_action: "Review model performance and recent data changes."
+          runbook_url: "https://runbooks.riskcast.io/business/accuracy-drop"
+      
+      # Flywheel stalled
+      - alert: FlywheelStalled
+        expr: |
+          sum(increase(flywheel_outcomes_recorded_total[7d])) < 10
+        for: 1d
+        labels:
+          severity: medium
+          alerttype: business
+          metric: flywheel_health
+        annotations:
+          summary: "Data flywheel stalled - few outcomes recorded"
+          description: "Only {{ $value }} outcomes recorded in 7 days."
+          business_impact: "Model improvement is stalled."
+          recommended_action: "Check outcome collection pipeline."
+
+  # ============================================================================
+  # CUSTOMER ENGAGEMENT ALERTS
+  # ============================================================================
+  - name: business.engagement
+    interval: 5m
+    rules:
+      # Low customer engagement
+      - alert: LowCustomerEngagement
+        expr: |
+          (
+            sum(increase(customer_alert_acknowledgements_total[24h]))
+            /
+            sum(increase(customer_alerts_sent_total[24h]))
+          ) < 0.1
+        for: 4h
+        labels:
+          severity: low
+          alerttype: business
+          metric: customer_engagement
+        annotations:
+          summary: "Customer engagement rate below 10%"
+          description: |
+            Only {{ $value | humanizePercentage }} of alerts acknowledged.
+          business_impact: "Customers may not be acting on alerts."
+          recommended_action: "Review alert content and delivery timing."
+
+  # ============================================================================
+  # REVENUE PROTECTION ALERTS
+  # ============================================================================
+  - name: business.revenue
+    interval: 5m
+    rules:
+      # Potential revenue impact
+      - alert: PotentialRevenueImpact
+        expr: |
+          sum(customer_subscription_at_risk_usd) > 10000
+        for: 1h
+        labels:
+          severity: high
+          alerttype: business
+          metric: revenue_risk
+        annotations:
+          summary: "Potential revenue at risk: ${{ $value | humanize }}"
+          description: |
+            Based on customer dissatisfaction signals and churn indicators.
+          business_impact: "MRR may be impacted."
+          recommended_action: "Review customer health dashboard."

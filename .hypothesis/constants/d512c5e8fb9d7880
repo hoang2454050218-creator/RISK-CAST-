@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\services\input_sanitizer.py
+# hypothesis_version: 6.151.2
+
+['%', '0.0.0.0', '10.0.0.0/8', '127.0.0.0/8', '127.0.0.1', '169.254.0.0/16', '172.16.0.0/12', '192.168.0.0/16', '::1', '::1/128', 'Malformed URL', 'No hostname in URL', 'OK', '[', '\\', '\\%', '\\[', '\\\\', '\\_', '^\\d+\\.\\d+\\.\\d+\\.\\d+$', '_', 'fc00::/7', 'fe80::/10', 'http', 'https', 'localhost']

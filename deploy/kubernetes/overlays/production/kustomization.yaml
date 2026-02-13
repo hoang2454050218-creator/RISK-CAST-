@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: riskcast-prod
+
+resources:
+  - ../../base
+
+# Production-specific patches
+patchesStrategicMerge:
+  - deployment-patch.yaml
+
+configMapGenerator:
+  - name: riskcast-config
+    behavior: merge
+    literals:
+      - environment=production
+      - log_level=INFO
+      - api_workers=8
+      - enable_tracing=true
+      - enable_metrics=true
+
+# Production replicas
+replicas:
+  - name: riskcast-api
+    count: 5
+
+images:
+  - name: riskcast/api
+    newTag: v1.0.0
+
+commonLabels:
+  environment: production
+
+commonAnnotations:
+  team: platform
+  oncall: platform-oncall@riskcast.io

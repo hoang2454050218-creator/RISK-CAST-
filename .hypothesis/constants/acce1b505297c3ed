@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\middleware\security_headers.py
+# hypothesis_version: 6.151.2
+
+['1; mode=block', 'Cache-Control', 'DENY', 'Permissions-Policy', 'Pragma', 'Referrer-Policy', 'X-Frame-Options', 'X-XSS-Protection', 'no-cache', 'nosniff']

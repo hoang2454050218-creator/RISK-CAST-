@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\services\analytics_service.py
+# hypothesis_version: 6.151.2
+
+[100, 200, 'all_time', 'avg_sev', 'cnt', 'current', 'day', 'developing', 'insufficient', 'max_sev', 'reliable', 'route']

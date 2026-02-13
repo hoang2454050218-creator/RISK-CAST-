@@ -1,0 +1,282 @@
+# RISKCAST Alerting Configuration
+# 
+# This file defines alerting rules for monitoring RISKCAST health
+# Compatible with Prometheus Alertmanager and similar systems
+
+groups:
+  - name: riskcast-availability
+    interval: 30s
+    rules:
+      # Service Down
+      - alert: RiskCastDown
+        expr: up{job="riskcast"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: riskcast
+        annotations:
+          summary: "RISKCAST service is down"
+          description: "RISKCAST has been unreachable for more than 1 minute."
+          runbook_url: "https://docs.riskcast.io/runbooks/service-down"
+      
+      # High Error Rate
+      - alert: RiskCastHighErrorRate
+        expr: |
+          sum(rate(http_requests_total{job="riskcast",status=~"5.."}[5m])) 
+          / sum(rate(http_requests_total{job="riskcast"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: riskcast
+        annotations:
+          summary: "High error rate on RISKCAST"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+          runbook_url: "https://docs.riskcast.io/runbooks/high-error-rate"
+
+      # High Latency
+      - alert: RiskCastHighLatency
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(http_request_duration_seconds_bucket{job="riskcast"}[5m])) by (le)
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: riskcast
+        annotations:
+          summary: "High latency on RISKCAST API"
+          description: "P95 latency is {{ $value | humanizeDuration }} (threshold: 2s)"
+          runbook_url: "https://docs.riskcast.io/runbooks/high-latency"
+
+  - name: riskcast-circuit-breakers
+    interval: 30s
+    rules:
+      # Circuit Breaker Open
+      - alert: CircuitBreakerOpen
+        expr: circuit_breaker_state{job="riskcast"} == 2  # 2 = OPEN
+        for: 5m
+        labels:
+          severity: warning
+          service: riskcast
+        annotations:
+          summary: "Circuit breaker open for {{ $labels.circuit_name }}"
+          description: "The circuit breaker for {{ $labels.circuit_name }} has been open for 5+ minutes."
+          runbook_url: "https://docs.riskcast.io/runbooks/circuit-breaker"
+
+      # Multiple Circuit Breakers Open
+      - alert: MultipleCircuitBreakersOpen
+        expr: count(circuit_breaker_state{job="riskcast"} == 2) > 2
+        for: 2m
+        labels:
+          severity: critical
+          service: riskcast
+        annotations:
+          summary: "Multiple circuit breakers are open"
+          description: "{{ $value }} circuit breakers are currently open."
+          runbook_url: "https://docs.riskcast.io/runbooks/multiple-circuits-open"
+
+      # Twilio Circuit Breaker (Critical for alerting)
+      - alert: TwilioCircuitBreakerOpen
+        expr: circuit_breaker_state{job="riskcast",circuit_name="twilio"} == 2
+        for: 1m
+        labels:
+          severity: critical
+          service: riskcast
+        annotations:
+          summary: "Twilio circuit breaker is open"
+          description: "WhatsApp alerts cannot be sent. Twilio service may be down."
+          runbook_url: "https://docs.riskcast.io/runbooks/twilio-down"
+
+  - name: riskcast-database
+    interval: 30s
+    rules:
+      # Database Connection Pool Exhausted
+      - alert: DatabasePoolExhausted
+        expr: |
+          database_pool_used{job="riskcast"} / database_pool_size{job="riskcast"} > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: riskcast
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "{{ $value | humanizePercentage }} of database connections in use."
+          runbook_url: "https://docs.riskcast.io/runbooks/db-pool"
+
+      # Database Latency
+      - alert: DatabaseHighLatency
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(database_query_duration_seconds_bucket{job="riskcast"}[5m])) by (le)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: riskcast
+        annotations:
+          summary: "High database query latency"
+          description: "P95 database latency is {{ $value | humanizeDuration }}"
+          runbook_url: "https://docs.riskcast.io/runbooks/db-latency"
+
+  - name: riskcast-redis
+    interval: 30s
+    rules:
+      # Redis Down
+      - alert: RedisDown
+        expr: redis_up{job="riskcast"} == 0
+        for: 2m
+        labels:
+          severity: warning  # Warning because Redis is not critical
+          service: riskcast
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis has been unreachable for 2+ minutes. Service will operate in degraded mode."
+          runbook_url: "https://docs.riskcast.io/runbooks/redis-down"
+
+      # Redis High Memory
+      - alert: RedisHighMemory
+        expr: redis_memory_used_bytes{job="riskcast"} / redis_memory_max_bytes{job="riskcast"} > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: riskcast
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis is using {{ $value | humanizePercentage }} of available memory."
+          runbook_url: "https://docs.riskcast.io/runbooks/redis-memory"
+
+  - name: riskcast-business
+    interval: 1m
+    rules:
+      # No Decisions Generated
+      - alert: NoDecisionsGenerated
+        expr: |
+          increase(decisions_generated_total{job="riskcast"}[15m]) == 0
+        for: 15m
+        labels:
+          severity: warning
+          service: riskcast
+        annotations:
+          summary: "No decisions generated in 15 minutes"
+          description: "The decision engine has not generated any decisions. Check OMEN signals."
+          runbook_url: "https://docs.riskcast.io/runbooks/no-decisions"
+
+      # Low Decision Generation Rate
+      - alert: LowDecisionRate
+        expr: |
+          rate(decisions_generated_total{job="riskcast"}[5m]) * 60 < 10
+        for: 10m
+        labels:
+          severity: warning
+          service: riskcast
+        annotations:
+          summary: "Low decision generation rate"
+          description: "Only {{ $value }} decisions per minute (expected > 10)."
+          runbook_url: "https://docs.riskcast.io/runbooks/low-decision-rate"
+
+      # High Exposure Without Alerts
+      - alert: HighExposureNoAlerts
+        expr: |
+          sum(active_exposure_usd{job="riskcast"}) > 1000000 
+          and increase(alerts_sent_total{job="riskcast"}[1h]) == 0
+        for: 30m
+        labels:
+          severity: warning
+          service: riskcast
+        annotations:
+          summary: "High exposure detected but no alerts sent"
+          description: "Total exposure is ${{ $value | humanize }} but no alerts in the last hour."
+          runbook_url: "https://docs.riskcast.io/runbooks/high-exposure"
+
+  - name: riskcast-external-services
+    interval: 1m
+    rules:
+      # Polymarket API Errors
+      - alert: PolymarketAPIErrors
+        expr: |
+          rate(polymarket_api_errors_total{job="riskcast"}[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          service: riskcast
+        annotations:
+          summary: "Polymarket API experiencing errors"
+          description: "Error rate: {{ $value }}/s. Signal quality may be degraded."
+          runbook_url: "https://docs.riskcast.io/runbooks/polymarket-errors"
+
+      # AIS API Errors
+      - alert: AISAPIErrors
+        expr: |
+          rate(ais_api_errors_total{job="riskcast"}[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          service: riskcast
+        annotations:
+          summary: "AIS API experiencing errors"
+          description: "Vessel tracking data may be stale or incomplete."
+          runbook_url: "https://docs.riskcast.io/runbooks/ais-errors"
+
+# Inhibition rules to reduce alert noise
+inhibit_rules:
+  # Don't alert on individual circuit breakers if service is down
+  - source_match:
+      alertname: RiskCastDown
+    target_match_re:
+      alertname: CircuitBreaker.*
+    equal:
+      - service
+
+  # Don't alert on database latency if pool is exhausted
+  - source_match:
+      alertname: DatabasePoolExhausted
+    target_match:
+      alertname: DatabaseHighLatency
+    equal:
+      - service
+
+# Notification routes
+route:
+  receiver: default
+  group_by: [alertname, service]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    # Critical alerts go to PagerDuty
+    - match:
+        severity: critical
+      receiver: pagerduty
+      continue: true
+
+    # All alerts go to Slack
+    - match_re:
+        severity: critical|warning
+      receiver: slack
+
+receivers:
+  - name: default
+    webhook_configs:
+      - url: 'http://alertmanager-webhook:8080/alerts'
+
+  - name: pagerduty
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY}'
+        severity: '{{ .CommonLabels.severity }}'
+        description: '{{ .CommonAnnotations.summary }}'
+        details:
+          firing: '{{ template "pagerduty.default.description" . }}'
+
+  - name: slack
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#riskcast-alerts'
+        title: '{{ .CommonAnnotations.summary }}'
+        text: |
+          {{ range .Alerts }}
+          *Alert:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          *Severity:* {{ .Labels.severity }}
+          *Runbook:* {{ .Annotations.runbook_url }}
+          {{ end }}
+        send_resolved: true

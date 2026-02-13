@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\api\routers\events.py
+# hypothesis_version: 6.151.2
+
+['/api/v1/events', '/stream', 'Cache-Control', 'Connection', 'X-Accel-Buffering', 'events', 'keep-alive', 'no', 'no-cache', 'text/event-stream']

@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\pipeline\traceability.py
+# hypothesis_version: 6.151.2
+
+['ack_id', 'actual_loss_usd', 'category', 'company_id', 'confidence_score', 'data', 'decision_id', 'failed', 'id', 'ingest_coverage', 'ingest_record', 'ingested', 'is_active', 'is_complete', 'ledger_receipt', 'missing_steps', 'needs_reconciliation', 'outcome', 'outcome_type', 'period_hours', 'predicted_loss_usd', 'probability', 'processed', 'recorded_at', 'risk_materialized', 'signal_id', 'signal_traced', 'signals_used', 'status', 'step', 'steps', 'timestamp', 'title', 'total_failed', 'total_in_ledger', 'total_ingested', 'total_steps', 'trace_id', 'value_generated_usd', 'was_accurate']

@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\alerting\schemas.py
+# hypothesis_version: 6.151.2
+
+[0.0, 'accelerating', 'contains', 'critical', 'delivered', 'email', 'eq', 'failed', 'falling', 'gt', 'gte', 'high', 'in_app', 'info', 'lt', 'lte', 'neq', 'pending', 'rising', 'sent', 'stable', 'suppressed', 'warning', 'webhook']

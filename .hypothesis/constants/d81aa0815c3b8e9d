@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\api\routers\companies.py
+# hypothesis_version: 6.151.2
+
+[404, '/api/v1/companies', '/me', 'Company not found', 'companies']

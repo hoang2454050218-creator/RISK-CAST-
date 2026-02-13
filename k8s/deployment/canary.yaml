@@ -1,0 +1,216 @@
+# RISKCAST Canary Deployment - Simplified Configuration
+#
+# This is a simplified canary deployment for environments without Istio.
+# Uses Kubernetes native rolling update with canary annotations.
+#
+# For full traffic routing capabilities, use k8s/argo-rollouts/rollout.yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: riskcast-canary
+  namespace: riskcast
+  labels:
+    app: riskcast
+    track: canary
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+spec:
+  # Canary runs fewer replicas
+  replicas: 1
+  
+  selector:
+    matchLabels:
+      app: riskcast
+      track: canary
+  
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  
+  template:
+    metadata:
+      labels:
+        app: riskcast
+        track: canary
+        version: canary
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+    spec:
+      containers:
+        - name: riskcast
+          image: riskcast/riskcast:canary
+          imagePullPolicy: Always
+          
+          ports:
+            - containerPort: 8000
+              name: http
+          
+          env:
+            - name: DEPLOYMENT_TRACK
+              value: "canary"
+            - name: ENABLE_DETAILED_METRICS
+              value: "true"
+          
+          envFrom:
+            - configMapRef:
+                name: riskcast-config
+            - secretRef:
+                name: riskcast-secrets
+          
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+          
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+
+---
+# Stable deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: riskcast-stable
+  namespace: riskcast
+  labels:
+    app: riskcast
+    track: stable
+spec:
+  replicas: 4  # Majority of traffic
+  
+  selector:
+    matchLabels:
+      app: riskcast
+      track: stable
+  
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  
+  template:
+    metadata:
+      labels:
+        app: riskcast
+        track: stable
+        version: stable
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+    spec:
+      containers:
+        - name: riskcast
+          image: riskcast/riskcast:stable
+          
+          ports:
+            - containerPort: 8000
+              name: http
+          
+          env:
+            - name: DEPLOYMENT_TRACK
+              value: "stable"
+          
+          envFrom:
+            - configMapRef:
+                name: riskcast-config
+            - secretRef:
+                name: riskcast-secrets
+          
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+
+---
+# Service routes to both canary and stable
+apiVersion: v1
+kind: Service
+metadata:
+  name: riskcast
+  namespace: riskcast
+  labels:
+    app: riskcast
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app: riskcast
+    # No track selector - routes to both canary and stable
+    # Traffic split is based on replica ratio (1:4 = 20% canary)
+
+---
+# Canary-only service for testing
+apiVersion: v1
+kind: Service
+metadata:
+  name: riskcast-canary-only
+  namespace: riskcast
+  labels:
+    app: riskcast
+    track: canary
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app: riskcast
+    track: canary
+
+---
+# Stable-only service for fallback
+apiVersion: v1
+kind: Service
+metadata:
+  name: riskcast-stable-only
+  namespace: riskcast
+  labels:
+    app: riskcast
+    track: stable
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app: riskcast
+    track: stable

@@ -1,0 +1,88 @@
+{
+  "decision": {
+    "executive_summary": "RISKCAST khuyến nghị {action} cho {shipment_count} lô hàng với rủi ro {exposure}. Dự kiến trễ: {delay} ngày. Chi phí hành động: {cost}. Độ tin cậy: {confidence:.0f}%. Hạn chót: {deadline}. Thiệt hại nếu không hành động: {inaction_loss}.",
+    "title": "Báo Cáo Quyết Định",
+    "generated_at": "Tạo lúc {timestamp}"
+  },
+  "questions": {
+    "q1_what": "Sự kiện {event_type} đang ảnh hưởng đến điểm nghẽn {chokepoint}. {summary}",
+    "q2_when": "Mức độ khẩn cấp: {urgency}. Bạn có {window_hours} giờ để quyết định. Hạn chót: {deadline}.",
+    "q3_severity": "Tổng rủi ro: {exposure}. Dự kiến trễ: {delay_days} ngày ảnh hưởng {shipment_count} lô hàng.",
+    "q4_why": "{reasoning} Dựa trên {evidence_count} nguồn bằng chứng: {evidence_summary}.",
+    "q5_action": "Hành động khuyến nghị: {action}. {action_description}. Chi phí ước tính: {cost}. Hạn chót: {deadline}.",
+    "q6_confidence": "Độ tin cậy: {level} ({score:.0f}%). Yếu tố chính: {factors}.",
+    "q7_inaction": "Nếu không hành động, thiệt hại dự kiến: {loss}. Điểm không thể quay lại: {point_of_no_return}."
+  },
+  "actions": {
+    "reroute": "CHUYỂN HƯỚNG",
+    "expedite": "TĂNG TỐC",
+    "hold": "TẠM GIỮ",
+    "delay": "TRÌ HOÃN",
+    "insure": "MUA BẢO HIỂM",
+    "monitor": "THEO DÕI",
+    "do_nothing": "KHÔNG HÀNH ĐỘNG"
+  },
+  "action_descriptions": {
+    "reroute": "Thay đổi tuyến vận chuyển để tránh khu vực bị ảnh hưởng",
+    "expedite": "Đẩy nhanh quá trình xử lý lô hàng",
+    "hold": "Giữ lô hàng tại vị trí hiện tại",
+    "delay": "Trì hoãn khởi hành lô hàng",
+    "insure": "Mua thêm bảo hiểm",
+    "monitor": "Tiếp tục theo dõi tình hình",
+    "do_nothing": "Không khuyến nghị hành động tại thời điểm này"
+  },
+  "confidence": {
+    "high": "Cao",
+    "moderate": "Trung bình",
+    "low": "Thấp"
+  },
+  "urgency": {
+    "immediate": "Yêu cầu hành động ngay",
+    "urgent": "Cần hành động trong 24 giờ",
+    "soon": "Khuyến nghị hành động trong 48 giờ",
+    "watch": "Theo dõi tình hình"
+  },
+  "events": {
+    "disruption": "gián đoạn chuỗi cung ứng",
+    "weather": "thời tiết khắc nghiệt",
+    "conflict": "xung đột địa chính trị",
+    "strike": "đình công",
+    "congestion": "tắc nghẽn cảng",
+    "closure": "đóng cửa tuyến đường"
+  },
+  "chokepoints": {
+    "red_sea": "Biển Đỏ",
+    "suez": "Kênh đào Suez",
+    "panama": "Kênh đào Panama",
+    "malacca": "Eo biển Malacca",
+    "bosphorus": "Eo biển Bosphorus",
+    "unknown": "khu vực bị ảnh hưởng"
+  },
+  "export": {
+    "audit_trail": "Xuất Dấu Vết Kiểm Toán",
+    "decisions": "Xuất Quyết Định",
+    "justification": "Giải Trình Quyết Định",
+    "generated_by": "Được tạo bởi RISKCAST",
+    "page": "Trang {page} / {total}",
+    "confidential": "MẬT - Chỉ Sử Dụng Nội Bộ"
+  },
+  "escalation": {
+    "alert_created": "Cảnh báo đã được tạo",
+    "escalated_to": "Đã chuyển lên {level}",
+    "acknowledged_by": "Đã xác nhận bởi {user}",
+    "no_ack_escalating": "Không nhận được xác nhận, đang chuyển cấp",
+    "levels": {
+      "l1": "Kỹ Sư Trực",
+      "l2": "Kỹ Sư Cao Cấp",
+      "l3": "Quản Lý Kỹ Thuật",
+      "l4": "Phó Giám Đốc Kỹ Thuật",
+      "l5": "Giám Đốc Công Nghệ"
+    }
+  },
+  "regulatory": {
+    "gdpr_request": "Yêu cầu dữ liệu GDPR",
+    "data_export": "Xuất dữ liệu hoàn tất",
+    "data_deletion": "Xóa dữ liệu hoàn tất",
+    "compliance_report": "Báo cáo tuân thủ đã tạo"
+  }
+}

@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\services\scheduler.py
+# hypothesis_version: 6.151.2
+
+['analyzer_failed', 'expire_signals', 'full_scan', 'full_scan_completed', 'full_scan_started', 'morning_brief', 'scan_failed']

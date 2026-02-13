@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: riskcast-config
+  labels:
+    app: riskcast
+data:
+  environment: "production"
+  log_level: "INFO"
+  log_format: "json"
+  
+  # API Configuration
+  api_host: "0.0.0.0"
+  api_port: "8000"
+  api_workers: "4"
+  
+  # Rate Limiting
+  rate_limit_requests: "100"
+  rate_limit_window_seconds: "60"
+  
+  # Caching
+  cache_ttl_seconds: "300"
+  decision_cache_ttl_seconds: "60"
+  
+  # Timeouts (seconds)
+  http_timeout: "30"
+  database_timeout: "10"
+  redis_timeout: "5"
+  
+  # Feature Flags
+  enable_tracing: "true"
+  enable_metrics: "true"
+  enable_circuit_breaker: "true"
+  
+  # OMEN Configuration
+  omen_polymarket_refresh_interval: "300"
+  omen_news_refresh_interval: "600"
+  omen_validation_threshold: "0.5"
+  
+  # ORACLE Configuration
+  oracle_ais_refresh_interval: "60"
+  oracle_rates_refresh_interval: "3600"
+  
+  # RISKCAST Configuration
+  riskcast_confidence_threshold: "0.6"
+  riskcast_impact_threshold_usd: "5000"
+  
+  # Alerter Configuration
+  alerter_batch_size: "10"
+  alerter_retry_attempts: "3"
+  alerter_retry_delay_seconds: "60"

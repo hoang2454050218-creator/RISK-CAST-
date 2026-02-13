@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\engine\ensemble.py
+# hypothesis_version: 6.151.2
+
+[0.0, 1.0, 15.0, 25.0, 100, 'high', 'low', 'moderate', 'none', 'weighted_ensemble']

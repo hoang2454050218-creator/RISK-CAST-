@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RISKCAST — Decision Intelligence</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Google Translate DOM compatibility patch for React.
+      // GT wraps text nodes in <font> tags, which causes React to crash with
+      // "Failed to execute 'removeChild'/'insertBefore' on 'Node'" errors
+      // because the original text nodes are no longer direct children.
+      // This patch makes those operations fail gracefully instead of crashing.
+      if (typeof Node !== 'undefined') {
+        var _removeChild = Node.prototype.removeChild;
+        Node.prototype.removeChild = function (child) {
+          if (child.parentNode !== this) {
+            // Node was already moved by Google Translate — skip silently
+            return child;
+          }
+          return _removeChild.apply(this, arguments);
+        };
+
+        var _insertBefore = Node.prototype.insertBefore;
+        Node.prototype.insertBefore = function (newNode, refNode) {
+          if (refNode && refNode.parentNode !== this) {
+            // Reference node was moved by Google Translate — append instead
+            return _insertBefore.call(this, newNode, null);
+          }
+          return _insertBefore.apply(this, arguments);
+        };
+      }
+    </script>
+  </body>
+</html>

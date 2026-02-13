@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\middleware\error_handler.py
+# hypothesis_version: 6.151.2
+
+[500, 'debug_hint', 'error', 'error_id', 'status', 'status_code', 'unhandled_exception']

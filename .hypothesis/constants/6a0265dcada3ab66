@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\auth\rbac.py
+# hypothesis_version: 6.151.2
+
+[403, 'Role', 'admin', 'analyst', 'analytics:read', 'api_keys:manage', 'audit:read', 'briefs:read', 'chat:use', 'customers:read', 'customers:write', 'data:export', 'decisions:approve', 'decisions:read', 'error', 'incidents:read', 'incidents:write', 'insufficient_role', 'manager', 'member', 'orders:read', 'orders:write', 'owner', 'payments:read', 'payments:write', 'permission_denied', 'reconcile:run', 'required', 'required_role', 'role_denied', 'routes:read', 'routes:write', 'settings:read', 'settings:write', 'signals:ingest', 'signals:read', 'unknown', 'user_id', 'user_role', 'users:manage', 'viewer', 'your_role']

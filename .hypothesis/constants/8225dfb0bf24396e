@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\analyzers\base.py
+# hypothesis_version: 6.151.2
+
+[100, 'How severe (0-100)', 'UUID of the entity']

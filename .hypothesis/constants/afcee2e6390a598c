@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\api\routers\alerts.py
+# hypothesis_version: 6.151.2
+
+[200, 404, '/api/v1/alerts', '/early-warnings', '/evaluate', '/rules', '/rules/{rule_id}', 'Alert not found', 'Alert rule not found', 'acknowledged', 'alert_id', 'alerts', 'critical', 'deleted', 'delivered', 'email', 'from_email', 'high', 'in_app', 'info', 'reason', 'rule_id', 'smtp_host', 'smtp_port', 'suppressed', 'url', 'warning', 'webhook']

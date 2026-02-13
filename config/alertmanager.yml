@@ -1,0 +1,267 @@
+# RISKCAST Alertmanager Configuration
+# Implements GAP D1.1: Comprehensive alerting configuration
+
+global:
+  # Global settings
+  resolve_timeout: 5m
+  smtp_smarthost: 'smtp.example.com:587'
+  smtp_from: 'alertmanager@riskcast.io'
+  smtp_auth_username: '${SMTP_USERNAME}'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+  slack_api_url: '${SLACK_WEBHOOK_URL}'
+  pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+
+# Route tree
+route:
+  # Default receiver
+  receiver: 'default-receiver'
+  
+  # Group by these labels
+  group_by: ['alertname', 'cluster', 'service']
+  
+  # Wait before sending first notification
+  group_wait: 30s
+  
+  # Wait before sending updates
+  group_interval: 5m
+  
+  # Repeat interval for continuing alerts
+  repeat_interval: 4h
+  
+  # Child routes
+  routes:
+    # Critical alerts - immediate escalation
+    - match:
+        severity: critical
+      receiver: 'critical-pagerduty'
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 5m
+      continue: true
+    
+    # Critical also goes to Slack
+    - match:
+        severity: critical
+      receiver: 'critical-slack'
+      group_wait: 10s
+      
+    # High severity - urgent but not paging
+    - match:
+        severity: high
+      receiver: 'high-slack'
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 30m
+      
+    # Decision system alerts
+    - match:
+        service: riskcast-decision
+      receiver: 'decision-team-slack'
+      routes:
+        - match:
+            alertname: DecisionSLABreached
+          receiver: 'decision-pagerduty'
+          
+    # Signal processing alerts
+    - match:
+        service: omen-signals
+      receiver: 'signals-team-slack'
+      routes:
+        - match:
+            alertname: SignalSourceDown
+          receiver: 'signals-pagerduty'
+          
+    # Data pipeline alerts
+    - match:
+        service: oracle-data
+      receiver: 'data-team-slack'
+      
+    # Security alerts - always escalate
+    - match:
+        category: security
+      receiver: 'security-pagerduty'
+      group_wait: 0s
+      repeat_interval: 5m
+      
+    # Infrastructure alerts
+    - match:
+        category: infrastructure
+      receiver: 'infra-slack'
+      routes:
+        - match:
+            alertname: HighCPU
+          receiver: 'infra-pagerduty'
+        - match:
+            alertname: DiskSpaceLow
+          receiver: 'infra-pagerduty'
+          
+    # Business alerts
+    - match:
+        category: business
+      receiver: 'business-slack'
+      
+    # Default medium/low severity
+    - match_re:
+        severity: ^(medium|low)$
+      receiver: 'default-slack'
+      repeat_interval: 24h
+
+# Inhibition rules
+inhibit_rules:
+  # Don't alert on individual services when entire cluster is down
+  - source_match:
+      alertname: 'ClusterDown'
+    target_match_re:
+      alertname: '.+'
+    equal: ['cluster']
+    
+  # Don't alert on warnings when critical exists for same service
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service']
+    
+  # Don't alert on medium when high exists
+  - source_match:
+      severity: 'high'
+    target_match:
+      severity: 'medium'
+    equal: ['alertname', 'service']
+    
+  # Don't alert on data issues during maintenance
+  - source_match:
+      alertname: 'MaintenanceMode'
+    target_match_re:
+      category: '^(data|signals)$'
+    equal: ['cluster']
+
+# Receivers
+receivers:
+  # Default receiver
+  - name: 'default-receiver'
+    email_configs:
+      - to: 'alerts@riskcast.io'
+        send_resolved: true
+        
+  # Critical PagerDuty
+  - name: 'critical-pagerduty'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY}'
+        severity: critical
+        description: '{{ .CommonAnnotations.summary }}'
+        details:
+          firing: '{{ template "pagerduty.default.instances" .Alerts.Firing }}'
+          resolved: '{{ template "pagerduty.default.instances" .Alerts.Resolved }}'
+          num_firing: '{{ .Alerts.Firing | len }}'
+          num_resolved: '{{ .Alerts.Resolved | len }}'
+          
+  # Critical Slack
+  - name: 'critical-slack'
+    slack_configs:
+      - channel: '#riskcast-critical'
+        username: 'RISKCAST Alert'
+        icon_emoji: ':rotating_light:'
+        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+        title: '{{ .CommonAnnotations.summary }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ "\n" }}{{ end }}'
+        actions:
+          - type: button
+            text: 'View in Dashboard'
+            url: '{{ .CommonAnnotations.dashboard }}'
+          - type: button
+            text: 'Silence Alert'
+            url: '{{ .CommonAnnotations.silenceURL }}'
+            
+  # High severity Slack
+  - name: 'high-slack'
+    slack_configs:
+      - channel: '#riskcast-alerts'
+        username: 'RISKCAST Alert'
+        icon_emoji: ':warning:'
+        color: 'warning'
+        title: '{{ .CommonAnnotations.summary }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ "\n" }}{{ end }}'
+        
+  # Decision team Slack
+  - name: 'decision-team-slack'
+    slack_configs:
+      - channel: '#riskcast-decisions'
+        username: 'Decision Engine'
+        icon_emoji: ':robot_face:'
+        title: '{{ .CommonAnnotations.summary }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ "\n" }}{{ end }}'
+        
+  # Decision PagerDuty (for SLA breaches)
+  - name: 'decision-pagerduty'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_DECISION_KEY}'
+        severity: high
+        description: 'Decision SLA Breach: {{ .CommonAnnotations.summary }}'
+        
+  # Signals team Slack
+  - name: 'signals-team-slack'
+    slack_configs:
+      - channel: '#riskcast-signals'
+        username: 'OMEN Signals'
+        icon_emoji: ':satellite:'
+        title: '{{ .CommonAnnotations.summary }}'
+        
+  # Signals PagerDuty
+  - name: 'signals-pagerduty'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SIGNALS_KEY}'
+        severity: high
+        description: 'Signal Source Down: {{ .CommonAnnotations.summary }}'
+        
+  # Data team Slack
+  - name: 'data-team-slack'
+    slack_configs:
+      - channel: '#riskcast-data'
+        username: 'ORACLE Data'
+        icon_emoji: ':crystal_ball:'
+        title: '{{ .CommonAnnotations.summary }}'
+        
+  # Security PagerDuty
+  - name: 'security-pagerduty'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SECURITY_KEY}'
+        severity: critical
+        description: 'SECURITY: {{ .CommonAnnotations.summary }}'
+    webhook_configs:
+      - url: '${SECURITY_WEBHOOK_URL}'
+        send_resolved: false
+        
+  # Infrastructure Slack
+  - name: 'infra-slack'
+    slack_configs:
+      - channel: '#riskcast-infra'
+        username: 'Infrastructure'
+        icon_emoji: ':gear:'
+        title: '{{ .CommonAnnotations.summary }}'
+        
+  # Infrastructure PagerDuty
+  - name: 'infra-pagerduty'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_INFRA_KEY}'
+        severity: high
+        
+  # Business Slack
+  - name: 'business-slack'
+    slack_configs:
+      - channel: '#riskcast-business'
+        username: 'Business Alerts'
+        icon_emoji: ':chart_with_upwards_trend:'
+        title: '{{ .CommonAnnotations.summary }}'
+        
+  # Default Slack
+  - name: 'default-slack'
+    slack_configs:
+      - channel: '#riskcast-alerts'
+        username: 'RISKCAST'
+        icon_emoji: ':bell:'
+        title: '{{ .CommonAnnotations.summary }}'
+
+# Templates
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'

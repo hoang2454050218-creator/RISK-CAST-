@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\middleware\tenant.py
+# hypothesis_version: 6.151.2
+
+[401, '/api/v1/auth/login', '/docs', '/health', '/metrics', '/openapi.json', '/reconcile', '/redoc', '/static', 'Authorization', 'Bearer ', 'X-API-Key', 'admin', 'api_key_auth_failed', 'application/json', 'company_id', 'email', 'role', 'tenant_auth_failed', 'token', 'user_id', 'viewer']

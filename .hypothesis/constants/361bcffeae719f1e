@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\config.py
+# hypothesis_version: 6.151.2
+
+[100, 480, 3600, 8001, '.env', '/api/v1', '0.0.0.0', '2.0.0', 'ANTHROPIC_API_KEY', 'API_HOST', 'CORS_ORIGINS', 'DATABASE_URL', 'DB_MAX_OVERFLOW', 'DB_POOL_RECYCLE', 'DB_POOL_SIZE', 'DEBUG', 'ENVIRONMENT', 'HS256', 'JWT_EXPIRE_MINUTES', 'JWT_SECRET', 'OMEN_URL', 'RATE_LIMIT_BURST', 'RATE_LIMIT_DEFAULT', 'REDIS_URL', 'RiskCast V2', 'V2_API_PORT', 'development', 'ignore', 'postgresql://', 'sqlite+aiosqlite://', 'sqlite://', 'utf-8']

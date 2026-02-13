@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\api\routers\ingest.py
+# hypothesis_version: 6.151.2
+
+[200, 400, 409, 500, '/api/v1/signals', '/ingest', 'X-Idempotency-Key', 'ack_id', 'application/json', 'content', 'description', 'detail', 'duplicate', 'error', 'error_id', 'example', 'omen-ingest']

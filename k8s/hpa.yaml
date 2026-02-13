@@ -1,0 +1,118 @@
+---
+# RISKCAST Horizontal Pod Autoscaler
+# Automatically scales based on CPU, memory, and custom metrics
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: riskcast-api-hpa
+  namespace: riskcast
+  labels:
+    app: riskcast
+    component: api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: riskcast-api
+  
+  # Replica Limits
+  minReplicas: 3
+  maxReplicas: 20
+  
+  # Scaling Metrics
+  metrics:
+    # CPU utilization
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    
+    # Memory utilization
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+    
+    # Custom metric: requests per second (requires Prometheus Adapter)
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "100"
+    
+    # Custom metric: decision queue depth
+    - type: Pods
+      pods:
+        metric:
+          name: riskcast_decision_queue_depth
+        target:
+          type: AverageValue
+          averageValue: "50"
+  
+  # Scaling Behavior
+  behavior:
+    scaleDown:
+      # Conservative scale down to prevent flapping
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+      selectPolicy: Min
+    
+    scaleUp:
+      # Aggressive scale up for traffic spikes
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+      selectPolicy: Max
+
+---
+# Vertical Pod Autoscaler (VPA) for resource optimization
+# Note: Requires VPA to be installed in cluster
+
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: riskcast-api-vpa
+  namespace: riskcast
+  labels:
+    app: riskcast
+    component: api
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: riskcast-api
+  
+  updatePolicy:
+    # Recommend only - don't auto-apply
+    updateMode: "Off"
+  
+  resourcePolicy:
+    containerPolicies:
+      - containerName: api
+        minAllowed:
+          cpu: "100m"
+          memory: "256Mi"
+        maxAllowed:
+          cpu: "2000m"
+          memory: "2Gi"
+        controlledResources:
+          - cpu
+          - memory

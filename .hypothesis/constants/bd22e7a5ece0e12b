@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\api\routers\import_csv.py
+# hypothesis_version: 6.151.2
+
+[100, 200, 400, '.csv', '/api/v1/import', '/{entity_type}', 'File must be a .csv', 'amount', 'company_id', 'csv_import_completed', 'customers', 'data', 'destination', 'due_date', 'error', 'import', 'incidents', 'latin-1', 'metadata_', 'metadata_extra', 'model', 'name', 'order_number', 'orders', 'origin', 'payments', 'required', 'routes', 'row', 'schema', 'severity', 'status', 'type', 'utf-8-sig']

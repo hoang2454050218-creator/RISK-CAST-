@@ -1,0 +1,279 @@
+# NEXUS + RISKCAST - Cursor AI Rules
+# RISKCAST Decision Intelligence Platform
+
+You are an expert Python backend developer building NEXUS, a supply chain intelligence platform with RISKCAST decision engine.
+
+## 🎯 SYSTEM ARCHITECTURE
+
+```
+OMEN (Signals) → ORACLE (Reality) → RISKCAST (Decisions) → Alerter (WhatsApp)
+     ↓                ↓                    ↓                     ↓
+ What might      What IS           What to DO            Deliver to
+   happen        happening          about it               user
+```
+
+## 🚨 CRITICAL RULES
+
+### OMEN Rules
+- OMEN is a SIGNAL ENGINE ONLY
+- OMEN outputs: signals, evidence, confidence (data quality), context
+- OMEN NEVER outputs: risk_status, overall_risk, RiskLevel, decisions
+- confidence_score = DATA QUALITY, not event probability
+- probability comes from source (Polymarket)
+
+### RISKCAST Rules (THE MOAT)
+- RISKCAST transforms INFORMATION into DECISIONS
+- Every output MUST answer 7 questions (Q1-Q7)
+- All costs in DOLLARS, not percentages
+- All delays in DAYS, not vague descriptions
+- Always include DEADLINE and INACTION COST
+- Personalization is the moat - use customer shipment data
+
+### What NOT to output:
+```
+❌ "Risk level: HIGH"
+❌ "Consider alternative routes"
+❌ "Significant impact expected"
+❌ "Rates up 35%"
+
+✅ "REROUTE shipment PO-4521 via Cape with MSC"
+✅ "Cost: $8,500. Deadline: Feb 5, 6PM UTC"
+✅ "If wait 24h: cost becomes $15,000"
+✅ "Your exposure: $235,000 across 5 containers"
+```
+
+## 📁 PROJECT STRUCTURE
+
+```
+app/
+├── omen/                    # Signal Engine
+│   ├── schemas.py           # OmenSignal, EvidenceItem
+│   ├── service.py           # OmenService
+│   ├── sources/             # Polymarket, News, etc.
+│   └── validators/          # 4-stage validation
+├── oracle/                  # Reality Engine
+│   ├── schemas.py           # RealitySnapshot, ChokepointHealth
+│   ├── service.py           # OracleService
+│   ├── ais.py               # Vessel tracking
+│   ├── rates.py             # Freight rates
+│   └── correlator.py        # SignalCorrelator
+├── riskcast/                # Decision Engine (THE MOAT)
+│   ├── schemas/
+│   │   ├── customer.py      # CustomerProfile, Shipment
+│   │   ├── decision.py      # DecisionObject, Q1-Q7
+│   │   ├── impact.py        # ImpactEstimate
+│   │   └── action.py        # Action, ActionType
+│   ├── matchers/
+│   │   └── exposure.py      # ExposureMatcher
+│   ├── calculators/
+│   │   └── impact.py        # ImpactCalculator
+│   ├── generators/
+│   │   ├── action.py        # ActionGenerator
+│   │   └── tradeoff.py      # TradeOffAnalyzer
+│   ├── composers/
+│   │   └── decision.py      # DecisionComposer (7 Questions)
+│   └── service.py           # RiskCastService
+├── alerter/                 # Delivery Engine
+│   ├── schemas.py
+│   ├── service.py
+│   ├── whatsapp.py
+│   ├── templates.py
+│   └── decision_templates.py
+└── api/routes/
+```
+
+## 🔧 TECH STACK
+
+- Python 3.11+, FastAPI, Pydantic v2
+- PostgreSQL (customer data), Redis (caching)
+- httpx for async HTTP (NOT requests)
+- structlog for logging
+- pytest + pytest-asyncio for testing
+
+## 📝 CODE PATTERNS
+
+### Pydantic v2 Models
+```python
+from pydantic import BaseModel, Field, computed_field
+from typing import Optional
+from datetime import datetime
+
+class Shipment(BaseModel):
+    """Active shipment with exposure data."""
+    shipment_id: str = Field(description="Customer's reference")
+    cargo_value_usd: float = Field(ge=0, description="Value in USD")
+    route_chokepoints: list[str] = Field(description="Chokepoints on route")
+    
+    @computed_field
+    @property
+    def teu_count(self) -> float:
+        """Computed TEU from container info."""
+        return self.container_count * 2  # Simplified
+```
+
+### Service Pattern
+```python
+class RiskCastService:
+    """Decision engine service."""
+    
+    def __init__(
+        self,
+        exposure_matcher: ExposureMatcher,
+        impact_calculator: ImpactCalculator,
+        action_generator: ActionGenerator,
+    ):
+        self.matcher = exposure_matcher
+        self.impact = impact_calculator
+        self.actions = action_generator
+    
+    async def generate_decision(
+        self,
+        intelligence: CorrelatedIntelligence,
+        context: CustomerContext,
+    ) -> DecisionObject:
+        # Pipeline: match → impact → actions → compose
+        pass
+```
+
+### Error Handling
+```python
+class RiskCastError(Exception):
+    """Base exception for RISKCAST."""
+    pass
+
+class NoExposureError(RiskCastError):
+    """Customer has no affected shipments."""
+    pass
+```
+
+### Logging
+```python
+import structlog
+logger = structlog.get_logger(__name__)
+
+logger.info(
+    "decision_generated",
+    decision_id=decision.decision_id,
+    customer_id=context.profile.customer_id,
+    exposure_usd=exposure.total_exposure_usd,
+    primary_action=decision.q5_action.action_type
+)
+```
+
+## 🎯 THE 7 QUESTIONS (MANDATORY)
+
+Every DecisionObject MUST answer:
+
+| # | Question | Output Type |
+|---|----------|-------------|
+| Q1 | What is happening? | Personalized event summary |
+| Q2 | When? | Timeline + urgency |
+| Q3 | How bad? | $ exposure + delay days |
+| Q4 | Why? | Causal chain + evidence |
+| Q5 | What to do? | Specific action + cost + deadline |
+| Q6 | Confidence? | Score + factors + caveats |
+| Q7 | If nothing? | Inaction cost + point of no return |
+
+## 🚀 MVP SCOPE
+
+### In Scope (Phase 1)
+- Red Sea chokepoint only
+- WhatsApp delivery only
+- Basic customer onboarding
+- 5 action types: REROUTE, DELAY, INSURE, MONITOR, DO_NOTHING
+
+### Out of Scope (Phase 2)
+- Multiple chokepoints
+- Dashboard UI
+- Insurance API integration
+- Carrier booking integration
+
+## 📊 KEY CONSTANTS
+
+```python
+# Chokepoints
+class Chokepoint(str, Enum):
+    RED_SEA = "red_sea"
+    SUEZ = "suez"
+    PANAMA = "panama"
+    MALACCA = "malacca"
+
+# Action types
+class ActionType(str, Enum):
+    REROUTE = "reroute"
+    DELAY = "delay"
+    INSURE = "insure"
+    MONITOR = "monitor"
+    DO_NOTHING = "do_nothing"
+
+# Urgency levels
+class Urgency(str, Enum):
+    IMMEDIATE = "immediate"  # Hours
+    URGENT = "urgent"        # 1-2 days
+    SOON = "soon"            # Week
+    WATCH = "watch"          # Monitor
+
+# Impact thresholds (USD)
+SEVERITY_THRESHOLDS = {
+    "LOW": 5_000,
+    "MEDIUM": 25_000,
+    "HIGH": 100_000,
+    # Above HIGH = CRITICAL
+}
+
+# Red Sea reroute parameters
+RED_SEA_PARAMS = {
+    "reroute_delay_days": (7, 14),
+    "reroute_cost_per_teu": 2500,
+    "holding_cost_per_day_pct": 0.001,
+}
+```
+
+## 🧪 TESTING
+
+```python
+@pytest.mark.asyncio
+async def test_decision_has_all_7_questions():
+    """Every decision must answer all 7 questions."""
+    decision = await service.generate_decision(intel, context)
+    
+    assert decision.q1_what is not None
+    assert decision.q2_when is not None
+    assert decision.q3_severity is not None
+    assert decision.q4_why is not None
+    assert decision.q5_action is not None
+    assert decision.q6_confidence is not None
+    assert decision.q7_inaction is not None
+
+@pytest.mark.asyncio
+async def test_action_has_specific_cost():
+    """Action must have specific USD cost, not percentage."""
+    decision = await service.generate_decision(intel, context)
+    
+    assert decision.q5_action.estimated_cost_usd > 0
+    assert isinstance(decision.q5_action.estimated_cost_usd, float)
+```
+
+## 💡 KEY INSIGHT
+
+The MOAT is not in algorithms - it's in CUSTOMER DATA.
+
+```
+Day 1:  Generic alerts (like competitors)
+Day 30: Personalized decisions (know their routes, shipments)
+Day 90: Self-improving system (historical accuracy data)
+```
+
+Every feature should collect more customer context.
+
+## ⚠️ COMMON MISTAKES
+
+1. ❌ Output risk_level from OMEN → ✅ Use probability + confidence
+2. ❌ Vague recommendations → ✅ Specific action + cost + deadline
+3. ❌ Percentages → ✅ Dollar amounts
+4. ❌ "Consider alternatives" → ✅ "REROUTE with MSC for $8,500 by 6PM"
+5. ❌ Missing Q7 → ✅ Always include inaction cost
+
+---
+
+*"OMEN sees the future. RISKCAST tells you what to DO."*

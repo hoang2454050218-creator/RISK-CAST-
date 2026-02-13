@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\api\routers\incidents.py
+# hypothesis_version: 6.151.2
+
+[200, 201, 204, 404, '/', '/api/v1/incidents', '/{incident_id}', 'Incident not found', 'incidents']

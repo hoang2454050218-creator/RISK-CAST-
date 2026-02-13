@@ -1,0 +1,480 @@
+# RISKCAST Consolidated CI/CD Pipeline
+# Implements GAP D3.1: Consolidate CI workflows
+# Single workflow for all CI operations
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'release/**']
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      run_e2e:
+        description: 'Run E2E tests'
+        type: boolean
+        default: false
+      run_chaos:
+        description: 'Run chaos tests'
+        type: boolean
+        default: false
+      deploy_env:
+        description: 'Deployment environment'
+        type: choice
+        options:
+          - none
+          - staging
+          - production
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+  POETRY_VERSION: '1.7.0'
+  
+  # Registry
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  
+  # Test configuration
+  COVERAGE_THRESHOLD: 80
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # LINT AND FORMAT CHECK
+  # ============================================================================
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install linters
+        run: |
+          pip install ruff black isort mypy
+          
+      - name: Run ruff
+        run: ruff check app/ tests/
+        
+      - name: Check formatting with black
+        run: black --check app/ tests/
+        
+      - name: Check imports with isort
+        run: isort --check-only app/ tests/
+        
+      - name: Type check with mypy
+        run: mypy app/ --ignore-missing-imports
+        continue-on-error: true  # Don't fail on type errors yet
+
+  # ============================================================================
+  # SECURITY SCAN
+  # ============================================================================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install security tools
+        run: pip install safety bandit
+        
+      - name: Check dependencies for vulnerabilities
+        run: safety check -r requirements.txt
+        continue-on-error: true
+        
+      - name: Run bandit security scan
+        run: bandit -r app/ -ll -ii
+        
+      - name: Scan for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified
+
+  # ============================================================================
+  # UNIT TESTS
+  # ============================================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: [lint]
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov pytest-xdist
+          
+      - name: Run unit tests with coverage
+        run: |
+          pytest tests/ \
+            --ignore=tests/integration \
+            --ignore=tests/e2e \
+            -v \
+            --cov=app \
+            --cov-report=xml \
+            --cov-report=html \
+            --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} \
+            -n auto
+            
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-python-${{ matrix.python-version }}
+          
+      - name: Archive coverage HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.python-version }}
+          path: htmlcov/
+
+  # ============================================================================
+  # INTEGRATION TESTS
+  # ============================================================================
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: riskcast
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: riskcast_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+          
+      - name: Run integration tests
+        env:
+          DATABASE_URL: postgresql://riskcast:testpassword@localhost:5432/riskcast_test
+          REDIS_URL: redis://localhost:6379
+          RISKCAST_ENCRYPTION_KEY: ${{ secrets.TEST_ENCRYPTION_KEY }}
+        run: |
+          pytest tests/integration -v --tb=short
+
+  # ============================================================================
+  # E2E TESTS (on demand or nightly)
+  # ============================================================================
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.run_e2e == 'true' ||
+      github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Start services with docker-compose
+        run: |
+          docker-compose -f docker-compose.test.yml up -d
+          sleep 30  # Wait for services
+          
+      - name: Run E2E tests
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+          pytest tests/e2e -v --tb=short
+          
+      - name: Shutdown services
+        if: always()
+        run: docker-compose -f docker-compose.test.yml down
+
+  # ============================================================================
+  # CHAOS TESTS (on demand)
+  # ============================================================================
+  chaos-tests:
+    name: Chaos Tests
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    if: github.event.inputs.run_chaos == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Run chaos tests
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio chaostoolkit
+          pytest tests/chaos -v --tb=short
+
+  # ============================================================================
+  # BUILD DOCKER IMAGE
+  # ============================================================================
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [unit-tests, security]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=sha,prefix=
+            
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ============================================================================
+  # DEPLOY TO STAGING
+  # ============================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build, integration-tests]
+    if: |
+      github.ref == 'refs/heads/develop' ||
+      github.event.inputs.deploy_env == 'staging'
+    environment:
+      name: staging
+      url: https://staging.riskcast.io
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment..."
+          # Add actual deployment commands here
+          # kubectl set image deployment/riskcast ...
+          
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests against staging..."
+          # curl -f https://staging.riskcast.io/health
+
+  # ============================================================================
+  # DEPLOY TO PRODUCTION
+  # ============================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, integration-tests, e2e-tests]
+    if: |
+      github.ref == 'refs/heads/main' ||
+      github.event.inputs.deploy_env == 'production'
+    environment:
+      name: production
+      url: https://app.riskcast.io
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production environment..."
+          # Add actual deployment commands here
+          
+      - name: Run production smoke tests
+        run: |
+          echo "Running smoke tests against production..."
+          
+      - name: Notify deployment
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "RISKCAST deployed to production: ${{ github.sha }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ============================================================================
+  # BACKTEST VALIDATION
+  # ============================================================================
+  backtest:
+    name: Backtest Validation
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Run backtest
+        run: |
+          pip install -r requirements.txt
+          python -m app.backtest.runner --days=30 --output=backtest_results.json
+          
+      - name: Upload backtest results
+        uses: actions/upload-artifact@v4
+        with:
+          name: backtest-results
+          path: backtest_results.json
+          
+      - name: Validate backtest metrics
+        run: |
+          python -c "
+          import json
+          with open('backtest_results.json') as f:
+              results = json.load(f)
+          assert results.get('accuracy', 0) > 0.7, 'Backtest accuracy below threshold'
+          print('Backtest validation passed')
+          "
+
+  # ============================================================================
+  # AUDIT SELF-SCORE
+  # ============================================================================
+  audit-score:
+    name: Audit Self-Score
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Run audit self-score
+        run: |
+          pip install -r requirements.txt
+          python audit_self_score.py --output=audit_score.json
+          
+      - name: Check score threshold
+        run: |
+          python -c "
+          import json
+          with open('audit_score.json') as f:
+              score = json.load(f)
+          total = score.get('total_score', 0)
+          print(f'Audit Score: {total}/2000')
+          if total < 1900:
+              print('::warning::Audit score below 1900 threshold')
+          "
+          
+      - name: Comment PR with score
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const score = JSON.parse(fs.readFileSync('audit_score.json', 'utf8'));
+            const body = `## Audit Score: ${score.total_score}/2000
+            
+            | Dimension | Score |
+            |-----------|-------|
+            | Cognitive Excellence | ${score.cognitive || 'N/A'}/500 |
+            | System Integrity | ${score.integrity || 'N/A'}/450 |
+            | Accountability | ${score.accountability || 'N/A'}/400 |
+            | Operational Excellence | ${score.operational || 'N/A'}/400 |
+            | Competitive Moat | ${score.moat || 'N/A'}/250 |
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

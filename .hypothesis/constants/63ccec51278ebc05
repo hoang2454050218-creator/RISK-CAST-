@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\auth\dependencies.py
+# hypothesis_version: 6.151.2
+
+[401, 'Missing user context', 'cid', 'company_id', 'postgresql', 'user_id']

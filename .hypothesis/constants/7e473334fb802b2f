@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\api\routers\analytics.py
+# hypothesis_version: 6.151.2
+
+[365, '/api/v1/analytics', '/risk-by-category', '/risk-by-route', '/risk-over-time', '/top-risk-factors', 'analytics']

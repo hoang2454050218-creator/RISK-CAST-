@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\db\repositories\base.py
+# hypothesis_version: 6.151.2
+
+['CreateSchemaT', 'ModelT', 'UpdateSchemaT', 'company_id', 'created_at', 'metadata_', 'metadata_extra']

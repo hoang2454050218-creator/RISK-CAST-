@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\alerting\channels.py
+# hypothesis_version: 6.151.2
+
+[400, 587, ', ', 'Content-Type', 'From', 'Subject', 'To', 'alert_id', 'alerts@riskcast.io', 'application/json', 'detail', 'email_alert_sent', 'email_dispatch_error', 'entity_id', 'entity_type', 'from_email', 'headers', 'in_app_alert_created', 'message', 'metric', 'metric_value', 'rule_name', 'severity', 'smtp_host', 'smtp_password', 'smtp_port', 'smtp_user', 'success', 'threshold', 'timeout', 'title', 'to_emails', 'triggered_at', 'url', 'webhook_alert_failed', 'webhook_alert_sent', 'webhook_ssrf_blocked']

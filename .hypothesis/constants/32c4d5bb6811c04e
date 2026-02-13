@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\engine\bayesian.py
+# hypothesis_version: 6.151.2
+
+[0.0, 1e-10, 0.95, 1.0, 1.96, 2.0, 2.576, 5.0, 25.0, 50.0]

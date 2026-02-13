@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\auth\schemas.py
+# hypothesis_version: 6.151.2
+
+[100, 128, 255, '^[a-z0-9\\-]+$', 'bearer']

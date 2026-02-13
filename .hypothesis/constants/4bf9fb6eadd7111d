@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\api\routers\decisions.py
+# hypothesis_version: 6.151.2
+
+[30.0, 100, '/api/v1/decisions', '/generate', '/generate-all', 'decisions', 'order']

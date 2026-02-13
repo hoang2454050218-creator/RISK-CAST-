@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\db\queries.py
+# hypothesis_version: 6.151.2
+
+[500, 'actual_date', 'avg_duration_days', 'brief_date', 'by_status', 'code', 'contact_email', 'content', 'count', 'created_at', 'currency', 'customer_id', 'description', 'destination', 'expected_date', 'id', 'incidents', 'name', 'order_number', 'origin', 'overdue', 'overdue_count', 'overdue_total', 'payment_terms', 'period_days', 'priority_items', 'resolution', 'route_id', 'severity', 'status', 'tier', 'total', 'total_amount', 'total_orders', 'total_payment_amount', 'total_payments', 'total_value', 'transport_mode', 'type']

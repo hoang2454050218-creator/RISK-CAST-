@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\services\llm_gateway.py
+# hypothesis_version: 6.151.2
+
+[30.0, 60.0, 200, 500, 2048, '2023-06-01', 'POST', 'Unknown error', '[DONE]', 'anthropic-version', 'application/json', 'content', 'content-type', 'content_block_delta', 'data: ', 'delta', 'error', 'llm_api_error', 'llm_generate_error', 'llm_stream_error', 'llm_stream_exception', 'llm_timeout', 'max_tokens', 'message', 'message_stop', 'messages', 'model', 'role', 'stream', 'system', 'text', 'type', 'user', 'x-api-key']

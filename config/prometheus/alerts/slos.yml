@@ -1,0 +1,282 @@
+# RISKCAST SLO-Based Alerting
+#
+# Multi-Window Multi-Burn-Rate (MWMBR) alerting for SLOs.
+# Based on Google SRE workbook recommendations.
+#
+# Addresses audit gap: D1.4 Alerting (+10 points)
+
+groups:
+  # ============================================================================
+  # DECISION LATENCY SLO
+  # Target: 99% of decisions < 2s
+  # ============================================================================
+  - name: slo.decision_latency
+    interval: 30s
+    rules:
+      # Record: Current SLO performance (for dashboards)
+      - record: slo:decision_latency:ratio
+        expr: |
+          sum(rate(decision_latency_seconds_bucket{le="2"}[5m]))
+          /
+          sum(rate(decision_latency_seconds_count[5m]))
+      
+      # Record: Error budget remaining
+      - record: slo:decision_latency:error_budget_remaining
+        expr: |
+          1 - (
+            (1 - slo:decision_latency:ratio)
+            /
+            0.01  # 1% error budget (99% SLO)
+          )
+      
+      # Fast burn - 1h window, 14.4x burn rate
+      # Alerts when 2% of monthly budget consumed in 1 hour
+      - alert: DecisionLatencySLOBurnFast
+        expr: |
+          (
+            1 - (
+              sum(rate(decision_latency_seconds_bucket{le="2"}[1h]))
+              /
+              sum(rate(decision_latency_seconds_count[1h]))
+            )
+          ) > (14.4 * 0.01)
+          and
+          (
+            1 - (
+              sum(rate(decision_latency_seconds_bucket{le="2"}[5m]))
+              /
+              sum(rate(decision_latency_seconds_count[5m]))
+            )
+          ) > (14.4 * 0.01)
+        for: 2m
+        labels:
+          severity: critical
+          alerttype: slo_burn
+          slo_name: decision_latency
+          slo_target: "99%"
+          window: 1h
+          burn_rate: "14.4"
+        annotations:
+          summary: "Decision latency SLO burning fast (14.4x)"
+          description: |
+            Decision latency SLO is burning error budget at 14.4x rate on 1h window.
+            At this rate, monthly budget will be exhausted in ~2 days.
+          runbook_url: "https://runbooks.riskcast.io/slo/decision-latency"
+          error_budget: "{{ $value | humanizePercentage }}"
+          budget_exhaustion: "~2 days at current rate"
+      
+      # Slow burn - 6h window, 6x burn rate
+      # Alerts when 3% of monthly budget consumed in 6 hours
+      - alert: DecisionLatencySLOBurnSlow
+        expr: |
+          (
+            1 - (
+              sum(rate(decision_latency_seconds_bucket{le="2"}[6h]))
+              /
+              sum(rate(decision_latency_seconds_count[6h]))
+            )
+          ) > (6 * 0.01)
+          and
+          (
+            1 - (
+              sum(rate(decision_latency_seconds_bucket{le="2"}[30m]))
+              /
+              sum(rate(decision_latency_seconds_count[30m]))
+            )
+          ) > (6 * 0.01)
+        for: 15m
+        labels:
+          severity: high
+          alerttype: slo_burn
+          slo_name: decision_latency
+          slo_target: "99%"
+          window: 6h
+          burn_rate: "6"
+        annotations:
+          summary: "Decision latency SLO slow burn (6x)"
+          description: "6x burn rate on 6h window. Budget will exhaust in ~5 days."
+          runbook_url: "https://runbooks.riskcast.io/slo/decision-latency"
+
+  # ============================================================================
+  # DECISION AVAILABILITY SLO
+  # Target: 99.9% availability
+  # ============================================================================
+  - name: slo.decision_availability
+    interval: 30s
+    rules:
+      # Record: Current SLO performance
+      - record: slo:decision_availability:ratio
+        expr: |
+          1 - (
+            sum(rate(decision_errors_total[5m]))
+            /
+            sum(rate(decision_requests_total[5m]))
+          )
+      
+      # Record: Error budget remaining
+      - record: slo:decision_availability:error_budget_remaining
+        expr: |
+          1 - (
+            (1 - slo:decision_availability:ratio)
+            /
+            0.001  # 0.1% error budget (99.9% SLO)
+          )
+      
+      # Fast burn - 1h window, 14.4x burn rate
+      - alert: DecisionAvailabilitySLOBurnFast
+        expr: |
+          (
+            sum(rate(decision_errors_total[1h]))
+            /
+            sum(rate(decision_requests_total[1h]))
+          ) > (14.4 * 0.001)
+          and
+          (
+            sum(rate(decision_errors_total[5m]))
+            /
+            sum(rate(decision_requests_total[5m]))
+          ) > (14.4 * 0.001)
+        for: 2m
+        labels:
+          severity: critical
+          alerttype: slo_burn
+          slo_name: decision_availability
+          slo_target: "99.9%"
+          window: 1h
+          burn_rate: "14.4"
+        annotations:
+          summary: "Decision availability SLO burning fast (14.4x)"
+          description: |
+            Error rate is 14.4x above SLO target. Monthly budget exhausted in ~2 days.
+          runbook_url: "https://runbooks.riskcast.io/slo/decision-availability"
+          error_budget: "{{ $value | humanizePercentage }}"
+      
+      # Slow burn - 6h window, 6x burn rate
+      - alert: DecisionAvailabilitySLOBurnSlow
+        expr: |
+          (
+            sum(rate(decision_errors_total[6h]))
+            /
+            sum(rate(decision_requests_total[6h]))
+          ) > (6 * 0.001)
+        for: 15m
+        labels:
+          severity: high
+          alerttype: slo_burn
+          slo_name: decision_availability
+          slo_target: "99.9%"
+          window: 6h
+          burn_rate: "6"
+        annotations:
+          summary: "Decision availability SLO slow burn (6x)"
+          runbook_url: "https://runbooks.riskcast.io/slo/decision-availability"
+
+  # ============================================================================
+  # AUDIT TRAIL COMPLETENESS SLO
+  # Target: 100% of decisions have audit trail
+  # ============================================================================
+  - name: slo.audit_completeness
+    interval: 30s
+    rules:
+      # Record: Audit completeness ratio
+      - record: slo:audit_completeness:ratio
+        expr: |
+          1 - (
+            sum(increase(decisions_without_audit_total[5m]))
+            /
+            sum(increase(decisions_total[5m]))
+          )
+      
+      # Any missing audit trail is critical
+      - alert: AuditTrailIncompleteSLO
+        expr: |
+          (
+            sum(increase(decisions_without_audit_total[5m]))
+            /
+            sum(increase(decisions_total[5m]))
+          ) > 0
+        for: 1m
+        labels:
+          severity: critical
+          alerttype: slo_burn
+          slo_name: audit_completeness
+          slo_target: "100%"
+        annotations:
+          summary: "Decisions missing audit trail"
+          description: "{{ $value | humanizePercentage }} of decisions lack audit records. This is a compliance violation."
+          runbook_url: "https://runbooks.riskcast.io/slo/audit-completeness"
+          impact: "Regulatory compliance at risk"
+
+  # ============================================================================
+  # DATA FRESHNESS SLO
+  # Target: 99% of data < 5 minutes old
+  # ============================================================================
+  - name: slo.data_freshness
+    interval: 30s
+    rules:
+      # Record: Data freshness ratio
+      - record: slo:data_freshness:ratio
+        expr: |
+          sum(rate(data_freshness_seconds_bucket{le="300"}[5m]))
+          /
+          sum(rate(data_freshness_seconds_count[5m]))
+      
+      # Fast burn - stale data
+      - alert: DataFreshnessSLOBurnFast
+        expr: |
+          (
+            1 - (
+              sum(rate(data_freshness_seconds_bucket{le="300"}[1h]))
+              /
+              sum(rate(data_freshness_seconds_count[1h]))
+            )
+          ) > (14.4 * 0.01)
+        for: 5m
+        labels:
+          severity: high
+          alerttype: slo_burn
+          slo_name: data_freshness
+          slo_target: "99%"
+          window: 1h
+          burn_rate: "14.4"
+        annotations:
+          summary: "Data freshness SLO burning fast"
+          description: "Data is stale - decisions may be based on outdated information."
+          runbook_url: "https://runbooks.riskcast.io/slo/data-freshness"
+
+  # ============================================================================
+  # DECISION QUALITY SLO
+  # Target: 65% decision accuracy
+  # ============================================================================
+  - name: slo.decision_quality
+    interval: 1m
+    rules:
+      # Record: Decision accuracy
+      - record: slo:decision_accuracy:ratio
+        expr: |
+          sum(decisions_accurate_total)
+          /
+          sum(decisions_with_outcome_total)
+      
+      # Alert on quality degradation
+      - alert: DecisionQualitySLOBurn
+        expr: |
+          (
+            sum(increase(decisions_accurate_total[6h]))
+            /
+            sum(increase(decisions_with_outcome_total[6h]))
+          ) < 0.65
+        for: 30m
+        labels:
+          severity: high
+          alerttype: slo_burn
+          slo_name: decision_quality
+          slo_target: "65%"
+          window: 6h
+        annotations:
+          summary: "Decision accuracy below SLO target"
+          description: |
+            Decision accuracy is {{ $value | humanizePercentage }}, below 65% target.
+            This indicates model degradation or data quality issues.
+          runbook_url: "https://runbooks.riskcast.io/slo/decision-quality"
+          business_impact: "Recommendations may be suboptimal"

@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\services\morning_brief.py
+# hypothesis_version: 6.151.2
+
+[0.5, 150, 500, '%d/%m/%Y', 'brief_date', 'brief_id', 'confidence', 'content', 'id', 'in_transit', 'incidents_7d', 'morning_brief', 'orders_in_transit', 'orders_pending', 'overdue', 'pending', 'preview', 'priority_items', 'severity_score', 'signal_id', 'signal_type', 'summary', 'type']

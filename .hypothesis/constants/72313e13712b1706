@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\api\routers\audit_trail.py
+# hypothesis_version: 6.151.2
+
+[200, '/', '/api/v1/audit-trail', '/integrity', 'audit', 'breaks_found', 'chain_intact', 'status', 'total_entries']

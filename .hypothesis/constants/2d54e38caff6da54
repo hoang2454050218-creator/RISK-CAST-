@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\api\routers\signals.py
+# hypothesis_version: 6.151.2
+
+[100, 200, 404, '/', '/api/v1/signals', '/scan', '/summary', '/{signal_id}', 'Signal not found', 'avg_severity', 'by_type', 'completed', 'count', 'max_severity', 'signal_type', 'signals', 'total_active']

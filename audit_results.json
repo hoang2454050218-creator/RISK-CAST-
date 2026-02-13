@@ -1,0 +1,389 @@
+{
+  "timestamp": "2026-02-05T10:06:20.596113",
+  "total_score": 2000,
+  "max_score": 2000,
+  "percentage": 100.0,
+  "cognitive": 500,
+  "integrity": 450,
+  "accountability": 400,
+  "operational": 400,
+  "moat": 250,
+  "categories": {
+    "A": {
+      "name": "Cognitive Excellence",
+      "score": 500,
+      "max_points": 500,
+      "pass_rate": 100.0,
+      "checks": [
+        {
+          "check_id": "A1.1",
+          "name": "6-layer reasoning engine",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "A1.2",
+          "name": "Decision graph visualization",
+          "passed": true,
+          "score": 40,
+          "max_points": 40,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "A1.3",
+          "name": "Hysteresis controller",
+          "passed": true,
+          "score": 30,
+          "max_points": 30,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "A1.4",
+          "name": "Deterministic trace IDs",
+          "passed": true,
+          "score": 30,
+          "max_points": 30,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "A2.1",
+          "name": "Probability calibration",
+          "passed": true,
+          "score": 40,
+          "max_points": 40,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "A2.2",
+          "name": "Calibration scheduler",
+          "passed": true,
+          "score": 30,
+          "max_points": 30,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "A2.3",
+          "name": "Temporal counterfactuals",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "A3.1",
+          "name": "Backtest framework",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "Directory exists: app/backtest"
+        },
+        {
+          "check_id": "A3.2",
+          "name": "Error taxonomy",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "A3.3",
+          "name": "Error pattern detection",
+          "passed": true,
+          "score": 30,
+          "max_points": 30,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "A4.1",
+          "name": "Confidence gauge SVG",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "A4.2",
+          "name": "Layer breakdown visualization",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        }
+      ]
+    },
+    "B": {
+      "name": "System Integrity",
+      "score": 450,
+      "max_points": 450,
+      "pass_rate": 100.0,
+      "checks": [
+        {
+          "check_id": "B1.1",
+          "name": "4-stage validation",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "Directory exists: app/omen/validators"
+        },
+        {
+          "check_id": "B1.2",
+          "name": "Schema validation",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "B2.1",
+          "name": "Custom exceptions",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "B2.2",
+          "name": "Error recovery",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "B3.1",
+          "name": "No XOR fallback",
+          "passed": true,
+          "score": 60,
+          "max_points": 60,
+          "details": "XOR fallback removed, AES-only encryption"
+        },
+        {
+          "check_id": "B3.2",
+          "name": "Key management",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "B3.3",
+          "name": "Key rotation",
+          "passed": true,
+          "score": 40,
+          "max_points": 40,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "B4.1",
+          "name": "Query optimizer",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "B4.2",
+          "name": "Query analysis",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        }
+      ]
+    },
+    "C": {
+      "name": "Accountability & Trust",
+      "score": 400,
+      "max_points": 400,
+      "pass_rate": 100.0,
+      "checks": [
+        {
+          "check_id": "C1.1",
+          "name": "Audit logging",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "Directory exists: app/audit"
+        },
+        {
+          "check_id": "C1.2",
+          "name": "Audit retention",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "C1.3",
+          "name": "Compliance policies",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "C2.1",
+          "name": "Challenge system",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "C2.2",
+          "name": "SLA enforcement",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "C2.3",
+          "name": "SLA metrics",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "C3.1",
+          "name": "7 Questions framework",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "C3.2",
+          "name": "Decision explanations",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        }
+      ]
+    },
+    "D": {
+      "name": "Operational Excellence",
+      "score": 400,
+      "max_points": 400,
+      "pass_rate": 100.0,
+      "checks": [
+        {
+          "check_id": "D1.1",
+          "name": "Alertmanager config",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "D1.2",
+          "name": "OTLP telemetry",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "D1.3",
+          "name": "Span tracing",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "D2.1",
+          "name": "Comprehensive tests",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "D2.2",
+          "name": "Test coverage",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "D2.3",
+          "name": "CI configuration",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "D3.1",
+          "name": "CI/CD pipeline",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "D3.2",
+          "name": "Audit scoring in CI",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        }
+      ]
+    },
+    "E": {
+      "name": "Competitive Moat",
+      "score": 250,
+      "max_points": 250,
+      "pass_rate": 100.0,
+      "checks": [
+        {
+          "check_id": "E1.1",
+          "name": "Customer schemas",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "E1.2",
+          "name": "Exposure matching",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "E2.1",
+          "name": "Outcome persistence",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "E2.2",
+          "name": "ML training integration",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        },
+        {
+          "check_id": "E2.3",
+          "name": "Network effect tracking",
+          "passed": true,
+          "score": 50,
+          "max_points": 50,
+          "details": "File exists with all required content"
+        }
+      ]
+    }
+  }
+}

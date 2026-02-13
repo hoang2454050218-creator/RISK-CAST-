@@ -1,0 +1,40 @@
+---
+# RISKCAST Pod Disruption Budget
+# Ensures high availability during voluntary disruptions
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: riskcast-api-pdb
+  namespace: riskcast
+  labels:
+    app: riskcast
+    component: api
+spec:
+  # Ensure at least 2 pods are always available
+  minAvailable: 2
+  
+  # Alternative: Allow at most 1 pod to be unavailable
+  # maxUnavailable: 1
+  
+  selector:
+    matchLabels:
+      app: riskcast
+      component: api
+
+---
+# PDB for worker processes (if any)
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: riskcast-worker-pdb
+  namespace: riskcast
+  labels:
+    app: riskcast
+    component: worker
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: riskcast
+      component: worker

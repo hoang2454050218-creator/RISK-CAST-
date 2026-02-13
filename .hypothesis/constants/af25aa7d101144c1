@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\engine\risk_engine.py
+# hypothesis_version: 6.151.2
+
+[0.0, 0.4, 0.5, 0.6, 100, 'bayesian_posterior', 'bayesian_probability', 'contribution_pct', 'critical', 'customer', 'explanation', 'fusion_score', 'high', 'low', 'moderate', 'n_correlated_pairs', 'name', 'none', 'order', 'recommendation', 'route', 'score', 'stale', 'temporal_freshness', 'weighted_fusion']

@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\api\routers\metrics.py
+# hypothesis_version: 6.151.2
+
+['-', '.', '/metrics', 'Prometheus metrics', 'SELECT 1', '_', 'database_up', 'ingest_success_rate', 'ingest_total_errors', 'observability', 'total_duplicates', 'total_errors', 'total_ingested', 'total_received', 'uptime_seconds']

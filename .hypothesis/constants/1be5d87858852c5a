@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\services\cache.py
+# hypothesis_version: 6.151.2
+
+[120, 300, 1800, 'redis_connected', 'redis_unavailable']

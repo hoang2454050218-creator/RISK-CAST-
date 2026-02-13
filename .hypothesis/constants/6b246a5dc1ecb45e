@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\api\routers\feedback.py
+# hypothesis_version: 6.151.2
+
+['/api/v1/feedback', '/stats', 'acceptance_rate', 'accepted', 'by_decision', 'count', 'feedback', 'recorded', 'status', 'total']

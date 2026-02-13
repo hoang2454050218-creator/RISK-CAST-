@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\analyzers\route_disruption.py
+# hypothesis_version: 6.151.2
+
+[0.15, 0.2, 0.5, 0.6, 0.95, 100, 'confidence', 'delay_rate_14d', 'delayed_orders', 'destination', 'internal_route', 'macro_signals', 'orders_analyzed', 'origin', 'route', 'route_disruption', 'route_name', 'type']

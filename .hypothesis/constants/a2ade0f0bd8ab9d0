@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\pipeline\validator.py
+# hypothesis_version: 6.151.2
+
+[0.0, 0.03, 0.05, 0.2, 0.4, 0.5, 0.7, 1.0, 168, 500, 3600, '1.0.0', '1.1.0', '2.0.0', 'ECONOMIC', 'ENVIRONMENTAL', 'GEOPOLITICAL', 'HEALTH', 'HIGH', 'INFRASTRUCTURE', 'LABOR', 'LOW', 'MARKET', 'MEDIUM', 'REGULATORY', 'SECURITY', 'SUPPLY_CHAIN', 'TECHNOLOGY', 'WEATHER', 'error', 'errors', 'field', 'info', 'is_valid', 'issues', 'message', 'observed_at', 'quality_score', 'schema_version', 'severity', 'signal.category', 'signal.evidence', 'signal.probability', 'signal.title', 'signal_id', 'signal_validated', 'warning', 'warnings']

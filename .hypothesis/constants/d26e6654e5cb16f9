@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\engine\decomposition.py
+# hypothesis_version: 6.151.2
+
+[0.1, 100, 'Market Volatility', 'No action needed.', 'Order Composite Risk', 'Payment Risk', 'Risk Factor', 'Route Disruption', 'Unknown', 'display_name', 'explanation_high', 'explanation_low', 'market_volatility', 'order_risk_composite', 'payment_risk', 'recommendation_high', 'recommendation_low', 'route_disruption', 'score', '{score']

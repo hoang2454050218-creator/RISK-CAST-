@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\outcomes\flywheel.py
+# hypothesis_version: 6.151.2
+
+[0.0, 0.15, 0.3, 0.5, 2.0, 5.0, 100.0, 'alpha', 'avg_prediction_error', 'beta', 'calibration_drift', 'collecting_data', 'entity_key', 'entity_states', 'flywheel_status', 'improvement_rate', 'improving', 'last_updated', 'learning', 'n_materialized', 'n_not_materialized', 'n_outcomes', 'needs_recalibration', 'original_prior', 'previous_avg_error', 'recent_avg_error', 'recent_outcomes', 'total_outcomes', 'updated_prior']

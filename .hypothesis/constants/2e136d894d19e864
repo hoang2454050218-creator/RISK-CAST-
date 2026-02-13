@@ -1,0 +1,4 @@
+# file: C:\Users\RIM\OneDrive\Desktop\RISK CAST V2\riskcast\api\routers\onboarding.py
+# hypothesis_version: 6.151.2
+
+[100, '/api/v1/onboarding', '/profile', '/status', '/templates', 'amount', 'avg_duration_days', 'code', 'columns', 'company', 'company_profile', 'contact_email', 'contact_phone', 'currency', 'customers', 'customers_imported', 'description', 'destination', 'due_date', 'entity', 'example_row', 'expected_date', 'first_scan_done', 'incidents', 'incidents_imported', 'name', 'onboarding', 'order_number', 'orders', 'orders_imported', 'origin', 'paid_date', 'payment_terms', 'payments', 'payments_imported', 'required', 'routes', 'routes_imported', 'severity', 'status', 'templates', 'tier', 'total_value', 'transport_mode', 'type', 'updated']
